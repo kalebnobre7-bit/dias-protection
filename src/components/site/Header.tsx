@@ -9,6 +9,8 @@ import { Emblem, Wordmark } from "@/components/brand/Logo";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/lib/types";
 
+import { LocaleToggle } from "./LocaleToggle";
+
 type Props = { locale: Locale; dict: Dictionary };
 
 export function Header({ locale, dict }: Props) {
@@ -16,8 +18,11 @@ export function Header({ locale, dict }: Props) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  const other: Locale = locale === "pt" ? "en" : "pt";
-  const switchHref = pathname.replace(/^\/(pt|en)/, `/${other}`);
+  // Mesma página no outro idioma
+  const localeHrefs: Record<Locale, string> = {
+    pt: pathname.replace(/^\/(pt|en)/, "/pt"),
+    en: pathname.replace(/^\/(pt|en)/, "/en"),
+  };
 
   const links = [
     { href: `/${locale}/servicos`, label: dict.nav.services },
@@ -52,9 +57,9 @@ export function Header({ locale, dict }: Props) {
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
         <Link href={`/${locale}`} className="flex min-h-11 items-center gap-2.5 text-text" aria-label="Dias Protection">
-          <Emblem className="h-8" />
+          <Emblem className="h-14" />
           <span className="hidden sm:flex">
-            <Wordmark className="h-8" />
+            <Wordmark className="h-14" />
           </span>
         </Link>
 
@@ -77,15 +82,12 @@ export function Header({ locale, dict }: Props) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-1.5">
-          <Link
-            href={switchHref}
-            hrefLang={other}
-            aria-label={dict.nav.switchLabel}
-            className="label grid min-h-11 min-w-11 place-items-center rounded-full px-3 transition-colors duration-300 hover:text-text"
-          >
-            {dict.nav.switchTo}
-          </Link>
+        <div className="flex items-center gap-2">
+          <LocaleToggle
+            locale={locale}
+            hrefs={localeHrefs}
+            label={dict.nav.switchLabel}
+          />
           <Link
             href={`/${locale}/solicitar`}
             className="btn btn-primary hidden !min-h-9 !px-4 !py-2 !text-[0.8125rem] sm:inline-flex"

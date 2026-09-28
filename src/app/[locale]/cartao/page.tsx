@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Emblem, Wordmark } from "@/components/brand/Logo";
+import { LocaleToggle } from "@/components/site/LocaleToggle";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getSiteContent } from "@/lib/content";
@@ -23,7 +24,6 @@ export default async function CardPage({ params }: Props) {
 
   const dict = getDictionary(locale);
   const { company } = await getSiteContent();
-  const other = locale === "pt" ? "en" : "pt";
   const phone = `+${company.whatsapp.slice(0, 2)} ${company.whatsapp.slice(2, 4)} ${company.whatsapp.slice(4, -4)}-${company.whatsapp.slice(-4)}`;
 
   const links = [
@@ -52,9 +52,7 @@ export default async function CardPage({ params }: Props) {
 
       <div className="mx-auto flex w-full max-w-sm flex-1 flex-col">
         <div className="flex justify-end">
-          <Link href={`/${other}/cartao`} hrefLang={other} aria-label={dict.nav.switchLabel} className="label grid min-h-11 min-w-11 place-items-center px-2 transition-colors duration-300 hover:text-text">
-            {dict.nav.switchTo}
-          </Link>
+          <LocaleToggle locale={locale} hrefs={{ pt: "/pt/cartao", en: "/en/cartao" }} label={dict.nav.switchLabel} />
         </div>
 
         <div className="mt-6 flex flex-col items-center text-center">

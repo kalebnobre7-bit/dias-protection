@@ -23,8 +23,7 @@ const pt = {
     request: "Solicitar",
     menu: "Menu",
     close: "Fechar",
-    switchTo: "EN",
-    switchLabel: "Switch to English",
+    switchLabel: "Idioma",
   },
   common: {
     requestCta: "Solicitar serviço",
@@ -224,8 +223,7 @@ const en: Dictionary = {
     request: "Request",
     menu: "Menu",
     close: "Close",
-    switchTo: "PT",
-    switchLabel: "Mudar para português",
+    switchLabel: "Language",
   },
   common: {
     requestCta: "Request service",

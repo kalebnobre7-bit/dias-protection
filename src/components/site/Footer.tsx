@@ -29,8 +29,8 @@ export function Footer({ dict, company, services, locale }: Props) {
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-3 text-text">
-              <Emblem className="h-12" />
-              <Wordmark className="h-12" />
+              <Emblem className="h-16" />
+              <Wordmark className="h-16" />
             </div>
             <p className="mt-6 max-w-[36ch] text-[0.9375rem] leading-relaxed text-muted">{dict.footer.pitch}</p>
             <p className="mt-4 text-[0.9375rem] font-medium text-silver">{company.tagline}</p>
