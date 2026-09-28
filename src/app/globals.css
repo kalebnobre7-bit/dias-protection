@@ -1,26 +1,269 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ───────── Tokens — Dias Protection (preto + marinho + prata, linguagem Apple) ───────── */
+@theme {
+  --color-ink: #07090d;
+  --color-ink-2: #0b0f17;
+  --color-navy: #0f1622;
+  --color-navy-2: #16202f;
+  --color-line: rgb(169 180 194 / 0.12);
+  --color-line-strong: rgb(169 180 194 / 0.26);
+  --color-text: #f2f4f7;
+  --color-muted: #8a94a3;
+  --color-silver: #b4bfcc;
+  --color-accent: #8fb3e6; /* azul-marinho claro: links e estados ativos */
+  --color-danger: #f08c8c;
+
+  /* SF Pro nativa no iPhone/Mac; Inter (com optical size) no resto */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--font-inter), "Helvetica Neue",
+    sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Motion "Physical": no máximo 3 curvas no projeto */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* entradas e revelações */
+  --ease-snap: cubic-bezier(0.22, 1, 0.36, 1); /* hover, press, micro */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* cor e opacidade */
+
+  --radius-tile: 1.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background: var(--color-ink);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.5;
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  /* Grain fixo: sentido, não visto */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ───────── Tipografia (uma escala para o site inteiro) ───────── */
+@utility t-hero {
+  font-size: clamp(2.5rem, 6.4vw, 6rem);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+}
+
+@utility t-display {
+  font-size: clamp(2.25rem, 5vw, 4.5rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.032em;
+}
+
+@utility t-h2 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.07;
+  letter-spacing: -0.028em;
+}
+
+@utility t-h3 {
+  font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+}
+
+@utility t-lead {
+  font-size: clamp(1.125rem, 1.45vw, 1.3125rem);
+  line-height: 1.45;
+  letter-spacing: -0.012em;
+  color: var(--color-muted);
+}
+
+@utility t-stat {
+  font-size: clamp(2.5rem, 4.5vw, 4rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rótulo curto acima dos títulos */
+@utility label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* ───────── Componentes ───────── */
+@utility btn {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition:
+    transform 0.35s var(--ease-snap),
+    background-color 0.3s var(--ease-in-out),
+    border-color 0.3s var(--ease-in-out),
+    box-shadow 0.35s var(--ease-snap);
+
+  &:active {
+    transform: scale(0.97);
+    transition-duration: 0.16s;
+  }
+}
+
+@utility btn-primary {
+  background: var(--color-text);
+  color: var(--color-ink);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+    }
+  }
+}
+
+@utility btn-ghost {
+  border: 1px solid var(--color-line-strong);
+  background: rgb(7 9 13 / 0.35);
+  backdrop-filter: blur(12px);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      border-color: var(--color-silver);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+/* Link de texto no estilo Apple: "Saiba mais ›" */
+@utility link-chevron {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  color: var(--color-accent);
+  font-weight: 500;
+
+  &::after {
+    content: "›";
+    font-size: 1.2em;
+    line-height: 1;
+    transition: transform 0.3s var(--ease-snap);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+    &:hover::after {
+      transform: translateX(3px);
+    }
+  }
+}
+
+@utility tile {
+  border-radius: var(--radius-tile);
+  border: 1px solid var(--color-line);
+  background: var(--color-navy);
+  overflow: hidden;
+}
+
+@utility lift {
+  transition:
+    transform 0.4s var(--ease-snap),
+    border-color 0.3s var(--ease-in-out);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-4px);
+      border-color: var(--color-line-strong);
+    }
+  }
+}
+
+/* Zoom suave da imagem dentro de um card com `group` */
+@utility media-zoom {
+  transition: transform 0.9s var(--ease-out);
+
+  @media (hover: hover) and (pointer: fine) {
+    :where(.group):hover & {
+      transform: scale(1.04);
+    }
+  }
+}
+
+/* Logo via máscara: herda a cor de `currentColor` */
+@utility mask-emblem {
+  background-color: currentColor;
+  mask: url("/brand/emblem.svg") center / contain no-repeat;
+}
+
+@utility mask-wordmark {
+  background-color: currentColor;
+  mask: url("/brand/wordmark.svg") center / contain no-repeat;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dias Protection — site + configurador
 
-## Getting Started
-
-First, run the development server:
+Next.js 15 · React 19 · Tailwind v4 · Framer Motion · TypeScript. Supabase entra na Fase B.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev   # http://localhost:3000 → redireciona pra /pt ou /en
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Rotas (todas em /pt e /en)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Rota | O que é |
+|---|---|
+| `/` | Home: hero, credenciais, serviços, como funciona, fundador, CTA |
+| `/servicos` e `/servicos/[slug]` | Lista e página de cada serviço (botão abre o pedido já preenchido) |
+| `/sobre` | Trajetória, certificações e reconhecimentos do Gabriel |
+| `/equipe` | Fundador + agentes (vêm do painel na Fase B) + critérios de seleção |
+| `/frota` | Categorias de veículo |
+| `/solicitar` | Configurador → WhatsApp (`?servico=slug` pré-seleciona) |
+| `/cartao` | Cartão de visita digital |
+| `/vcard` | Download do contato (.vcf) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Onde mexer
 
-## Learn More
+- **Conteúdo** (empresa, trajetória, serviços, frota, agentes): `src/data/content.ts`. Itens com ⚠️ aguardam confirmação do Gabriel. Clientes famosos só aparecem com `showNotableClients: true`.
+- **Imagens**: `public/images/` (geradas por IA; originais em `docs/imagens-ia/`). `docs/` fica fora do git (tem dados pessoais).
+- **Domínio**: definir `NEXT_PUBLIC_SITE_URL` na Vercel (usado no sitemap e no preview de link).
+- **Textos de interface PT/EN**: `src/i18n/dictionaries.ts`
+- **Mensagem do WhatsApp**: `src/lib/order.ts` (`buildMessage`)
+- **Tokens de marca**: `src/app/globals.css` (`@theme`)
+- **Logo**: `public/brand/emblem.svg` e `wordmark.svg` (vetorizados das pranchetas; usados via máscara CSS, herdam `currentColor`)
 
-To learn more about Next.js, take a look at the following resources:
+## Fase B — Supabase
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `supabase/migrations/0001_init.sql`: schema completo (conteúdo, agentes, frota, clientes, parceiros, serviços com custos, lançamentos, view `monthly_summary`), RLS e bucket `photos`. Validado num Postgres 16 local.
+- Trocar `getSiteContent()` em `src/lib/content.ts` pra ler do Supabase. Os tipos em `src/lib/types.ts` já espelham as tabelas (`name` ↔ `name_pt`/`name_en`).
+- ⚠️ O papel `anon` só tem SELECT em colunas públicas de `agents`: a consulta precisa listar as colunas (não usar `select *`).
