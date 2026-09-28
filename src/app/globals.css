@@ -248,6 +248,26 @@
   }
 }
 
+/* Campos do painel admin */
+@utility input {
+  min-height: 2.75rem;
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-ink);
+  padding: 0.625rem 0.875rem;
+  font-size: 1rem;
+  transition: border-color 0.3s var(--ease-in-out);
+
+  &::placeholder {
+    color: rgb(138 148 163 / 0.6);
+  }
+  &:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+}
+
 /* Logo via máscara: herda a cor de `currentColor` */
 @utility mask-emblem {
   background-color: currentColor;

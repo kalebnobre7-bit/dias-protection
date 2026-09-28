@@ -18,6 +18,7 @@ npm run dev   # http://localhost:3000 → redireciona pra /pt ou /en
 | `/solicitar` | Configurador → WhatsApp (`?servico=slug` pré-seleciona) |
 | `/cartao` | Cartão de visita digital |
 | `/contato.vcf` | Download do contato (gerado no build) |
+| `/admin` | Painel do Gabriel (só PT, fora do índice dos buscadores) |
 
 ## GitHub Pages
 
@@ -32,6 +33,14 @@ A cada push na `main`, `.github/workflows/pages.yml` gera o export estático (`G
 - **Mensagem do WhatsApp**: `src/lib/order.ts` (`buildMessage`)
 - **Tokens de marca**: `src/app/globals.css` (`@theme`)
 - **Logo**: `public/brand/emblem.svg` e `wordmark.svg` (vetorizados das pranchetas; usados via máscara CSS, herdam `currentColor`)
+
+## Painel admin (`/admin`)
+
+Início, Serviços (com equipe, veículos, custos e lucro), Clientes (com histórico), Parceiros, Agentes, Veículos e Financeiro (resumo mensal + lançamentos avulsos).
+
+**Enquanto o Supabase não entra:** tudo é client-side e grava no `localStorage` do navegador (`src/lib/admin/store.ts`). Os dados ficam só naquele navegador, e o login é de demonstração (credenciais em `src/lib/admin/seed.ts`, sem segurança real). Vem com dados fictícios de exemplo; "Zerar dados de exemplo" no menu apaga tudo.
+
+**Ao conectar o Supabase:** trocar só `store.ts` (as funções `repo.*` já são assíncronas) e `auth.ts` (Supabase Auth). Tipos em `src/lib/admin/types.ts` espelham as tabelas; `Job.agentIds`/`vehicleIds` viram `job_agents`/`job_vehicles`. O cálculo de `src/lib/admin/finance.ts` é o mesmo da view `monthly_summary`.
 
 ## Fase B — Supabase
 

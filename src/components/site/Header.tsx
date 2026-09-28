@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -102,14 +103,7 @@ export function Header({ locale, dict }: Props) {
             aria-label={open ? dict.nav.close : dict.nav.menu}
             className="grid size-11 place-items-center rounded-full lg:hidden"
           >
-            <span className="relative block h-3 w-4">
-              <span
-                className={`absolute left-0 h-px w-4 bg-text transition-transform duration-300 ease-[var(--ease-snap)] ${open ? "top-1.5 rotate-45" : "top-0"}`}
-              />
-              <span
-                className={`absolute left-0 h-px w-4 bg-text transition-transform duration-300 ease-[var(--ease-snap)] ${open ? "top-1.5 -rotate-45" : "top-3"}`}
-              />
-            </span>
+            {open ? <X aria-hidden className="size-5" /> : <Menu aria-hidden className="size-5" />}
           </button>
         </div>
       </div>

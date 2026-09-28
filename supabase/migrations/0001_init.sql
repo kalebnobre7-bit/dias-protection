@@ -188,11 +188,11 @@ create view monthly_summary with (security_invoker = true) as
 with months as (
   select date_trunc('month', starts_at)::date as month, sum(price) as revenue,
          sum(price) filter (where payment_status = 'pending') as receivable
-  from jobs where status <> 'canceled' group by 1
+  from jobs where status in ('scheduled', 'done') group by 1
 ),
 costs as (
   select date_trunc('month', j.starts_at)::date as month, sum(c.amount) as job_costs
-  from job_costs c join jobs j on j.id = c.job_id where j.status <> 'canceled' group by 1
+  from job_costs c join jobs j on j.id = c.job_id where j.status in ('scheduled', 'done') group by 1
 ),
 extra as (
   select date_trunc('month', date)::date as month,

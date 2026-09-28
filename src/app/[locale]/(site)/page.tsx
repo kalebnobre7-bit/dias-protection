@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -177,9 +178,7 @@ export default async function Home({ params }: LocaleParams) {
             <ul className="mt-9 grid gap-3 sm:grid-cols-2">
               {t.credentials.map((c) => (
                 <li key={c} className="flex gap-3 text-[0.9375rem]">
-                  <svg aria-hidden viewBox="0 0 16 16" className="mt-1 size-4 shrink-0 text-accent">
-                    <path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <Check aria-hidden className="mt-1 size-4 shrink-0 text-accent" />
                   {c}
                 </li>
               ))}

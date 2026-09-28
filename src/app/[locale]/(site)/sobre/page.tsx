@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Check } from "lucide-react";
 import Image from "next/image";
 
 import { CtaBand } from "@/components/site/CtaBand";
@@ -89,9 +90,7 @@ export default async function AboutPage({ params }: LocaleParams) {
             <ul className="mt-6 border-t border-line">
               {founder.certifications.map((c) => (
                 <li key={c} className="flex gap-4 border-b border-line py-4">
-                  <svg aria-hidden viewBox="0 0 16 16" className="mt-1 size-4 shrink-0 text-accent">
-                    <path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <Check aria-hidden className="mt-1 size-4 shrink-0 text-accent" />
                   <span>{c}</span>
                 </li>
               ))}

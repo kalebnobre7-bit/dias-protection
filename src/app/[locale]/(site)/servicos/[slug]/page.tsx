@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -72,9 +73,7 @@ export default async function ServicePage({ params }: Props) {
             <ul className="mt-6 space-y-4">
               {service.includes[locale].map((item) => (
                 <li key={item} className="flex gap-4 border-b border-line pb-4 last:border-0 last:pb-0">
-                  <svg aria-hidden viewBox="0 0 16 16" className="mt-1 size-4 shrink-0 text-accent">
-                    <path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <Check aria-hidden className="mt-1 size-4 shrink-0 text-accent" />
                   <span>{item}</span>
                 </li>
               ))}
