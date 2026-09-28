@@ -9,6 +9,8 @@ import { HeroIn, Reveal } from "@/components/site/Reveal";
 import { locales } from "@/i18n/config";
 import { getSiteContent } from "@/lib/content";
 import { loadPage } from "@/lib/page";
+import { JsonLd, pageMetadata } from "@/lib/seo";
+import { siteUrl } from "@/lib/site";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -22,7 +24,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, content } = await loadPage(params);
   const service = content.serviceTypes.find((s) => s.id === slug);
   if (!service) return {};
-  return { title: `${service.name[locale]} · Dias Protection`, description: service.summary[locale] };
+  return pageMetadata({
+    locale,
+    path: `/servicos/${service.id}`,
+    title: `${service.name[locale]} · Dias Protection`,
+    description: service.summary[locale],
+  });
 }
 
 export default async function ServicePage({ params }: Props) {
@@ -34,16 +41,40 @@ export default async function ServicePage({ params }: Props) {
   const service = content.serviceTypes[index];
   const others = content.serviceTypes.filter((s) => s.id !== slug);
   const requestHref = `/${locale}/solicitar?servico=${service.id}`;
+  const url = `${siteUrl}/${locale}/servicos/${service.id}`;
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: service.name[locale],
+      description: service.description[locale],
+      serviceType: service.name[locale],
+      url,
+      image: `${siteUrl}${service.image}`,
+      areaServed: { "@type": "City", name: "São Paulo" },
+      provider: { "@id": `${siteUrl}/#business` },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Dias Protection", item: `${siteUrl}/${locale}` },
+        { "@type": "ListItem", position: 2, name: dict.nav.services, item: `${siteUrl}/${locale}/servicos` },
+        { "@type": "ListItem", position: 3, name: service.name[locale], item: url },
+      ],
+    },
+  ];
 
   return (
     <>
+      <JsonLd data={jsonLd} />
       {/* Topo com a imagem do serviço */}
       <section className="relative isolate overflow-hidden">
         <Image src={service.image} alt="" fill priority sizes="100vw" className="-z-20 object-cover" />
         <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/75 to-ink/30" />
         <div className="mx-auto max-w-7xl px-4 pb-14 pt-36 md:px-8 md:pb-20 md:pt-56">
           <HeroIn>
-            <nav aria-label="Breadcrumb" className="text-[0.9375rem]">
+            <nav aria-label={locale === "pt" ? "Navegação" : "Breadcrumb"} className="text-[0.9375rem]">
               <Link href={`/${locale}/servicos`} className="text-muted transition-colors duration-300 hover:text-text">
                 {dict.nav.services}
               </Link>

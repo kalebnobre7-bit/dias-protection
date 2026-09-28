@@ -141,6 +141,20 @@
   letter-spacing: 0;
 }
 
+/* Entrada do hero em CSS: roda antes do JS, então o título conta cedo para o LCP */
+/* 0.01 em vez de 0: o Chrome ignora texto invisível no LCP e esperaria o JS inteiro */
+@keyframes hero-in {
+  from {
+    opacity: 0.01;
+    transform: translateY(24px);
+    filter: blur(8px);
+  }
+}
+
+@utility hero-in {
+  animation: hero-in 0.8s var(--ease-out) both;
+}
+
 /* ───────── Componentes ───────── */
 @utility btn {
   display: inline-flex;

@@ -187,6 +187,12 @@ const pt = {
     card: "Cartão digital",
     rights: "Todos os direitos reservados.",
   },
+  notFound: {
+    label: "Erro 404",
+    title: "Esta página não existe.",
+    lead: "O endereço pode ter mudado ou foi digitado errado. Estes caminhos levam aonde você precisa:",
+    home: "Voltar para o início",
+  },
   card: {
     save: "Salvar contato",
     whatsapp: "WhatsApp",
@@ -386,6 +392,12 @@ const en: Dictionary = {
     contactLabel: "Contact",
     card: "Digital card",
     rights: "All rights reserved.",
+  },
+  notFound: {
+    label: "Error 404",
+    title: "This page doesn't exist.",
+    lead: "The address may have changed or been mistyped. These links will get you where you need to go:",
+    home: "Back to home",
   },
   card: {
     save: "Save contact",

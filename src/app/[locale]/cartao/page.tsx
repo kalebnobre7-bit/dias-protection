@@ -8,13 +8,15 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getSiteContent } from "@/lib/content";
 import { whatsappUrl } from "@/lib/order";
+import { pageMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
-  return { title: getDictionary(locale).meta.cardTitle };
+  const dict = getDictionary(locale);
+  return pageMetadata({ locale, path: "/cartao", title: dict.meta.cardTitle, description: dict.meta.description });
 }
 
 // Cartão de visita digital: uma tela, sem rolagem no celular

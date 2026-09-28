@@ -56,16 +56,11 @@ export function StaggerItem({ children, className, as = "div" }: ItemProps) {
   );
 }
 
-// Entrada do hero: sobe e desfoca de leve, uma vez, ao carregar
-export function HeroIn({ children, className, delay = 0 }: Props) {
+// Entrada do hero: sobe e desfoca de leve, uma vez, ao carregar (CSS puro, ver .hero-in)
+export function HeroIn({ children, className = "", delay = 0 }: Props) {
   return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
-      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      transition={{ duration: 0.8, ease: easeOut, delay }}
-    >
+    <div className={`hero-in ${className}`} style={delay ? { animationDelay: `${delay}s` } : undefined}>
       {children}
-    </motion.div>
+    </div>
   );
 }

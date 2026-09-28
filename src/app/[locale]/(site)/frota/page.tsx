@@ -5,11 +5,17 @@ import Link from "next/link";
 import { CtaBand } from "@/components/site/CtaBand";
 import { PageHero } from "@/components/site/PageHero";
 import { Reveal, Stagger, StaggerItem } from "@/components/site/Reveal";
+import { pageMetadata } from "@/lib/seo";
 import { loadPage, type LocaleParams } from "@/lib/page";
 
 export async function generateMetadata({ params }: LocaleParams): Promise<Metadata> {
-  const { dict } = await loadPage(params);
-  return { title: `${dict.meta.pages.fleet} · Dias Protection`, description: dict.fleet.lead };
+  const { locale, dict } = await loadPage(params);
+  return pageMetadata({
+    locale,
+    path: "/frota",
+    title: `${dict.meta.pages.fleet} · Dias Protection`,
+    description: dict.fleet.lead,
+  });
 }
 
 export default async function FleetPage({ params }: LocaleParams) {

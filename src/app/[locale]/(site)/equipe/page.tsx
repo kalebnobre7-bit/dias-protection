@@ -7,11 +7,17 @@ import { CtaBand } from "@/components/site/CtaBand";
 import { PageHero } from "@/components/site/PageHero";
 import { Reveal, Stagger, StaggerItem } from "@/components/site/Reveal";
 import { SectionHeading } from "@/components/site/SectionHeading";
+import { pageMetadata } from "@/lib/seo";
 import { loadPage, type LocaleParams } from "@/lib/page";
 
 export async function generateMetadata({ params }: LocaleParams): Promise<Metadata> {
-  const { dict } = await loadPage(params);
-  return { title: `${dict.meta.pages.team} · Dias Protection`, description: dict.team.lead };
+  const { locale, dict } = await loadPage(params);
+  return pageMetadata({
+    locale,
+    path: "/equipe",
+    title: `${dict.meta.pages.team} · Dias Protection`,
+    description: dict.team.lead,
+  });
 }
 
 export default async function TeamPage({ params }: LocaleParams) {
@@ -42,7 +48,7 @@ export default async function TeamPage({ params }: LocaleParams) {
                   />
                 </div>
                 <div className="p-6">
-                  <h3 className="t-h3">{company.founderName}</h3>
+                  <h2 className="t-h3">{company.founderName}</h2>
                   <p className="mt-1 text-[0.9375rem] text-muted">{company.founderRole[locale]}</p>
                   <span className="link-chevron mt-4 text-[0.9375rem]">{dict.home.founderCta}</span>
                 </div>
@@ -68,7 +74,7 @@ export default async function TeamPage({ params }: LocaleParams) {
                     )}
                   </div>
                   <div className="flex flex-1 flex-col p-6">
-                    <h3 className="t-h3">{a.name}</h3>
+                    <h2 className="t-h3">{a.name}</h2>
                     <p className="mt-1 text-[0.9375rem] text-muted">{a.role[locale]}</p>
                     <p className="mt-3 text-[0.9375rem] leading-relaxed text-text/80">{a.bio[locale]}</p>
                     <dl className="num mt-auto space-y-2 border-t border-line pt-5 text-sm">

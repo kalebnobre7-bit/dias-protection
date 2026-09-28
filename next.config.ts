@@ -6,6 +6,8 @@ const basePath = pages ? "/dias-protection" : "";
 
 const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_BASE_PATH: basePath },
+  // 404 própria para qualquer endereço inexistente (vira o 404.html do GitHub Pages)
+  experimental: { globalNotFound: true },
   ...(pages && {
     output: "export",
     basePath,

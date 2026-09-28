@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -9,6 +10,12 @@ import { SectionHeading } from "@/components/site/SectionHeading";
 import { ServiceCard } from "@/components/site/ServiceCard";
 import { whatsappUrl } from "@/lib/order";
 import { loadPage, type LocaleParams } from "@/lib/page";
+import { pageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({ params }: LocaleParams): Promise<Metadata> {
+  const { locale, dict } = await loadPage(params);
+  return pageMetadata({ locale, path: "", title: dict.meta.title, description: dict.meta.description });
+}
 
 export default async function Home({ params }: LocaleParams) {
   const { locale, dict, content } = await loadPage(params);

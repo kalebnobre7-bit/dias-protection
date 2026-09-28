@@ -64,7 +64,7 @@ export function Footer({ dict, company, services, locale }: Props) {
                 </a>
               </li>
             ))}
-            <li className="pt-2 text-muted/70">{company.city}</li>
+            <li className="pt-2 text-muted">{company.city}</li>
           </FooterList>
         </div>
 

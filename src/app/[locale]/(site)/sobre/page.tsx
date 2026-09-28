@@ -5,11 +5,17 @@ import Image from "next/image";
 import { CtaBand } from "@/components/site/CtaBand";
 import { HeroIn, Reveal, Stagger, StaggerItem } from "@/components/site/Reveal";
 import { SectionHeading } from "@/components/site/SectionHeading";
+import { pageMetadata } from "@/lib/seo";
 import { loadPage, type LocaleParams } from "@/lib/page";
 
 export async function generateMetadata({ params }: LocaleParams): Promise<Metadata> {
-  const { dict } = await loadPage(params);
-  return { title: `${dict.meta.pages.about} · Dias Protection`, description: dict.about.title };
+  const { locale, dict, content } = await loadPage(params);
+  return pageMetadata({
+    locale,
+    path: "/sobre",
+    title: `${dict.meta.pages.about} · Dias Protection`,
+    description: content.company.founderBio[locale],
+  });
 }
 
 export default async function AboutPage({ params }: LocaleParams) {

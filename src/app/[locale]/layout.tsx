@@ -22,16 +22,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isLocale(locale)) return {};
   const dict = getDictionary(locale);
   return {
-    metadataBase: new URL(siteUrl),
+    // Só a origem: o Next já põe o basePath nas imagens OG (senão duplica no GitHub Pages)
+    metadataBase: new URL(new URL(siteUrl).origin),
     title: dict.meta.title,
     description: dict.meta.description,
-    alternates: { languages: { "pt-BR": "/pt", en: "/en" } },
-    openGraph: {
-      title: dict.meta.title,
-      description: dict.meta.description,
-      type: "website",
-      images: [{ url: "/images/hero-suv.jpg", width: 1672, height: 941 }],
-    },
+    openGraph: { siteName: "Dias Protection", type: "website" },
   };
 }
 

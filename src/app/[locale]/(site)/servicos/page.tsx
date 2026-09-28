@@ -4,11 +4,17 @@ import { CtaBand } from "@/components/site/CtaBand";
 import { PageHero } from "@/components/site/PageHero";
 import { Stagger, StaggerItem } from "@/components/site/Reveal";
 import { ServiceCard } from "@/components/site/ServiceCard";
+import { pageMetadata } from "@/lib/seo";
 import { loadPage, type LocaleParams } from "@/lib/page";
 
 export async function generateMetadata({ params }: LocaleParams): Promise<Metadata> {
-  const { dict } = await loadPage(params);
-  return { title: `${dict.meta.pages.services} · Dias Protection`, description: dict.services.lead };
+  const { locale, dict } = await loadPage(params);
+  return pageMetadata({
+    locale,
+    path: "/servicos",
+    title: `${dict.meta.pages.services} · Dias Protection`,
+    description: dict.services.lead,
+  });
 }
 
 export default async function ServicesPage({ params }: LocaleParams) {
@@ -26,7 +32,7 @@ export default async function ServicesPage({ params }: LocaleParams) {
         <Stagger as="ul" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {content.serviceTypes.map((s) => (
             <StaggerItem as="li" key={s.id}>
-              <ServiceCard service={s} locale={locale} cta={dict.common.learnMore} />
+              <ServiceCard service={s} locale={locale} cta={dict.common.learnMore} heading="h2" />
             </StaggerItem>
           ))}
         </Stagger>
