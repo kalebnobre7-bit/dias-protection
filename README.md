@@ -17,7 +17,11 @@ npm run dev   # http://localhost:3000 → redireciona pra /pt ou /en
 | `/frota` | Categorias de veículo |
 | `/solicitar` | Configurador → WhatsApp (`?servico=slug` pré-seleciona) |
 | `/cartao` | Cartão de visita digital |
-| `/vcard` | Download do contato (.vcf) |
+| `/contato.vcf` | Download do contato (gerado no build) |
+
+## GitHub Pages
+
+A cada push na `main`, `.github/workflows/pages.yml` gera o export estático (`GITHUB_PAGES=true`, basePath `/dias-protection`) e publica em https://kalebnobre7-bit.github.io/dias-protection/. Sem middleware ali: a raiz usa `scripts/pages-index.html` pra escolher o idioma. O build normal (Vercel) não muda.
 
 ## Onde mexer
 

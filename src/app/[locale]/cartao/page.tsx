@@ -92,7 +92,7 @@ export default async function CardPage({ params }: Props) {
             {dict.card.order}
           </Link>
           <a
-            href="/vcard"
+            href={`${process.env.NEXT_PUBLIC_BASE_PATH}/contato.vcf`}
             className="btn btn-ghost w-full"
           >
             {dict.card.save}

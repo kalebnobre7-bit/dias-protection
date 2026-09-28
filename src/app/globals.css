@@ -251,12 +251,12 @@
 /* Logo via máscara: herda a cor de `currentColor` */
 @utility mask-emblem {
   background-color: currentColor;
-  mask: url("/brand/emblem.svg") center / contain no-repeat;
+  mask: url("../../public/brand/emblem.svg") center / contain no-repeat;
 }
 
 @utility mask-wordmark {
   background-color: currentColor;
-  mask: url("/brand/wordmark.svg") center / contain no-repeat;
+  mask: url("../../public/brand/wordmark.svg") center / contain no-repeat;
 }
 
 @media (prefers-reduced-motion: reduce) {
