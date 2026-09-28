@@ -66,7 +66,8 @@ export type FounderProfile = {
   education: Localized[];
   languages: Localized;
   // Empresas para as quais já atuou (currículo) e clientes atendidos
-  experienceWith: string[];
+  // logo: arquivo em public/images/logos; scale compensa logos com muito respiro interno
+  experienceWith: { name: string; logo?: string; scale?: number }[];
   notableClients: { name: string; context: string }[];
   showNotableClients: boolean; // só liga com autorização do Gabriel
 };

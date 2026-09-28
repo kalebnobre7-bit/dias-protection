@@ -98,7 +98,15 @@ export const localContent: SiteContent = {
     ],
     languages: { pt: "Português · Inglês fluente · Espanhol", en: "Portuguese · Fluent English · Spanish" },
     // ⚠️ confirmar com o Gabriel se pode exibir
-    experienceWith: ["Pinkerton", "Global Guardian", "SCS", "Crisol Group", "Royal American Group", "Fórmula 1"],
+    // Logos baixadas dos sites oficiais; sem `logo` aparece como texto
+    experienceWith: [
+      { name: "Pinkerton", logo: "/images/logos/pinkerton.png" },
+      { name: "Global Guardian", logo: "/images/logos/global-guardian.png" },
+      { name: "SCS" }, // o logo oficial é só o símbolo, ilegível sem o nome
+      { name: "Crisol Group" },
+      { name: "Royal American Group", logo: "/images/logos/royal-american.png", scale: 1.7 },
+      { name: "Fórmula 1", logo: "/images/logos/f1.svg" },
+    ],
     notableClients: [
       { name: "Mario Isola", context: "Pirelli · Fórmula 1" },
       { name: "Earl Bamber", context: "Fórmula E" },

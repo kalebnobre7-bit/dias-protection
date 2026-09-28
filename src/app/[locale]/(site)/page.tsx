@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -202,10 +203,25 @@ export default async function Home({ params }: LocaleParams) {
       <section className="border-t border-line">
         <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-24">
           <p className="label text-center">{t.experienceLabel}</p>
-          <Stagger as="ul" className="mt-9 flex flex-wrap items-center justify-center gap-x-12 gap-y-5">
-            {founder.experienceWith.map((name) => (
+          <Stagger
+            as="ul"
+            className="mt-10 grid grid-cols-2 place-items-center gap-x-6 gap-y-9 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-14 sm:gap-y-8"
+          >
+            {founder.experienceWith.map(({ name, logo, scale = 1 }) => (
               <StaggerItem as="li" key={name} className="text-xl font-semibold tracking-[-0.02em] text-silver/70 md:text-2xl">
-                {name}
+                {logo ? (
+                  // Prata uniforme; a cor original aparece no hover
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_BASE_PATH}${logo}`}
+                    alt={name}
+                    loading="lazy"
+                    style={{ "--scale": scale } as CSSProperties}
+                    className="h-[calc(1.625rem*var(--scale))] w-auto opacity-60 transition-[opacity,filter] duration-300 ease-[var(--ease-in-out)] [filter:brightness(0)_invert(1)] hover:opacity-100 hover:[filter:none] sm:h-[calc(2rem*var(--scale))]"
+                  />
+                ) : (
+                  name
+                )}
               </StaggerItem>
             ))}
           </Stagger>

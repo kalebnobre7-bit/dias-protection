@@ -136,7 +136,7 @@ export default async function AboutPage({ params }: LocaleParams) {
         <div className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-40">
           <p className="label">{dict.home.experienceLabel}</p>
           <ul className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-line bg-line md:grid-cols-3">
-            {founder.experienceWith.map((name) => (
+            {founder.experienceWith.map(({ name }) => (
               <li key={name} className="bg-ink px-6 py-10 text-lg font-semibold tracking-[-0.02em] text-silver md:text-2xl">
                 {name}
               </li>
