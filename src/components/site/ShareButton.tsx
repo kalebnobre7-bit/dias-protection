@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Share2 } from "lucide-react";
 import { useState } from "react";
 
 type Props = { title: string; text: string; label: string; copied: string; className?: string };
@@ -29,6 +30,7 @@ export function ShareButton({ title, text, label, copied, className = "" }: Prop
 
   return (
     <button type="button" onClick={share} className={className} aria-live="polite">
+      {done ? <Check className="size-[1.1em]" aria-hidden /> : <Share2 className="size-[1.1em]" aria-hidden />}
       {done ? copied : label}
     </button>
   );
