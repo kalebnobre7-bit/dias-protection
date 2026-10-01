@@ -29,7 +29,7 @@ export default async function TeamPage({ params }: LocaleParams) {
     <>
       <PageHero label={t.label} title={t.title} lead={t.lead} image="/images/event.jpg" />
 
-      <section className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* Fundador sempre primeiro */}
           <li>
@@ -99,7 +99,7 @@ export default async function TeamPage({ params }: LocaleParams) {
 
       {/* Critérios de seleção */}
       <section className="bg-ink-2">
-        <div className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-40">
+        <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
           <Reveal>
             <SectionHeading label={t.criteriaLabel} title={t.lead} />
           </Reveal>

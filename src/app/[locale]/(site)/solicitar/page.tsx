@@ -20,7 +20,7 @@ export default async function RequestPage({ params }: LocaleParams) {
 
   return (
     <>
-      <PageHero label={dict.order.label} title={dict.order.title} lead={dict.order.lead} />
+      <PageHero label={dict.order.label} title={dict.order.title} lead={dict.order.lead} compact />
       <Configurator content={content} dict={dict} locale={locale} />
     </>
   );

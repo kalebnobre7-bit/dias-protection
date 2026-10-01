@@ -14,7 +14,7 @@ export function CtaBand({ dict, locale, whatsapp }: Props) {
     <section className="relative isolate overflow-hidden">
       <Image src="/images/airport.jpg" alt="" fill sizes="100vw" className="-z-20 object-cover" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-ink via-ink/85 to-ink/30" />
-      <div className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-40">
+      <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
         <Reveal>
           <h2 className="t-display max-w-[16ch]">{dict.home.ctaTitle}</h2>
           <p className="t-lead mt-6 max-w-[46ch] !text-text/75">{dict.home.ctaText}</p>

@@ -11,7 +11,7 @@ export function ServiceCard({ service, locale, cta, featured = false, heading: H
     return (
       <Link
         href={`/${locale}/servicos/${service.id}`}
-        className="tile lift group relative isolate flex h-full min-h-[26rem] flex-col justify-end p-7 md:p-10"
+        className="tile lift group relative isolate flex h-full min-h-[22rem] flex-col justify-end p-6 sm:min-h-[26rem] md:p-10"
       >
         <Image
           src={service.image}
@@ -21,7 +21,7 @@ export function ServiceCard({ service, locale, cta, featured = false, heading: H
           className="media-zoom -z-20 object-cover"
         />
         <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/60 to-transparent" />
-        <Heading className="t-display max-w-[14ch] !text-[clamp(2rem,3.6vw,3.25rem)]">{service.name[locale]}</Heading>
+        <Heading className="t-display max-w-[14ch] !text-[clamp(1.75rem,3.6vw,3.25rem)]">{service.name[locale]}</Heading>
         <p className="mt-4 max-w-[44ch] text-text/80">{service.summary[locale]}</p>
         <span className="link-chevron mt-6">{cta}</span>
       </Link>
