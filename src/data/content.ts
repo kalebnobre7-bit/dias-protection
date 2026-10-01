@@ -293,6 +293,7 @@ export const localContent: SiteContent = {
       description: { pt: "Discreto, para agendas urbanas.", en: "Discreet, for city schedules." },
       capacity: 3,
       armored: false,
+      image: "/images/fleet/sedan.webp",
       sortOrder: 1,
     },
     {
@@ -301,6 +302,7 @@ export const localContent: SiteContent = {
       description: { pt: "Mais espaço e bagagem.", en: "More room and luggage space." },
       capacity: 4,
       armored: false,
+      image: "/images/fleet/suv.webp",
       sortOrder: 2,
     },
     {
@@ -309,6 +311,7 @@ export const localContent: SiteContent = {
       description: { pt: "Blindagem para deslocamentos sensíveis.", en: "Armored for sensitive journeys." },
       capacity: 4,
       armored: true,
+      image: "/images/fleet/suv-blindado.webp",
       sortOrder: 3,
     },
     {
@@ -317,6 +320,7 @@ export const localContent: SiteContent = {
       description: { pt: "Comitivas e grupos.", en: "Delegations and groups." },
       capacity: 10,
       armored: false,
+      image: "/images/fleet/van.webp",
       sortOrder: 4,
     },
   ],
