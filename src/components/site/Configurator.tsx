@@ -1,18 +1,24 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { Check } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { Dictionary } from "@/i18n/dictionaries";
 import {
   buildMessage,
   emptyOrder,
+  guardCount,
+  optionsForService,
+  serviceOptions,
+  usesPeriod,
   validateOrder,
   vehicleCount,
   whatsappUrl,
-  type Duration,
   type EventKind,
   type Exposure,
+  type Language,
+  type LanguagePref,
   type Order,
   type OrderErrors,
   type TripNeed,
@@ -21,7 +27,7 @@ import type { Locale, SiteContent } from "@/lib/types";
 
 type Props = { content: SiteContent; dict: Dictionary; locale: Locale };
 
-const durations: Duration[] = ["4h", "8h", "12h", "multi"];
+const languages: Language[] = ["pt", "pt-en", "pt-es", "other"];
 const tripNeeds: TripNeed[] = ["vehicle", "driver", "guards"];
 const eventKinds: EventKind[] = ["sports", "show", "corporate", "social", "political", "other"];
 const exposures: Exposure[] = ["no", "public", "pep"];
@@ -37,10 +43,7 @@ export function Configurator({ content, dict, locale }: Props) {
 
   const set = <K extends keyof Order>(key: K, value: Order[K]) => {
     setOrder((o) => ({ ...o, [key]: value }));
-    if (key === "serviceTypeId" || key === "date" || key === "name") {
-      const errorKey = key === "serviceTypeId" ? "service" : key;
-      setErrors((e) => ({ ...e, [errorKey]: undefined }));
-    }
+    if (key === "date" || key === "name") setErrors((e) => ({ ...e, [key]: undefined }));
   };
 
   const setVehicle = (id: string, qty: number) =>
@@ -52,15 +55,17 @@ export function Configurator({ content, dict, locale }: Props) {
       tripNeeds: o.tripNeeds.includes(need) ? o.tripNeeds.filter((n) => n !== need) : [...o.tripNeeds, need],
     }));
 
-  const chooseService = (id: string) => {
-    setOrder((o) => withService(o, id));
+  const toggleService = (id: string) => {
+    setOrder((o) =>
+      o.services.includes(id) ? { ...o, services: o.services.filter((s) => s !== id) } : withServices(o, [id]),
+    );
     setErrors((e) => ({ ...e, service: undefined }));
   };
 
   // Pré-seleciona o serviço vindo da lista (?servico=id)
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("servico");
-    if (id && content.serviceTypes.some((s) => s.id === id)) setOrder((o) => withService(o, id));
+    if (id && content.serviceTypes.some((s) => s.id === id)) setOrder((o) => withServices(o, optionsForService(id)));
   }, [content.serviceTypes]);
 
   // Barra fixa do mobile: aparece no configurador, some quando o resumo já está visível
@@ -79,8 +84,11 @@ export function Configurator({ content, dict, locale }: Props) {
   }, []);
 
   const message = useMemo(() => buildMessage(order, content, dict, locale), [order, content, dict, locale]);
+  const options = useMemo(() => serviceOptions(content, dict, locale), [content, dict, locale]);
+  const chosen = options.filter((o) => order.services.includes(o.id));
   const vehicles = vehicleCount(order);
-  const service = content.serviceTypes.find((s) => s.id === order.serviceTypeId);
+  const guards = guardCount(order);
+  const period = usesPeriod(order);
 
   function send() {
     const found = validateOrder(order, dict);
@@ -99,26 +107,26 @@ export function Configurator({ content, dict, locale }: Props) {
         <div className="grid gap-10 lg:grid-cols-[1fr_380px] lg:gap-14">
           <form className="space-y-12" onSubmit={(e) => e.preventDefault()} noValidate>
             {/* 01 · Serviço */}
-            <Step n="01" title={t.steps.service} id="field-service" error={errors.service}>
-              <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={t.steps.service}>
-                {content.serviceTypes.map((s) => {
-                  const active = order.serviceTypeId === s.id;
+            <Step n="01" title={t.steps.service} hint={t.serviceHint} id="field-service" error={errors.service}>
+              <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label={t.steps.service}>
+                {options.map((s) => {
+                  const active = order.services.includes(s.id);
                   return (
                     <button
                       key={s.id}
                       type="button"
-                      role="radio"
+                      role="checkbox"
                       aria-checked={active}
-                      onClick={() => chooseService(s.id)}
+                      onClick={() => toggleService(s.id)}
                       className={`rounded-2xl border p-4 text-left transition-[border-color,background-color,transform] duration-300 ease-[var(--ease-snap)] active:scale-[0.98] ${
                         active ? "border-accent/70 bg-navy-2" : "border-line bg-navy/40 hover:border-line-strong"
                       }`}
                     >
                       <span className="flex items-center justify-between gap-3">
-                        <span className="font-medium">{s.name[locale]}</span>
-                        <Dot active={active} />
+                        <span className="font-medium">{s.name}</span>
+                        <CheckBox active={active} />
                       </span>
-                      <span className="mt-1.5 block text-[0.8125rem] leading-relaxed text-muted">{s.summary[locale]}</span>
+                      <span className="mt-1.5 block text-[0.8125rem] leading-relaxed text-muted">{s.summary}</span>
                     </button>
                   );
                 })}
@@ -163,15 +171,12 @@ export function Configurator({ content, dict, locale }: Props) {
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <p className="label mb-3 mt-6">{t.steps.driver}</p>
-                    <div className="flex flex-wrap gap-2">
-                      <Chip active={order.driverLanguage === "pt"} onClick={() => set("driverLanguage", "pt")}>
-                        {t.driverPt}
-                      </Chip>
-                      <Chip active={order.driverLanguage === "en"} onClick={() => set("driverLanguage", "en")}>
-                        {t.driverEn}
-                      </Chip>
-                    </div>
+                    <LanguagePicker
+                      title={t.steps.driver}
+                      value={order.driverLanguage}
+                      onChange={(v) => set("driverLanguage", v)}
+                      dict={dict}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -181,31 +186,45 @@ export function Configurator({ content, dict, locale }: Props) {
             <Step n="03" title={t.steps.guards} hint={t.guardsHint}>
               <SuggestToggle
                 active={order.guardsSuggest}
-                onClick={() => setOrder((o) => ({ ...o, guardsSuggest: !o.guardsSuggest, guards: 0 }))}
+                onClick={() => setOrder((o) => ({ ...o, guardsSuggest: !o.guardsSuggest, guardsArmed: 0, guardsUnarmed: 0 }))}
                 label={t.suggest}
                 note={t.suggestNote}
               />
               <Collapse open={!order.guardsSuggest}>
-                <div className="flex flex-wrap items-center gap-4">
-                  <Stepper value={order.guards} onChange={(n) => set("guards", Math.max(0, Math.min(20, n)))} label={t.steps.guards} dict={dict} />
-                  {order.guards > 0 && (
-                    <div className="flex gap-2">
-                      <Chip active={order.armed} onClick={() => set("armed", true)}>
-                        {t.armed}
-                      </Chip>
-                      <Chip active={!order.armed} onClick={() => set("armed", false)}>
-                        {t.unarmed}
-                      </Chip>
-                    </div>
-                  )}
-                </div>
+                <ul className="divide-y divide-line rounded-2xl border border-line bg-navy/40">
+                  {(
+                    [
+                      ["guardsArmed", t.armed],
+                      ["guardsUnarmed", t.unarmed],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <li key={key} className="flex items-center justify-between gap-4 p-4">
+                      <span className="font-medium">{label}</span>
+                      <Stepper
+                        value={order[key]}
+                        onChange={(n) => set(key, Math.max(0, Math.min(20, n)))}
+                        label={label}
+                        dict={dict}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </Collapse>
+
+              <Collapse open={guards > 0 || order.guardsSuggest}>
+                <LanguagePicker
+                  title={t.steps.agentLanguage}
+                  value={order.agentLanguage}
+                  onChange={(v) => set("agentLanguage", v)}
+                  dict={dict}
+                />
               </Collapse>
             </Step>
 
             {/* 04 · Logística */}
-            <Step n="04" title={t.steps.logistics}>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label={t.date} id="field-date" error={errors.date}>
+            <Step n="04" title={t.steps.logistics} hint={period ? t.periodHint : undefined}>
+              <div className={`grid gap-4 ${period ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+                <Field label={period ? t.startDate : t.date} id="field-date" error={errors.date}>
                   <input
                     type="date"
                     value={order.date}
@@ -213,9 +232,22 @@ export function Configurator({ content, dict, locale }: Props) {
                     className={inputClass(!!errors.date)}
                   />
                 </Field>
+                {period && (
+                  <Field label={t.endDate}>
+                    <input
+                      type="date"
+                      value={order.endDate}
+                      min={order.date || undefined}
+                      onChange={(e) => set("endDate", e.target.value)}
+                      className={inputClass()}
+                    />
+                  </Field>
+                )}
                 <Field label={t.time}>
                   <input type="time" value={order.time} onChange={(e) => set("time", e.target.value)} className={inputClass()} />
                 </Field>
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <Field label={t.origin}>
                   <input value={order.origin} onChange={(e) => set("origin", e.target.value)} placeholder={t.originPh} className={inputClass()} />
                 </Field>
@@ -265,17 +297,7 @@ export function Configurator({ content, dict, locale }: Props) {
                 </AnimatePresence>
               </div>
 
-              <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="label mb-3">{t.duration}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {durations.map((d) => (
-                      <Chip key={d} active={order.duration === d} onClick={() => set("duration", order.duration === d ? null : d)}>
-                        {t.durations[d]}
-                      </Chip>
-                    ))}
-                  </div>
-                </div>
+              <div className="mt-6">
                 <div>
                   <p className="label mb-3">{t.passengers}</p>
                   <Stepper
@@ -380,7 +402,7 @@ export function Configurator({ content, dict, locale }: Props) {
                 <span className="label">{locale.toUpperCase()}</span>
               </div>
               <div className="px-6 py-5">
-                {service ? <MessagePreview text={message} /> : <p className="text-sm text-muted">{t.empty}</p>}
+                {chosen.length > 0 ? <MessagePreview text={message} /> : <p className="text-sm text-muted">{t.empty}</p>}
               </div>
               <div className="border-t border-dashed border-line-strong p-4">
                 <button
@@ -417,12 +439,16 @@ export function Configurator({ content, dict, locale }: Props) {
           >
             <div className="flex items-center gap-3">
               <p className="min-w-0 flex-1 truncate text-sm">
-                {service ? service.name[locale] : <span className="text-muted">{t.empty}</span>}
-                {(vehicles > 0 || order.guards > 0) && (
+                {chosen.length > 0 ? (
+                  `${chosen[0].name}${chosen.length > 1 ? ` +${chosen.length - 1}` : ""}`
+                ) : (
+                  <span className="text-muted">{t.empty}</span>
+                )}
+                {(vehicles > 0 || guards > 0) && (
                   <span className="num block text-xs text-muted">
                     {vehicles > 0 && `${vehicles} ${dict.message.vehicles.toLowerCase()}`}
-                    {vehicles > 0 && order.guards > 0 && " · "}
-                    {order.guards > 0 && `${order.guards} ${dict.message.guards.toLowerCase()}`}
+                    {vehicles > 0 && guards > 0 && " · "}
+                    {guards > 0 && `${guards} ${dict.message.guards.toLowerCase()}`}
                   </span>
                 )}
               </p>
@@ -443,9 +469,11 @@ export function Configurator({ content, dict, locale }: Props) {
 
 /* ——— Peças internas ——— */
 
-// Serviço de eventos já marca "é para um evento?" (se ainda não respondido)
-function withService(order: Order, id: string): Order {
-  return { ...order, serviceTypeId: id, event: id === "eventos" && order.event === null ? true : order.event };
+// Soma serviços sem repetir; o de eventos já marca "é para um evento?" (se ainda não respondido)
+function withServices(order: Order, ids: string[]): Order {
+  const services = [...order.services, ...ids.filter((id) => !order.services.includes(id))];
+  const event = ids.includes("eventos") && order.event === null ? true : order.event;
+  return { ...order, services, event };
 }
 
 function inputClass(invalid = false) {
@@ -536,11 +564,47 @@ function Collapse({ open, children }: { open: boolean; children: React.ReactNode
   );
 }
 
-function Dot({ active }: { active: boolean }) {
+function CheckBox({ active }: { active: boolean }) {
   return (
-    <span className={`grid size-4 shrink-0 place-items-center rounded-full border ${active ? "border-accent" : "border-line-strong"}`}>
-      {active && <span className="size-2 rounded-full bg-accent" />}
+    <span
+      className={`grid size-5 shrink-0 place-items-center rounded-md border transition-colors duration-300 ${
+        active ? "border-accent bg-accent text-ink" : "border-line-strong"
+      }`}
+    >
+      {active && <Check className="size-3.5" strokeWidth={3} aria-hidden />}
     </span>
+  );
+}
+
+// Idioma do motorista / dos agentes: PT, PT+EN, PT+ES ou outro digitado
+function LanguagePicker(props: {
+  title: string;
+  value: LanguagePref;
+  onChange: (v: LanguagePref) => void;
+  dict: Dictionary;
+}) {
+  const t = props.dict.order;
+  const { value, onChange } = props;
+  return (
+    <div className="mt-6">
+      <p className="label mb-3">{props.title}</p>
+      <div className="flex flex-wrap gap-2">
+        {languages.map((l) => (
+          <Chip key={l} active={value.choice === l} onClick={() => onChange({ ...value, choice: l })}>
+            {t.languages[l]}
+          </Chip>
+        ))}
+      </div>
+      {value.choice === "other" && (
+        <input
+          value={value.other}
+          onChange={(e) => onChange({ ...value, other: e.target.value })}
+          placeholder={t.otherLanguagePh}
+          aria-label={t.languages.other}
+          className={`${inputClass()} mt-3`}
+        />
+      )}
+    </div>
   );
 }
 
