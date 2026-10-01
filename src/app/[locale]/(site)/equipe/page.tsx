@@ -61,7 +61,11 @@ export default async function TeamPage({ params }: LocaleParams) {
               <Reveal delay={((i + 1) % 3) * 0.06} className="h-full">
                 <article className="tile flex h-full flex-col">
                   <div className="relative aspect-[4/5] bg-[linear-gradient(180deg,var(--color-navy-2),var(--color-ink))]">
-                    {a.photoUrl ? (
+                    {a.photoUrl?.startsWith("data:") ? (
+                      // Foto enviada pelo painel (embutida no JSON publicado)
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={a.photoUrl} alt={a.name} className="absolute inset-0 size-full object-cover grayscale" />
+                    ) : a.photoUrl ? (
                       <Image
                         src={a.photoUrl}
                         alt={a.name}
@@ -86,6 +90,12 @@ export default async function TeamPage({ params }: LocaleParams) {
                         <div className="flex justify-between gap-4">
                           <dt className="text-muted">{t.years}</dt>
                           <dd>{a.yearsExperience}</dd>
+                        </div>
+                      )}
+                      {a.certifications.length > 0 && (
+                        <div className="flex justify-between gap-4">
+                          <dt className="shrink-0 text-muted">{t.certifications}</dt>
+                          <dd className="text-right">{a.certifications.join(" · ")}</dd>
                         </div>
                       )}
                     </dl>

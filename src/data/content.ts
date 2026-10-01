@@ -325,6 +325,7 @@ export const localContent: SiteContent = {
     },
   ],
 
-  // Agentes entram pelo painel (Fase B). Vazio = página mostra só o fundador e os critérios.
+  // Agentes e veículos entram pelo painel ("Publicar no site"). Vazio = página mostra só o fundador e as categorias.
   agents: [],
+  vehicles: [],
 };

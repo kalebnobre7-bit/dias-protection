@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Briefcase as IconJobs, Building2 as IconPartners, Car as IconVehicles, ChartColumn as IconFinance, ExternalLink as IconExternal, FileText as IconProposals, House as IconHome, LogOut as IconLogout, Menu as IconMenu, ShieldCheck as IconAgents, Trash2, Users as IconClients } from "lucide-react";
+import { Briefcase as IconJobs, Building2 as IconPartners, Car as IconVehicles, ChartColumn as IconFinance, ExternalLink as IconExternal, FileText as IconProposals, Globe as IconSite, House as IconHome, LogOut as IconLogout, Menu as IconMenu, ShieldCheck as IconAgents, Trash2, Users as IconClients } from "lucide-react";
 
 import { Emblem } from "@/components/brand/Logo";
 import { signOut, useSession } from "@/lib/admin/auth";
@@ -20,6 +20,7 @@ const nav = [
   { href: "/admin/agentes", label: "Agentes", Icon: IconAgents },
   { href: "/admin/veiculos", label: "Veículos", Icon: IconVehicles },
   { href: "/admin/financeiro", label: "Financeiro", Icon: IconFinance },
+  { href: "/admin/site", label: "Site", Icon: IconSite },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

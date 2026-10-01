@@ -35,9 +35,13 @@ A cada push na `main`, `.github/workflows/pages.yml` gera o export estático (`G
 - **Tokens de marca**: `src/app/globals.css` (`@theme`)
 - **Logo**: `public/brand/emblem.svg` e `wordmark.svg` (vetorizados das pranchetas; usados via máscara CSS, herdam `currentColor`)
 
+## Publicar equipe e frota no site
+
+O site é estático e o painel grava no navegador, então o que aparece em **Equipe** e **Frota** passa pela aba **Site** do painel: marque os agentes e veículos "no site" e clique em **Publicar no site**. O painel grava `src/data/published.json` no repositório pela API do GitHub (token fine-grained com *Contents: Read and write*, salvo só naquele navegador) e o GitHub Pages republica em ~2 min. O site lê esse JSON no build (`src/lib/content.ts`); fotos vão embutidas (data URL, 480px). Placa, telefone e documento nunca saem do painel.
+
 ## Painel admin (`/admin`)
 
-Início, Propostas (orçamento numerado por ano, itens com catálogo rápido, desconto, validade, condições; documento A4 para PDF, envio pelo WhatsApp; aceita vira serviço agendado), Serviços (com equipe, veículos, custos e lucro; em orçamento gera proposta), Clientes (com histórico e propostas), Parceiros, Agentes, Veículos e Financeiro (resumo mensal + lançamentos avulsos).
+Início, Propostas (orçamento numerado por ano, itens com catálogo rápido, desconto, validade, condições; documento A4 para PDF, envio pelo WhatsApp; aceita vira serviço agendado), Serviços (com equipe, veículos, custos e lucro; em orçamento gera proposta), Clientes (com histórico e propostas), Parceiros, Agentes, Veículos (com foto, lugares, blindagem e descrição pra Frota), Financeiro (resumo mensal + lançamentos avulsos) e Site (publicação de Equipe e Frota).
 
 **Enquanto o Supabase não entra:** tudo é client-side e grava no `localStorage` do navegador (`src/lib/admin/store.ts`). Os dados ficam só naquele navegador, e o login é de demonstração (credenciais em `src/lib/admin/seed.ts`, sem segurança real). Vem com dados fictícios de exemplo; "Zerar dados de exemplo" no menu apaga tudo.
 

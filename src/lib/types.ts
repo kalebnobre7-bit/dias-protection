@@ -56,6 +56,23 @@ export type Agent = {
   sortOrder: number;
 };
 
+// Veículo publicado na página Frota (vem do painel via "Publicar no site"; sem placa)
+export type PublicVehicle = {
+  id: string;
+  categoryId: string | null;
+  model: string;
+  year: number | null;
+  color: string;
+  capacity: number | null;
+  armored: boolean;
+  description: Localized;
+  photoUrl: string | null;
+  sortOrder: number;
+};
+
+// src/data/published.json: o que o painel publicou por último
+export type PublishedContent = { updatedAt: string | null; agents: Agent[]; vehicles: PublicVehicle[] };
+
 // Trajetória do fundador (página Sobre)
 export type Milestone = { period: Localized; title: Localized; text: Localized };
 
@@ -79,4 +96,5 @@ export type SiteContent = {
   serviceTypes: ServiceType[];
   vehicleCategories: VehicleCategory[];
   agents: Agent[];
+  vehicles: PublicVehicle[];
 };
