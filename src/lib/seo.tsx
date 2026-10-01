@@ -2,14 +2,22 @@ import type { Metadata } from "next";
 
 import type { Dictionary } from "@/i18n/dictionaries";
 import { siteUrl } from "@/lib/site";
-import type { Locale, SiteContent } from "@/lib/types";
+import type { Company, Locale, SiteContent } from "@/lib/types";
 
 type PageMeta = { locale: Locale; path: string; title: string; description: string };
+
+// Imagem de prévia fixa por página (public/og, gerada por scripts/og-images.mjs).
+// URL absoluta, .jpg e ~100 KB: é o que o WhatsApp exige para mostrar a foto no link.
+export function ogImage(locale: Locale, path: string) {
+  const key = path ? path.slice(1).replace(/\//g, "-") : "home";
+  return { url: `${siteUrl}/og/${key}-${locale}.jpg`, width: 1200, height: 630, type: "image/jpeg" };
+}
 
 // Metadata por página: canonical e alternância PT/EN apontando para a MESMA página
 export function pageMetadata({ locale, path, title, description }: PageMeta): Metadata {
   // metadataBase é só a origem, então o basePath (GitHub Pages) entra aqui
   const url = (l: Locale) => `${process.env.NEXT_PUBLIC_BASE_PATH}/${l}${path}`;
+  const image = { ...ogImage(locale, path), alt: title };
   return {
     title,
     description,
@@ -25,8 +33,27 @@ export function pageMetadata({ locale, path, title, description }: PageMeta): Me
       locale: locale === "pt" ? "pt_BR" : "en_US",
       alternateLocale: locale === "pt" ? "en_US" : "pt_BR",
       type: "website",
+      images: [image],
     },
-    twitter: { card: "summary_large_image", title, description },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
+  };
+}
+
+// Dados estruturados do cartão digital (Google: pessoa + empresa)
+export function personJsonLd(company: Company, locale: Locale) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": `${siteUrl}/${locale}/cartao#person`,
+    name: company.founderName,
+    jobTitle: company.founderRole[locale],
+    image: `${siteUrl}/images/gabriel.jpg`,
+    telephone: `+${company.whatsapp}`,
+    email: company.email,
+    url: `${siteUrl}/${locale}/cartao`,
+    worksFor: { "@type": "Organization", "@id": `${siteUrl}/#business`, name: company.brandName },
+    address: { "@type": "PostalAddress", addressLocality: "São Paulo", addressRegion: "SP", addressCountry: "BR" },
+    sameAs: [`https://instagram.com/${company.instagram}`, `https://www.linkedin.com/in/${company.linkedin}`],
   };
 }
 

@@ -13,7 +13,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getSiteContent } from "@/lib/content";
 import { whatsappUrl } from "@/lib/order";
 import { qrPath } from "@/lib/qr";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd, pageMetadata, personJsonLd } from "@/lib/seo";
 import { siteUrl } from "@/lib/site";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -69,6 +69,7 @@ export default async function CardPage({ params }: Props) {
 
   return (
     <main className="relative isolate flex min-h-dvh flex-col overflow-hidden px-4 pb-10 pt-6">
+      <JsonLd data={personJsonLd(company, locale)} />
       {/* Fundo: marinho no topo + brilho azul discreto atrás do cartão */}
       <div aria-hidden className="absolute inset-0 -z-10 bg-ink">
         <div className="absolute inset-x-0 top-0 h-[70vh] bg-[radial-gradient(90%_60%_at_50%_0%,var(--color-navy-2)_0%,transparent_100%)]" />
