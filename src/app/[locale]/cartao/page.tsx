@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Emblem, Wordmark } from "@/components/brand/Logo";
+import { BusinessCard } from "@/components/site/BusinessCard";
 import { LocaleToggle } from "@/components/site/LocaleToggle";
+import { ShareButton } from "@/components/site/ShareButton";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getSiteContent } from "@/lib/content";
 import { whatsappUrl } from "@/lib/order";
+import { qrPath } from "@/lib/qr";
 import { pageMetadata } from "@/lib/seo";
+import { siteUrl } from "@/lib/site";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -19,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return pageMetadata({ locale, path: "/cartao", title: dict.meta.cardTitle, description: dict.meta.description });
 }
 
-// Cartão de visita digital: uma tela, sem rolagem no celular
+// Cartão de visita digital: cartão que vira (marca / contato + QR), links e ações
 export default async function CardPage({ params }: Props) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
@@ -27,6 +30,8 @@ export default async function CardPage({ params }: Props) {
   const dict = getDictionary(locale);
   const { company } = await getSiteContent();
   const phone = `+${company.whatsapp.slice(0, 2)} ${company.whatsapp.slice(2, 4)} ${company.whatsapp.slice(4, -4)}-${company.whatsapp.slice(-4)}`;
+  // O QR aponta pra esta mesma página: quem escaneia já cai no cartão
+  const qr = qrPath(`${siteUrl}/${locale}/cartao`);
 
   const links = [
     { href: whatsappUrl(company.whatsapp), label: dict.card.whatsapp, value: phone, external: true },
@@ -57,16 +62,22 @@ export default async function CardPage({ params }: Props) {
           <LocaleToggle locale={locale} hrefs={{ pt: "/pt/cartao", en: "/en/cartao" }} label={dict.nav.switchLabel} />
         </div>
 
-        <div className="mt-6 flex flex-col items-center text-center">
-          <Emblem className="h-28 text-text" />
-          <Wordmark className="mt-4 h-16 text-text" />
-          <div className="mt-8 h-px w-12 bg-line-strong" />
-          <h1 className="mt-8 text-[1.75rem] font-semibold tracking-[-0.025em]">{company.founderName}</h1>
-          <p className="mt-1 text-[0.9375rem] text-muted">{company.founderRole[locale]}</p>
-          <p className="mt-3 text-[0.9375rem] font-medium text-silver">{company.tagline}</p>
+        <div className="mt-6">
+          <BusinessCard
+            name={company.founderName}
+            role={company.founderRole[locale]}
+            tagline={company.tagline}
+            photo={company.founderPhoto}
+            phone={phone}
+            email={company.email}
+            instagram={company.instagram}
+            qr={qr}
+            labels={{ flip: dict.card.flip, scan: dict.card.scan }}
+          />
+          <p className="mt-3 text-center text-[0.8125rem] text-muted">{dict.card.flipHint}</p>
         </div>
 
-        <ul className="mt-10 divide-y divide-line overflow-hidden rounded-3xl border border-line bg-navy/60">
+        <ul className="mt-8 divide-y divide-line overflow-hidden rounded-3xl border border-line bg-navy/60">
           {links.map((l) => (
             <li key={l.label}>
               <a
@@ -85,18 +96,21 @@ export default async function CardPage({ params }: Props) {
         </ul>
 
         <div className="mt-6 grid gap-3">
-          <Link
-            href={`/${locale}/solicitar`}
-            className="btn btn-primary w-full"
-          >
-            {dict.card.order}
-          </Link>
-          <a
-            href={`${process.env.NEXT_PUBLIC_BASE_PATH}/contato.vcf`}
-            className="btn btn-ghost w-full"
-          >
+          <a href={`${process.env.NEXT_PUBLIC_BASE_PATH}/contato.vcf`} className="btn btn-primary w-full">
             {dict.card.save}
           </a>
+          <div className="grid grid-cols-2 gap-3">
+            <ShareButton
+              title={`${company.founderName} · ${company.brandName}`}
+              text={company.founderRole[locale]}
+              label={dict.card.share}
+              copied={dict.card.copied}
+              className="btn btn-ghost w-full !px-4"
+            />
+            <Link href={`/${locale}/solicitar`} className="btn btn-ghost w-full !px-4">
+              {dict.card.order}
+            </Link>
+          </div>
         </div>
 
         <Link href={`/${locale}`} className="link-chevron mx-auto mt-auto pt-10 text-[0.9375rem]">

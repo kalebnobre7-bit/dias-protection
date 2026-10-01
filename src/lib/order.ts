@@ -3,11 +3,16 @@ import type { Locale, SiteContent } from "./types";
 
 export type Duration = "4h" | "8h" | "12h" | "multi";
 export type DriverLanguage = "pt" | "en";
+export type TripNeed = "vehicle" | "driver" | "guards";
+export type EventKind = "sports" | "show" | "corporate" | "social" | "political" | "other";
+export type Exposure = "no" | "public" | "pep";
 
 export type Order = {
   serviceTypeId: string | null;
   vehicles: Record<string, number>; // id da categoria → quantidade
+  vehiclesSuggest: boolean; // cliente não sabe: a equipe sugere
   guards: number;
+  guardsSuggest: boolean;
   armed: boolean;
   driverLanguage: DriverLanguage;
   date: string; // yyyy-mm-dd
@@ -15,7 +20,14 @@ export type Order = {
   duration: Duration | null;
   origin: string;
   destination: string;
-  passengers: number;
+  passengers: number; // estimativa
+  intercity: boolean | null; // null = não respondeu
+  tripNeeds: TripNeed[];
+  tripDuration: string;
+  event: boolean | null;
+  eventKind: EventKind | null;
+  eventName: string;
+  exposure: Exposure | null;
   name: string;
   company: string;
   notes: string;
@@ -24,7 +36,9 @@ export type Order = {
 export const emptyOrder: Order = {
   serviceTypeId: null,
   vehicles: {},
+  vehiclesSuggest: false,
   guards: 0,
+  guardsSuggest: false,
   armed: true,
   driverLanguage: "pt",
   date: "",
@@ -33,6 +47,13 @@ export const emptyOrder: Order = {
   origin: "",
   destination: "",
   passengers: 1,
+  intercity: null,
+  tripNeeds: [],
+  tripDuration: "",
+  event: null,
+  eventKind: null,
+  eventName: "",
+  exposure: null,
   name: "",
   company: "",
   notes: "",
@@ -85,19 +106,35 @@ export function buildMessage(
   add(m.destination, order.destination.trim());
   add(m.passengers, String(order.passengers));
 
-  const vehicleLines = content.vehicleCategories
-    .filter((v) => (order.vehicles[v.id] ?? 0) > 0)
-    .map((v) => `• ${order.vehicles[v.id]}× ${v.name[locale]}`);
-  const hasTeam = vehicleLines.length > 0 || order.guards > 0;
+  if (order.intercity !== null) {
+    add(m.intercity, order.intercity ? m.yes : m.no);
+    if (order.intercity) {
+      const list = new Intl.ListFormat(locale === "pt" ? "pt-BR" : "en-US", { type: "conjunction" });
+      add(m.tripNeeds, list.format(order.tripNeeds.map((n) => m.needs[n])));
+      add(m.tripDuration, order.tripDuration.trim());
+    }
+  }
+  if (order.event) {
+    const kind = order.eventKind ? dict.order.eventKinds[order.eventKind] : "";
+    add(m.event, [kind, order.eventName.trim()].filter(Boolean).join(" · ") || m.yes);
+  }
+  add(m.exposure, order.exposure ? m.exposures[order.exposure] : "");
+
+  const vehicleLines = order.vehiclesSuggest
+    ? []
+    : content.vehicleCategories
+        .filter((v) => (order.vehicles[v.id] ?? 0) > 0)
+        .map((v) => `• ${order.vehicles[v.id]}× ${v.name[locale]}`);
+  const wantsVehicle = vehicleLines.length > 0 || order.vehiclesSuggest;
+  const hasTeam = wantsVehicle || order.guards > 0 || order.guardsSuggest;
 
   if (hasTeam) lines.push("");
-  if (vehicleLines.length > 0) {
-    lines.push(`*${m.vehicles}:*`, ...vehicleLines);
-    add(m.driver, order.driverLanguage === "en" ? m.driverEn : m.driverPt);
-  }
-  if (order.guards > 0) {
-    add(m.guards, `${order.guards} (${order.armed ? m.armed : m.unarmed})`);
-  }
+  if (order.vehiclesSuggest) add(m.vehicles, m.suggest);
+  else if (vehicleLines.length > 0) lines.push(`*${m.vehicles}:*`, ...vehicleLines);
+  if (wantsVehicle) add(m.driver, order.driverLanguage === "en" ? m.driverEn : m.driverPt);
+
+  if (order.guardsSuggest) add(m.guards, m.suggest);
+  else if (order.guards > 0) add(m.guards, `${order.guards} (${order.armed ? m.armed : m.unarmed})`);
 
   lines.push("");
   const company = order.company.trim();
