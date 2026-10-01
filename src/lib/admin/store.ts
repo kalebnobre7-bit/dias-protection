@@ -50,9 +50,17 @@ function checkRemove(db: Database, table: TableName, id: string) {
 function cascade(db: Database, table: TableName, id: string): Database {
   switch (table) {
     case "jobs":
-      return { ...db, jobCosts: db.jobCosts.filter((c) => c.jobId !== id) };
+      return {
+        ...db,
+        jobCosts: db.jobCosts.filter((c) => c.jobId !== id),
+        proposals: db.proposals.map((p) => (p.jobId === id ? { ...p, jobId: null } : p)),
+      };
     case "clients":
-      return { ...db, jobs: db.jobs.map((j) => (j.clientId === id ? { ...j, clientId: null } : j)) };
+      return {
+        ...db,
+        jobs: db.jobs.map((j) => (j.clientId === id ? { ...j, clientId: null } : j)),
+        proposals: db.proposals.map((p) => (p.clientId === id ? { ...p, clientId: null } : p)),
+      };
     case "partners":
       return {
         ...db,

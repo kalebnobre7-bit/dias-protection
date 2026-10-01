@@ -18,7 +18,7 @@ npm run dev   # http://localhost:3000 → redireciona pra /pt ou /en
 | `/solicitar` | Configurador em passos (um por tela, trilha de progresso) → WhatsApp (`?servico=slug` pré-seleciona). Vários serviços por pedido (transporte vira transfer ou diária), armados x desarmados, idioma do motorista e dos agentes, período estimado, viagem intermunicipal, evento, pessoa pública/PPE e "quero sugestão" |
 | `/cartao` | Cartão de visita digital: cartão que vira (marca / contato + QR), compartilhar e salvar contato |
 | `/contato.vcf` | Download do contato com foto (gerado no build) |
-| `/admin` | Painel do Gabriel (só PT, fora do índice dos buscadores) |
+| `/admin` | Painel do Gabriel (só PT, fora do índice dos buscadores). Inclui Propostas: orçamento numerado com itens e documento A4 em `/admin/propostas/documento?id=…` |
 
 ## GitHub Pages
 
@@ -36,7 +36,7 @@ A cada push na `main`, `.github/workflows/pages.yml` gera o export estático (`G
 
 ## Painel admin (`/admin`)
 
-Início, Serviços (com equipe, veículos, custos e lucro), Clientes (com histórico), Parceiros, Agentes, Veículos e Financeiro (resumo mensal + lançamentos avulsos).
+Início, Propostas (orçamento numerado por ano, itens com catálogo rápido, desconto, validade, condições; documento A4 para PDF, envio pelo WhatsApp; aceita vira serviço agendado), Serviços (com equipe, veículos, custos e lucro; em orçamento gera proposta), Clientes (com histórico e propostas), Parceiros, Agentes, Veículos e Financeiro (resumo mensal + lançamentos avulsos).
 
 **Enquanto o Supabase não entra:** tudo é client-side e grava no `localStorage` do navegador (`src/lib/admin/store.ts`). Os dados ficam só naquele navegador, e o login é de demonstração (credenciais em `src/lib/admin/seed.ts`, sem segurança real). Vem com dados fictícios de exemplo; "Zerar dados de exemplo" no menu apaga tudo.
 

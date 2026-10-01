@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Briefcase as IconJobs, Building2 as IconPartners, Car as IconVehicles, ChartColumn as IconFinance, ExternalLink as IconExternal, House as IconHome, LogOut as IconLogout, Menu as IconMenu, ShieldCheck as IconAgents, Trash2, Users as IconClients } from "lucide-react";
+import { Briefcase as IconJobs, Building2 as IconPartners, Car as IconVehicles, ChartColumn as IconFinance, ExternalLink as IconExternal, FileText as IconProposals, House as IconHome, LogOut as IconLogout, Menu as IconMenu, ShieldCheck as IconAgents, Trash2, Users as IconClients } from "lucide-react";
 
 import { Emblem } from "@/components/brand/Logo";
 import { signOut, useSession } from "@/lib/admin/auth";
@@ -13,6 +13,7 @@ import { repo } from "@/lib/admin/store";
 
 const nav = [
   { href: "/admin", label: "Início", Icon: IconHome },
+  { href: "/admin/propostas", label: "Propostas", Icon: IconProposals },
   { href: "/admin/servicos", label: "Serviços", Icon: IconJobs },
   { href: "/admin/clientes", label: "Clientes", Icon: IconClients },
   { href: "/admin/parceiros", label: "Parceiros", Icon: IconPartners },
