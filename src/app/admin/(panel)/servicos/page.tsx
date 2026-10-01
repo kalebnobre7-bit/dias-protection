@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Plus as IconPlus, X as IconClose } from "lucide-react";
+import { FileText as IconDoc, Plus as IconPlus, X as IconClose } from "lucide-react";
 
 import {
   Badge,
@@ -201,6 +202,14 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
           options={(Object.keys(jobStatusLabel) as JobStatus[]).map((s) => ({ value: s, label: jobStatusLabel[s] }))}
         />
       </Field>
+      {j.status === "quote" && !props.isNew && (
+        <Link
+          href={`/admin/propostas?deServico=${j.id}`}
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line-strong px-5 text-[0.9375rem] font-medium hover:border-silver"
+        >
+          <IconDoc className="size-4" /> Gerar proposta a partir deste serviço
+        </Link>
+      )}
 
       <Field label="Cliente">
         <select className="input" value={clientChoice} onChange={(e) => setClientChoice(e.target.value)}>

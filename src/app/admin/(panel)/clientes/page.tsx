@@ -6,7 +6,8 @@ import { Plus as IconPlus } from "lucide-react";
 import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, useForm } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { countsAsRevenue } from "@/lib/admin/finance";
-import { brl, clientLanguageLabel, formatDateTime, jobStatusLabel } from "@/lib/admin/labels";
+import { brl, clientLanguageLabel, formatDate, formatDateTime, jobStatusLabel, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
+import { proposalTotals } from "@/lib/admin/proposals";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Client, Job } from "@/lib/admin/types";
 
@@ -85,7 +86,9 @@ export default function ClientsPage() {
 
 function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; onClose: () => void }) {
   const { value: c, set } = useForm(props.client);
+  const { rows: proposals } = useTable("proposals");
   const [error, setError] = useState("");
+  const mineProposals = proposals.filter((p) => p.clientId === c.id).sort((a, b) => b.number.localeCompare(a.number));
   const history = [...props.history].sort((a, b) => b.startsAt.localeCompare(a.startsAt));
   const billed = history.filter(countsAsRevenue).reduce((s, j) => s + j.price, 0);
 
@@ -141,6 +144,26 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
       <Field label="Observações" hint="Preferências, restrições, quem indicou…">
         <textarea className="input resize-none" rows={3} value={c.notes} onChange={(e) => set("notes", e.target.value)} />
       </Field>
+
+      {!props.isNew && mineProposals.length > 0 && (
+        <Section title="Propostas">
+          <List>
+            {mineProposals.map((p) => (
+              <Row
+                key={p.id}
+                title={`${p.number} · ${p.title || "Sem título"}`}
+                subtitle={`Válida até ${formatDate(p.validUntil)}`}
+                trailing={
+                  <span className="flex flex-col items-end gap-1">
+                    <span className="num text-[0.9375rem] font-medium">{brl.format(proposalTotals(p).total)}</span>
+                    <Badge tone={proposalStatusTone(p.status)}>{proposalStatusLabel[p.status]}</Badge>
+                  </span>
+                }
+              />
+            ))}
+          </List>
+        </Section>
+      )}
 
       {!props.isNew && (
         <Section title={`Histórico · ${brl.format(billed)}`}>

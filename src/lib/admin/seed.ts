@@ -1,3 +1,4 @@
+import { DEFAULT_TERMS } from "./proposals";
 import type { Database } from "./types";
 
 // Login da demonstração (só até o Supabase Auth entrar; não protege nada de verdade)
@@ -83,6 +84,56 @@ export function seedDatabase(): Database {
       { id: "co-4", jobId: "jb-2", description: "Diárias dos agentes", category: "agent", amount: 1400, agentId: null, partnerId: null, paid: false, createdAt: now },
       { id: "co-5", jobId: "jb-3", description: "Pedágios", category: "toll", amount: 95, agentId: null, partnerId: null, paid: false, createdAt: now },
     ],
+    proposals: [
+      {
+        id: "pr-1",
+        number: `${new Date().getFullYear()}-001`,
+        clientId: "cl-1",
+        jobId: "jb-4",
+        title: "Segurança para jantar corporativo",
+        status: "sent",
+        issuedAt: day(-1, ""),
+        validUntil: day(9, ""),
+        serviceIds: ["eventos", "transporte-executivo"],
+        summary:
+          "Cobertura de segurança e logística para jantar corporativo com cerca de 40 convidados, incluindo recepção, controle de acesso e transporte executivo da diretoria.",
+        period: `${new Date(Date.now() + 9 * 864e5).toLocaleDateString("pt-BR")}, das 18h às 23h`,
+        location: "São Paulo · SP",
+        items: [
+          { id: "pi-1", description: "Agentes de segurança (desarmados)", detail: "2 agentes · até 6h", qty: 2, unit: "diária", unitPrice: 900 },
+          { id: "pi-2", description: "Transfer executivo", detail: "SUV executivo com motorista bilíngue", qty: 2, unit: "transfer", unitPrice: 650 },
+          { id: "pi-3", description: "Coordenação e advance do local", detail: "Visita técnica prévia e plano de contingência", qty: 1, unit: "un.", unitPrice: 400 },
+        ],
+        discount: 0,
+        paymentTerms: "50% na confirmação e 50% até 2 dias úteis após o serviço. PIX ou transferência.",
+        terms: DEFAULT_TERMS,
+        notes: "Cliente pediu desconto; segurar o valor.",
+        createdAt: now,
+      },
+      {
+        id: "pr-2",
+        number: `${new Date().getFullYear()}-002`,
+        clientId: "cl-2",
+        jobId: null,
+        title: "Escolta veicular São Paulo → Campinas",
+        status: "draft",
+        issuedAt: day(0, ""),
+        validUntil: day(10, ""),
+        serviceIds: ["escolta-veicular"],
+        summary: "Escolta veicular com veículo de apoio e dois agentes armados para deslocamento rodoviário com retorno no mesmo dia.",
+        period: "A definir",
+        location: "São Paulo → Campinas",
+        items: [
+          { id: "pi-4", description: "Veículo de apoio com 2 agentes armados", detail: "Ida e volta, até 12h", qty: 1, unit: "diária", unitPrice: 3200 },
+          { id: "pi-5", description: "Pedágios e combustível", detail: "Estimativa, acerto no fechamento", qty: 1, unit: "un.", unitPrice: 350 },
+        ],
+        discount: 150,
+        paymentTerms: "100% na confirmação. PIX ou transferência.",
+        terms: DEFAULT_TERMS,
+        notes: "",
+        createdAt: now,
+      },
+    ],
     transactions: [
       { id: "tx-1", kind: "expense", description: "Seguro dos veículos", category: "Seguro", amount: 450, date: day(-6, ""), paid: true, createdAt: now },
       { id: "tx-2", kind: "expense", description: "Rádios (manutenção)", category: "Equipamento", amount: 220, date: day(-2, ""), paid: true, createdAt: now },
@@ -91,5 +142,5 @@ export function seedDatabase(): Database {
 }
 
 export function emptyDatabase(): Database {
-  return { agents: [], vehicles: [], clients: [], partners: [], jobs: [], jobCosts: [], transactions: [] };
+  return { agents: [], vehicles: [], clients: [], partners: [], jobs: [], jobCosts: [], transactions: [], proposals: [] };
 }

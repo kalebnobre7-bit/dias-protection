@@ -293,6 +293,33 @@
   mask: url("../../public/brand/wordmark.svg") center / contain no-repeat;
 }
 
+/* Documento da proposta: folha A4 limpa na impressão */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #141922;
+  }
+  body::after {
+    display: none;
+  }
+  .doc-page {
+    background: #ffffff !important;
+  }
+  .doc-sheet {
+    box-shadow: none !important;
+    max-width: none !important;
+  }
+  .doc-sheet tr,
+  .doc-sheet section {
+    break-inside: avoid;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

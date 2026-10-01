@@ -104,6 +104,39 @@ export type Transaction = {
   createdAt: string;
 };
 
+export type ProposalStatus = "draft" | "sent" | "accepted" | "declined" | "expired";
+
+export type ProposalItem = {
+  id: string;
+  description: string;
+  detail: string; // linha menor abaixo da descrição (ex.: "2 agentes · 12h")
+  qty: number;
+  unit: string; // diária, transfer, hora, un.
+  unitPrice: number;
+};
+
+// Proposta comercial / orçamento. Vira documento A4 em /admin/propostas/documento?id=…
+export type Proposal = {
+  id: string;
+  number: string; // "2026-001", sequencial por ano
+  clientId: string | null;
+  jobId: string | null; // serviço de origem ou gerado a partir dela
+  title: string;
+  status: ProposalStatus;
+  issuedAt: string; // "YYYY-MM-DD"
+  validUntil: string; // "YYYY-MM-DD"
+  serviceIds: string[]; // tipos de serviço do site
+  summary: string; // contexto e escopo, em texto corrido
+  period: string; // "10 a 15 de outubro de 2026", texto livre
+  location: string;
+  items: ProposalItem[];
+  discount: number;
+  paymentTerms: string;
+  terms: string; // condições gerais (uma por linha)
+  notes: string; // internas, não vão para o documento
+  createdAt: string;
+};
+
 export type Tables = {
   agents: AgentRecord;
   vehicles: Vehicle;
@@ -112,6 +145,7 @@ export type Tables = {
   jobs: Job;
   jobCosts: JobCost;
   transactions: Transaction;
+  proposals: Proposal;
 };
 
 export type TableName = keyof Tables;
