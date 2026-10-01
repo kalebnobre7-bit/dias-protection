@@ -29,6 +29,7 @@ A cada push na `main`, `.github/workflows/pages.yml` gera o export estático (`G
 - **Conteúdo** (empresa, trajetória, serviços, frota, agentes): `src/data/content.ts`. Itens com ⚠️ aguardam confirmação do Gabriel. Clientes famosos só aparecem com `showNotableClients: true`.
 - **Imagens**: `public/images/` (geradas por IA; originais em `docs/imagens-ia/`). `docs/` fica fora do git (tem dados pessoais).
 - **Domínio**: definir `NEXT_PUBLIC_SITE_URL` na Vercel (usado no sitemap e no preview de link).
+- **Imagens de prévia (WhatsApp/LinkedIn)**: `public/og/*.jpg`, uma por página e idioma, geradas por `node --experimental-strip-types --no-warnings scripts/og-images.mjs` (precisa do Chromium do Playwright). Rodar de novo ao mudar textos ou fotos. São JPG fixos de ~50 KB porque o WhatsApp ignora imagem sem extensão ou acima de ~300 KB.
 - **Textos de interface PT/EN**: `src/i18n/dictionaries.ts`
 - **Mensagem do WhatsApp**: `src/lib/order.ts` (`buildMessage`)
 - **Tokens de marca**: `src/app/globals.css` (`@theme`)
