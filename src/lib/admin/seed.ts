@@ -58,9 +58,9 @@ export function seedDatabase(): Database {
       },
     ],
     vehicles: [
-      { id: "ve-1", categoryId: "suv", model: "SUV preta (exemplo)", plate: "ABC1D23", color: "Preto", year: 2023, owner: "own", partnerId: null, active: true, notes: "", createdAt: now },
-      { id: "ve-2", categoryId: "suv-blindado", model: "SUV blindada (exemplo)", plate: "", color: "Preto", year: 2022, owner: "partner", partnerId: "pa-1", active: true, notes: "Nível III-A", createdAt: now },
-      { id: "ve-3", categoryId: "sedan", model: "Sedã executivo (exemplo)", plate: "", color: "Prata", year: 2024, owner: "own", partnerId: null, active: true, notes: "", createdAt: now },
+      { id: "ve-1", categoryId: "suv", model: "SUV preta (exemplo)", plate: "ABC1D23", color: "Preto", year: 2023, owner: "own", partnerId: null, active: true, notes: "", published: false, photoUrl: null, descriptionPt: "SUV executiva com vidros escurecidos e bancos em couro.", descriptionEn: "Executive SUV with tinted windows and leather seats.", capacity: 4, armored: false, createdAt: now },
+      { id: "ve-2", categoryId: "suv-blindado", model: "SUV blindada (exemplo)", plate: "", color: "Preto", year: 2022, owner: "partner", partnerId: "pa-1", active: true, notes: "Nível III-A", published: false, photoUrl: null, descriptionPt: "Blindagem nível III-A para deslocamentos sensíveis.", descriptionEn: "Level III-A armor for sensitive journeys.", capacity: 4, armored: true, createdAt: now },
+      { id: "ve-3", categoryId: "sedan", model: "Sedã executivo (exemplo)", plate: "", color: "Prata", year: 2024, owner: "own", partnerId: null, active: true, notes: "", published: false, photoUrl: null, descriptionPt: "", descriptionEn: "", capacity: 3, armored: false, createdAt: now },
     ],
     clients: [
       { id: "cl-1", name: "Cliente Exemplo A", company: "Empresa Exemplo", phone: "", email: "", language: "en", notes: "Prefere atendimento em inglês.", createdAt: now },

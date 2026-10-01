@@ -34,6 +34,13 @@ export type Vehicle = {
   partnerId: string | null;
   active: boolean;
   notes: string;
+  // públicos (vão para a página Frota quando published)
+  published: boolean;
+  photoUrl: string | null;
+  descriptionPt: string;
+  descriptionEn: string;
+  capacity: number | null;
+  armored: boolean;
   createdAt: string;
 };
 

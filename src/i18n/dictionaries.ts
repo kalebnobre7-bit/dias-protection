@@ -107,6 +107,7 @@ const pt = {
     ],
     years: "anos de experiência",
     languages: "Idiomas",
+    certifications: "Certificações",
   },
   fleet: {
     label: "Frota",
@@ -114,6 +115,8 @@ const pt = {
     lead: "Sedans, SUVs, blindados e vans executivas, sempre com motorista treinado em direção defensiva.",
     seats: "lugares",
     armored: "Blindado",
+    ourFleetLabel: "Nossa frota",
+    ourFleetTitle: "Os veículos que atendem você.",
   },
   order: {
     label: "Solicitar",
@@ -371,6 +374,7 @@ const en: Dictionary = {
     ],
     years: "years of experience",
     languages: "Languages",
+    certifications: "Certifications",
   },
   fleet: {
     label: "Fleet",
@@ -378,6 +382,8 @@ const en: Dictionary = {
     lead: "Sedans, SUVs, armored vehicles and executive vans, always with a driver trained in defensive driving.",
     seats: "seats",
     armored: "Armored",
+    ourFleetLabel: "Our fleet",
+    ourFleetTitle: "The vehicles at your service.",
   },
   order: {
     label: "Request",
