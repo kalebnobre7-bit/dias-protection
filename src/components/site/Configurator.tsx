@@ -11,14 +11,20 @@ import {
   vehicleCount,
   whatsappUrl,
   type Duration,
+  type EventKind,
+  type Exposure,
   type Order,
   type OrderErrors,
+  type TripNeed,
 } from "@/lib/order";
 import type { Locale, SiteContent } from "@/lib/types";
 
 type Props = { content: SiteContent; dict: Dictionary; locale: Locale };
 
 const durations: Duration[] = ["4h", "8h", "12h", "multi"];
+const tripNeeds: TripNeed[] = ["vehicle", "driver", "guards"];
+const eventKinds: EventKind[] = ["sports", "show", "corporate", "social", "political", "other"];
+const exposures: Exposure[] = ["no", "public", "pep"];
 
 export function Configurator({ content, dict, locale }: Props) {
   const t = dict.order;
@@ -40,10 +46,21 @@ export function Configurator({ content, dict, locale }: Props) {
   const setVehicle = (id: string, qty: number) =>
     setOrder((o) => ({ ...o, vehicles: { ...o.vehicles, [id]: Math.max(0, Math.min(10, qty)) } }));
 
+  const toggleTripNeed = (need: TripNeed) =>
+    setOrder((o) => ({
+      ...o,
+      tripNeeds: o.tripNeeds.includes(need) ? o.tripNeeds.filter((n) => n !== need) : [...o.tripNeeds, need],
+    }));
+
+  const chooseService = (id: string) => {
+    setOrder((o) => withService(o, id));
+    setErrors((e) => ({ ...e, service: undefined }));
+  };
+
   // Pré-seleciona o serviço vindo da lista (?servico=id)
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("servico");
-    if (id && content.serviceTypes.some((s) => s.id === id)) setOrder((o) => ({ ...o, serviceTypeId: id }));
+    if (id && content.serviceTypes.some((s) => s.id === id)) setOrder((o) => withService(o, id));
   }, [content.serviceTypes]);
 
   // Barra fixa do mobile: aparece no configurador, some quando o resumo já está visível
@@ -92,7 +109,7 @@ export function Configurator({ content, dict, locale }: Props) {
                       type="button"
                       role="radio"
                       aria-checked={active}
-                      onClick={() => set("serviceTypeId", s.id)}
+                      onClick={() => chooseService(s.id)}
                       className={`rounded-2xl border p-4 text-left transition-[border-color,background-color,transform] duration-300 ease-[var(--ease-snap)] active:scale-[0.98] ${
                         active ? "border-accent/70 bg-navy-2" : "border-line bg-navy/40 hover:border-line-strong"
                       }`}
@@ -110,28 +127,36 @@ export function Configurator({ content, dict, locale }: Props) {
 
             {/* 02 · Veículos */}
             <Step n="02" title={t.steps.vehicles} hint={t.vehiclesHint}>
-              <ul className="divide-y divide-line rounded-2xl border border-line bg-navy/40">
-                {content.vehicleCategories.map((v) => (
-                  <li key={v.id} className="flex items-center justify-between gap-4 p-4">
-                    <span>
-                      <span className="block font-medium">{v.name[locale]}</span>
-                      <span className="num text-[0.8125rem] text-muted">
-                        {v.capacity} {dict.fleet.seats}
-                        {v.armored && ` · ${dict.fleet.armored}`}
+              <SuggestToggle
+                active={order.vehiclesSuggest}
+                onClick={() => setOrder((o) => ({ ...o, vehiclesSuggest: !o.vehiclesSuggest, vehicles: {} }))}
+                label={t.suggest}
+                note={t.suggestNote}
+              />
+              <Collapse open={!order.vehiclesSuggest}>
+                <ul className="divide-y divide-line rounded-2xl border border-line bg-navy/40">
+                  {content.vehicleCategories.map((v) => (
+                    <li key={v.id} className="flex items-center justify-between gap-4 p-4">
+                      <span>
+                        <span className="block font-medium">{v.name[locale]}</span>
+                        <span className="num text-[0.8125rem] text-muted">
+                          {v.capacity} {dict.fleet.seats}
+                          {v.armored && ` · ${dict.fleet.armored}`}
+                        </span>
                       </span>
-                    </span>
-                    <Stepper
-                      value={order.vehicles[v.id] ?? 0}
-                      onChange={(n) => setVehicle(v.id, n)}
-                      label={v.name[locale]}
-                      dict={dict}
-                    />
-                  </li>
-                ))}
-              </ul>
+                      <Stepper
+                        value={order.vehicles[v.id] ?? 0}
+                        onChange={(n) => setVehicle(v.id, n)}
+                        label={v.name[locale]}
+                        dict={dict}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </Collapse>
 
               <AnimatePresence initial={false}>
-                {vehicles > 0 && (
+                {(vehicles > 0 || order.vehiclesSuggest) && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -154,19 +179,27 @@ export function Configurator({ content, dict, locale }: Props) {
 
             {/* 03 · Seguranças */}
             <Step n="03" title={t.steps.guards} hint={t.guardsHint}>
-              <div className="flex flex-wrap items-center gap-4">
-                <Stepper value={order.guards} onChange={(n) => set("guards", Math.max(0, Math.min(20, n)))} label={t.steps.guards} dict={dict} />
-                {order.guards > 0 && (
-                  <div className="flex gap-2">
-                    <Chip active={order.armed} onClick={() => set("armed", true)}>
-                      {t.armed}
-                    </Chip>
-                    <Chip active={!order.armed} onClick={() => set("armed", false)}>
-                      {t.unarmed}
-                    </Chip>
-                  </div>
-                )}
-              </div>
+              <SuggestToggle
+                active={order.guardsSuggest}
+                onClick={() => setOrder((o) => ({ ...o, guardsSuggest: !o.guardsSuggest, guards: 0 }))}
+                label={t.suggest}
+                note={t.suggestNote}
+              />
+              <Collapse open={!order.guardsSuggest}>
+                <div className="flex flex-wrap items-center gap-4">
+                  <Stepper value={order.guards} onChange={(n) => set("guards", Math.max(0, Math.min(20, n)))} label={t.steps.guards} dict={dict} />
+                  {order.guards > 0 && (
+                    <div className="flex gap-2">
+                      <Chip active={order.armed} onClick={() => set("armed", true)}>
+                        {t.armed}
+                      </Chip>
+                      <Chip active={!order.armed} onClick={() => set("armed", false)}>
+                        {t.unarmed}
+                      </Chip>
+                    </div>
+                  )}
+                </div>
+              </Collapse>
             </Step>
 
             {/* 04 · Logística */}
@@ -196,6 +229,42 @@ export function Configurator({ content, dict, locale }: Props) {
                 </Field>
               </div>
 
+              <div className="mt-6">
+                <p className="label mb-3">{t.intercity}</p>
+                <YesNo value={order.intercity} onChange={(v) => set("intercity", v)} yes={t.yes} no={t.no} />
+                <AnimatePresence initial={false}>
+                  {order.intercity && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-4 space-y-5 border-l border-line-strong pl-4">
+                        <div>
+                          <p className="label mb-3">{t.tripNeeds}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {tripNeeds.map((n) => (
+                              <Chip key={n} active={order.tripNeeds.includes(n)} onClick={() => toggleTripNeed(n)}>
+                                {t.needs[n]}
+                              </Chip>
+                            ))}
+                          </div>
+                        </div>
+                        <Field label={t.tripDuration}>
+                          <input
+                            value={order.tripDuration}
+                            onChange={(e) => set("tripDuration", e.target.value)}
+                            placeholder={t.tripDurationPh}
+                            className={inputClass()}
+                          />
+                        </Field>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="label mb-3">{t.duration}</p>
@@ -219,8 +288,58 @@ export function Configurator({ content, dict, locale }: Props) {
               </div>
             </Step>
 
-            {/* 05 · Contato */}
-            <Step n="05" title={t.steps.contact}>
+            {/* 05 · Ocasião */}
+            <Step n="05" title={t.steps.context} hint={t.contextHint}>
+              <p className="label mb-3">{t.event}</p>
+              <YesNo value={order.event} onChange={(v) => set("event", v)} yes={t.yes} no={t.no} />
+              <AnimatePresence initial={false}>
+                {order.event && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-4 space-y-5 border-l border-line-strong pl-4">
+                      <div>
+                        <p className="label mb-3">{t.eventKind}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {eventKinds.map((k) => (
+                            <Chip
+                              key={k}
+                              active={order.eventKind === k}
+                              onClick={() => set("eventKind", order.eventKind === k ? null : k)}
+                            >
+                              {t.eventKinds[k]}
+                            </Chip>
+                          ))}
+                        </div>
+                      </div>
+                      <Field label={t.eventName}>
+                        <input
+                          value={order.eventName}
+                          onChange={(e) => set("eventName", e.target.value)}
+                          placeholder={t.eventNamePh}
+                          className={inputClass()}
+                        />
+                      </Field>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <p className="label mb-3 mt-6">{t.exposure}</p>
+              <div className="flex flex-wrap gap-2">
+                {exposures.map((x) => (
+                  <Chip key={x} active={order.exposure === x} onClick={() => set("exposure", order.exposure === x ? null : x)}>
+                    {t.exposures[x]}
+                  </Chip>
+                ))}
+              </div>
+            </Step>
+
+            {/* 06 · Contato */}
+            <Step n="06" title={t.steps.contact}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label={t.name} id="field-name" error={errors.name}>
                   <input
@@ -324,6 +443,11 @@ export function Configurator({ content, dict, locale }: Props) {
 
 /* ——— Peças internas ——— */
 
+// Serviço de eventos já marca "é para um evento?" (se ainda não respondido)
+function withService(order: Order, id: string): Order {
+  return { ...order, serviceTypeId: id, event: id === "eventos" && order.event === null ? true : order.event };
+}
+
 function inputClass(invalid = false) {
   return `min-h-12 w-full rounded-xl border bg-navy/40 px-4 py-3 text-base placeholder:text-muted/60 transition-colors duration-300 focus:outline-none focus:border-accent ${
     invalid ? "border-danger" : "border-line hover:border-line-strong"
@@ -366,6 +490,49 @@ function Chip(props: { active: boolean; onClick: () => void; children: React.Rea
     >
       {props.children}
     </button>
+  );
+}
+
+// Sim / Não com "desmarcar" ao tocar de novo (pergunta é opcional)
+function YesNo(props: { value: boolean | null; onChange: (v: boolean | null) => void; yes: string; no: string }) {
+  return (
+    <div className="flex gap-2">
+      <Chip active={props.value === true} onClick={() => props.onChange(props.value === true ? null : true)}>
+        {props.yes}
+      </Chip>
+      <Chip active={props.value === false} onClick={() => props.onChange(props.value === false ? null : false)}>
+        {props.no}
+      </Chip>
+    </div>
+  );
+}
+
+// "Não sei, quero sugestão": esconde as quantidades e a equipe sugere na conversa
+function SuggestToggle(props: { active: boolean; onClick: () => void; label: string; note: string }) {
+  return (
+    <div className="mb-4">
+      <Chip active={props.active} onClick={props.onClick}>
+        {props.label}
+      </Chip>
+      {props.active && <p className="mt-3 text-sm text-muted">{props.note}</p>}
+    </div>
+  );
+}
+
+function Collapse({ open, children }: { open: boolean; children: React.ReactNode }) {
+  return (
+    <AnimatePresence initial={false}>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="overflow-hidden"
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -417,13 +584,13 @@ function MessagePreview({ text }: { text: string }) {
         if (match) {
           return (
             <p key={i} className="flex gap-3">
-              <span className="w-28 shrink-0 pt-0.5 text-[0.8125rem] text-muted">{match[1]}</span>
+              <span className="w-32 shrink-0 pt-0.5 text-[0.8125rem] text-muted">{match[1]}</span>
               <span className="min-w-0 break-words">{match[2]}</span>
             </p>
           );
         }
         return (
-          <p key={i} className="pl-[calc(7rem+0.75rem)] break-words">
+          <p key={i} className="pl-[calc(8rem+0.75rem)] break-words">
             {line.replace(/^• /, "")}
           </p>
         );
