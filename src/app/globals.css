@@ -4,12 +4,12 @@
 @theme {
   --color-ink: #07090d;
   --color-ink-2: #0b0f17;
-  --color-navy: #0f1622;
-  --color-navy-2: #16202f;
-  --color-line: rgb(169 180 194 / 0.12);
-  --color-line-strong: rgb(169 180 194 / 0.26);
+  --color-navy: #111a27;
+  --color-navy-2: #192436;
+  --color-line: rgb(169 180 194 / 0.16);
+  --color-line-strong: rgb(169 180 194 / 0.32);
   --color-text: #f2f4f7;
-  --color-muted: #8a94a3;
+  --color-muted: #9ca6b4;
   --color-silver: #b4bfcc;
   --color-accent: #8fb3e6; /* azul-marinho claro: links e estados ativos */
   --color-danger: #f08c8c;
@@ -52,7 +52,7 @@
     inset: 0;
     z-index: 9999;
     pointer-events: none;
-    opacity: 0.025;
+    opacity: 0.015;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
   }
 

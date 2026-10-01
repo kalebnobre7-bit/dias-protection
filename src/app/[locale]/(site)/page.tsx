@@ -18,6 +18,9 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
   return pageMetadata({ locale, path: "", title: dict.meta.title, description: dict.meta.description });
 }
 
+// Largura de cada card no carrossel do celular; some do sm pra cima
+const slideClass = "w-[78vw] max-w-[20rem] shrink-0 snap-start sm:w-auto sm:max-w-none";
+
 export default async function Home({ params }: LocaleParams) {
   const { locale, dict, content } = await loadPage(params);
   const { company, founder, serviceTypes } = content;
@@ -67,7 +70,7 @@ export default async function Home({ params }: LocaleParams) {
       <section className="border-y border-line bg-ink-2">
         <Stagger as="dl" className="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-line md:grid-cols-4">
           {founder.stats.map((s) => (
-            <StaggerItem key={s.label.pt} className="bg-ink-2 px-4 py-10 md:px-8 md:py-14">
+            <StaggerItem key={s.label.pt} className="bg-ink-2 px-4 py-8 md:px-8 md:py-10">
               <dt className="sr-only">{s.label[locale]}</dt>
               <dd>
                 <span className="t-stat block">{s.value}</span>
@@ -79,7 +82,7 @@ export default async function Home({ params }: LocaleParams) {
       </section>
 
       {/* Intro */}
-      <section className="mx-auto grid max-w-7xl gap-14 px-4 py-28 md:grid-cols-[1.1fr_1fr] md:items-center md:gap-20 md:px-8 md:py-40">
+      <section className="mx-auto grid max-w-7xl gap-12 px-4 py-20 md:grid-cols-[1.1fr_1fr] md:items-center md:gap-20 md:px-8 md:py-28">
         <Reveal>
           <SectionHeading label={t.introLabel} title={t.introTitle} />
           <p className="max-w-[58ch] text-text/85">{company.about[locale]}</p>
@@ -95,7 +98,7 @@ export default async function Home({ params }: LocaleParams) {
             ))}
           </Stagger>
         </Reveal>
-        <Reveal delay={0.1}>
+        <Reveal delay={0.1} className="hidden md:block">
           <figure className="tile relative aspect-[4/5]">
             <Image src="/images/hotel.jpg" alt="" fill sizes="(min-width: 768px) 45vw, 100vw" className="object-cover" />
           </figure>
@@ -104,20 +107,24 @@ export default async function Home({ params }: LocaleParams) {
 
       {/* Serviços: bento com uma célula dominante */}
       <section className="bg-ink-2">
-        <div className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-40">
+        <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
           <Reveal>
             <SectionHeading label={t.servicesLabel} title={t.servicesTitle} />
           </Reveal>
-          <Stagger as="ul" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <StaggerItem as="li" className="sm:col-span-2 lg:row-span-2">
+          {/* Celular: carrossel com snap (uma tela, não cinco). Tablet+: grid com célula dominante */}
+          <Stagger
+            as="ul"
+            className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 scroll-px-4 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-3"
+          >
+            <StaggerItem as="li" className={`${slideClass} sm:col-span-2 lg:row-span-2`}>
               <ServiceCard service={featured} locale={locale} cta={dict.common.learnMore} featured />
             </StaggerItem>
             {others.map((s) => (
-              <StaggerItem as="li" key={s.id}>
+              <StaggerItem as="li" key={s.id} className={slideClass}>
                 <ServiceCard service={s} locale={locale} cta={dict.common.learnMore} />
               </StaggerItem>
             ))}
-            <StaggerItem as="li" className="sm:col-span-2 lg:col-span-1">
+            <StaggerItem as="li" className={`${slideClass} sm:col-span-2 lg:col-span-1`}>
               <Link
                 href={`/${locale}/servicos`}
                 className="tile lift flex h-full min-h-48 flex-col justify-between bg-navy-2 p-7"
@@ -133,12 +140,12 @@ export default async function Home({ params }: LocaleParams) {
       {/* Quebra visual */}
       <ParallaxBreak image="/images/convoy.jpg">
         <Reveal>
-          <p className="t-hero max-w-[12ch]">{company.tagline}.</p>
+          <p className="t-display max-w-[12ch]">{company.tagline}.</p>
         </Reveal>
       </ParallaxBreak>
 
       {/* Como funciona: linha do tempo vertical */}
-      <section className="mx-auto grid max-w-7xl gap-12 px-4 py-28 md:grid-cols-[0.9fr_1.1fr] md:gap-20 md:px-8 md:py-40">
+      <section className="mx-auto grid max-w-7xl gap-12 px-4 py-20 md:grid-cols-[0.9fr_1.1fr] md:gap-20 md:px-8 md:py-28">
         <Reveal className="md:sticky md:top-28 md:self-start">
           <SectionHeading label={t.howLabel} title={t.howTitle} />
           <Link href={`/${locale}/solicitar`} className="btn btn-primary">
@@ -165,9 +172,9 @@ export default async function Home({ params }: LocaleParams) {
 
       {/* Fundador */}
       <section className="bg-ink-2">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-28 md:grid-cols-[0.9fr_1.1fr] md:items-center md:gap-20 md:px-8 md:py-40">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 md:grid-cols-[0.9fr_1.1fr] md:items-center md:gap-20 md:px-8 md:py-28">
           <Reveal>
-            <div className="tile relative aspect-square">
+            <div className="tile relative aspect-[4/3] md:aspect-square">
               <Image
                 src={company.founderPhoto}
                 alt={company.founderName}

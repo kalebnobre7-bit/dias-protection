@@ -70,7 +70,7 @@ export default async function AboutPage({ params }: LocaleParams) {
       </section>
 
       {/* Trajetória */}
-      <section className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-40">
+      <section className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
         <Reveal>
           <SectionHeading label={t.storyLabel} title={t.storyTitle} />
         </Reveal>
@@ -90,7 +90,7 @@ export default async function AboutPage({ params }: LocaleParams) {
 
       {/* Certificações, reconhecimentos, formação */}
       <section className="bg-ink-2">
-        <div className="mx-auto grid max-w-7xl gap-14 px-4 py-28 md:grid-cols-2 md:gap-20 md:px-8 md:py-40">
+        <div className="mx-auto grid max-w-7xl gap-14 px-4 py-20 md:grid-cols-2 md:gap-20 md:px-8 md:py-28">
           <Reveal>
             <p className="label">{t.certificationsLabel}</p>
             <ul className="mt-6 border-t border-line">
@@ -133,7 +133,7 @@ export default async function AboutPage({ params }: LocaleParams) {
 
       {/* Experiência internacional */}
       <section>
-        <div className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-40">
+        <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
           <p className="label">{dict.home.experienceLabel}</p>
           <ul className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-line bg-line md:grid-cols-3">
             {founder.experienceWith.map(({ name }) => (

@@ -27,7 +27,7 @@ export default async function FleetPage({ params }: LocaleParams) {
     <>
       <PageHero label={t.label} title={t.title} lead={t.lead} image="/images/convoy.jpg" />
 
-      <section className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
         <Stagger as="ul" className="grid gap-4 sm:grid-cols-2">
           {content.vehicleCategories.map((v) => (
             <StaggerItem as="li" key={v.id} className="tile lift flex flex-col gap-10 p-7 md:p-10">
@@ -63,7 +63,7 @@ export default async function FleetPage({ params }: LocaleParams) {
 
       {/* Motorista bilíngue: destaque com imagem */}
       <section className="bg-ink-2">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-28 md:grid-cols-2 md:items-center md:gap-20 md:px-8 md:py-40">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 md:grid-cols-2 md:items-center md:gap-20 md:px-8 md:py-28">
           <Reveal>
             <div className="tile relative aspect-[16/10]">
               <Image src="/images/driver.jpg" alt="" fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />

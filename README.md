@@ -15,7 +15,7 @@ npm run dev   # http://localhost:3000 → redireciona pra /pt ou /en
 | `/sobre` | Trajetória, certificações e reconhecimentos do Gabriel |
 | `/equipe` | Fundador + agentes (vêm do painel na Fase B) + critérios de seleção |
 | `/frota` | Categorias de veículo |
-| `/solicitar` | Configurador → WhatsApp (`?servico=slug` pré-seleciona). Vários serviços por pedido (transporte vira transfer ou diária), armados x desarmados, idioma do motorista e dos agentes, período estimado, viagem intermunicipal, evento, pessoa pública/PPE e "quero sugestão" |
+| `/solicitar` | Configurador em passos (um por tela, trilha de progresso) → WhatsApp (`?servico=slug` pré-seleciona). Vários serviços por pedido (transporte vira transfer ou diária), armados x desarmados, idioma do motorista e dos agentes, período estimado, viagem intermunicipal, evento, pessoa pública/PPE e "quero sugestão" |
 | `/cartao` | Cartão de visita digital: cartão que vira (marca / contato + QR), compartilhar e salvar contato |
 | `/contato.vcf` | Download do contato com foto (gerado no build) |
 | `/admin` | Painel do Gabriel (só PT, fora do índice dos buscadores) |

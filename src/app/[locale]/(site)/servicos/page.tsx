@@ -28,7 +28,7 @@ export default async function ServicesPage({ params }: LocaleParams) {
         lead={dict.services.lead}
         image="/images/hotel.jpg"
       />
-      <section className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
         <Stagger as="ul" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {content.serviceTypes.map((s) => (
             <StaggerItem as="li" key={s.id}>
