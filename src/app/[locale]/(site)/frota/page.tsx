@@ -31,6 +31,19 @@ export default async function FleetPage({ params }: LocaleParams) {
         <Stagger as="ul" className="grid gap-4 sm:grid-cols-2">
           {content.vehicleCategories.map((v) => (
             <StaggerItem as="li" key={v.id} className="tile lift flex flex-col gap-10 p-7 md:p-10">
+              {v.image && (
+                <div className="relative -mx-2 aspect-[16/9]">
+                  {/* sombra de chão: o carro "pousa" no card */}
+                  <div aria-hidden className="absolute inset-x-[18%] bottom-[6%] h-[12%] rounded-[50%] bg-black/60 blur-xl" />
+                  <Image
+                    src={v.image}
+                    alt={v.name[locale]}
+                    fill
+                    sizes="(min-width: 640px) 40vw, 90vw"
+                    className="object-contain drop-shadow-[0_20px_30px_rgb(0_0_0/0.45)]"
+                  />
+                </div>
+              )}
               <div className="flex items-start justify-between gap-4">
                 <h2 className="t-h3 !text-[clamp(1.5rem,2.4vw,2rem)]">{v.name[locale]}</h2>
                 {v.armored && (

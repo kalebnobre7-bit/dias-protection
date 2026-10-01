@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Check } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { Dictionary } from "@/i18n/dictionaries";
@@ -144,9 +145,21 @@ export function Configurator({ content, dict, locale }: Props) {
               <Collapse open={!order.vehiclesSuggest}>
                 <ul className="divide-y divide-line rounded-2xl border border-line bg-navy/40">
                   {content.vehicleCategories.map((v) => (
-                    <li key={v.id} className="flex items-center justify-between gap-4 p-4">
-                      <span>
-                        <span className="block font-medium">{v.name[locale]}</span>
+                    <li key={v.id} className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
+                      {v.image && (
+                        <Image
+                          src={v.image}
+                          alt=""
+                          width={96}
+                          height={72}
+                          sizes="96px"
+                          className={`h-12 w-16 shrink-0 object-contain transition-transform duration-500 ease-[var(--ease-snap)] sm:h-16 sm:w-24 ${
+                            (order.vehicles[v.id] ?? 0) > 0 ? "scale-110" : ""
+                          }`}
+                        />
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[0.9375rem] font-medium leading-snug sm:text-base">{v.name[locale]}</span>
                         <span className="num text-[0.8125rem] text-muted">
                           {v.capacity} {dict.fleet.seats}
                           {v.armored && ` · ${dict.fleet.armored}`}

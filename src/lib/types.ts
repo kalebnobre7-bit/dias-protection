@@ -40,6 +40,7 @@ export type VehicleCategory = {
   description: Localized;
   capacity: number;
   armored: boolean;
+  image: string | null; // ilustração 3D com fundo transparente (public/images/fleet)
   sortOrder: number;
 };
 
