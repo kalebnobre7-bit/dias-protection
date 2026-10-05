@@ -111,6 +111,8 @@ export function Avatar({ name, photo }: { name: string; photo?: string | null })
     .map((p) => p[0]?.toUpperCase())
     .join("");
   return photo ? (
+    // Foto do painel (data URL hoje, Storage na Fase 2): não passa pelo otimizador do next/image
+    // eslint-disable-next-line @next/next/no-img-element
     <img src={photo} alt="" className="size-10 shrink-0 rounded-full object-cover" />
   ) : (
     <span className="grid size-10 shrink-0 place-items-center rounded-full bg-navy-2 text-sm font-semibold text-silver">{initials || "?"}</span>
