@@ -34,10 +34,7 @@ export default async function TeamPage({ params }: LocaleParams) {
           {/* Fundador sempre primeiro */}
           <li>
             <Reveal className="h-full">
-              <Link
-                href={`/${locale}/sobre`}
-                className="tile lift group flex h-full flex-col"
-              >
+              <Link href={`/${locale}/sobre`} className="tile lift group flex h-full flex-col">
                 <div className="relative aspect-[4/5] overflow-hidden">
                   <Image
                     src={company.founderPhoto}

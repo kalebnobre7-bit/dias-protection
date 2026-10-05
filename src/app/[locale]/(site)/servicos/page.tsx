@@ -22,12 +22,7 @@ export default async function ServicesPage({ params }: LocaleParams) {
 
   return (
     <>
-      <PageHero
-        label={dict.services.label}
-        title={dict.services.title}
-        lead={dict.services.lead}
-        image="/images/hotel.jpg"
-      />
+      <PageHero label={dict.services.label} title={dict.services.title} lead={dict.services.lead} image="/images/hotel.jpg" />
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
         <Stagger as="ul" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {content.serviceTypes.map((s) => (

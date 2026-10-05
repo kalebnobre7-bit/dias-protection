@@ -7,8 +7,7 @@ const published = publishedJson as PublishedContent;
 
 // Ponto único de leitura do conteúdo. Na Fase B passa a buscar no Supabase.
 export async function getSiteContent(): Promise<SiteContent> {
-  const bySort = <T extends { sortOrder: number }>(items: T[]) =>
-    [...items].sort((a, b) => a.sortOrder - b.sortOrder);
+  const bySort = <T extends { sortOrder: number }>(items: T[]) => [...items].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return {
     ...localContent,

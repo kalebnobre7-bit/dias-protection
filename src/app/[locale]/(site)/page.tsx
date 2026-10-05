@@ -54,12 +54,7 @@ export default async function Home({ params }: LocaleParams) {
             <Link href={`/${locale}/solicitar`} className="btn btn-primary">
               {dict.common.requestCta}
             </Link>
-            <a
-              href={whatsappUrl(company.whatsapp)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-chevron min-h-11"
-            >
+            <a href={whatsappUrl(company.whatsapp)} target="_blank" rel="noopener noreferrer" className="link-chevron min-h-11">
               {dict.common.whatsappCta}
             </a>
           </HeroIn>
@@ -125,10 +120,7 @@ export default async function Home({ params }: LocaleParams) {
               </StaggerItem>
             ))}
             <StaggerItem as="li" className={`${slideClass} sm:col-span-2 lg:col-span-1`}>
-              <Link
-                href={`/${locale}/servicos`}
-                className="tile lift flex h-full min-h-48 flex-col justify-between bg-navy-2 p-7"
-              >
+              <Link href={`/${locale}/servicos`} className="tile lift flex h-full min-h-48 flex-col justify-between bg-navy-2 p-7">
                 <span className="text-[0.9375rem] leading-relaxed text-muted">{dict.services.lead}</span>
                 <span className="link-chevron mt-6">{dict.common.allServices}</span>
               </Link>
@@ -154,7 +146,11 @@ export default async function Home({ params }: LocaleParams) {
         </Reveal>
         <Stagger as="ol" className="relative">
           {t.steps.map((s, i) => (
-            <StaggerItem as="li" key={s.title} className="relative grid grid-cols-[3.5rem_1fr] gap-4 pb-14 last:pb-0 md:grid-cols-[5rem_1fr]">
+            <StaggerItem
+              as="li"
+              key={s.title}
+              className="relative grid grid-cols-[3.5rem_1fr] gap-4 pb-14 last:pb-0 md:grid-cols-[5rem_1fr]"
+            >
               {i < t.steps.length - 1 && (
                 <span aria-hidden className="absolute bottom-0 left-[1.375rem] top-14 w-px bg-line-strong md:left-[1.875rem]" />
               )}

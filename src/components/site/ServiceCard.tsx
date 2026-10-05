@@ -13,13 +13,7 @@ export function ServiceCard({ service, locale, cta, featured = false, heading: H
         href={`/${locale}/servicos/${service.id}`}
         className="tile lift group relative isolate flex h-full min-h-[22rem] flex-col justify-end p-6 sm:min-h-[26rem] md:p-10"
       >
-        <Image
-          src={service.image}
-          alt=""
-          fill
-          sizes="(min-width: 1024px) 66vw, 100vw"
-          className="media-zoom -z-20 object-cover"
-        />
+        <Image src={service.image} alt="" fill sizes="(min-width: 1024px) 66vw, 100vw" className="media-zoom -z-20 object-cover" />
         <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/60 to-transparent" />
         <Heading className="t-display max-w-[14ch] !text-[clamp(1.75rem,3.6vw,3.25rem)]">{service.name[locale]}</Heading>
         <p className="mt-4 max-w-[44ch] text-text/80">{service.summary[locale]}</p>

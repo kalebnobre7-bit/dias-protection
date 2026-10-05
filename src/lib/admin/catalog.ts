@@ -10,5 +10,4 @@ export const vehicleCategoryOptions = [...localContent.vehicleCategories]
   .map((c) => ({ value: c.id, label: c.name.pt }));
 
 export const serviceTypeName = (id: string | null) => serviceTypeOptions.find((o) => o.value === id)?.label ?? "Sem tipo";
-export const vehicleCategoryName = (id: string | null) =>
-  vehicleCategoryOptions.find((o) => o.value === id)?.label ?? "Sem categoria";
+export const vehicleCategoryName = (id: string | null) => vehicleCategoryOptions.find((o) => o.value === id)?.label ?? "Sem categoria";

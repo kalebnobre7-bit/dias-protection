@@ -121,7 +121,10 @@ export default async function CardPage({ params }: Props) {
                 <span className="block font-semibold">{dict.card.chat}</span>
                 <span className="num block truncate text-sm text-silver">{phone}</span>
               </span>
-              <ArrowUpRight className="size-5 shrink-0 text-[#25d366] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
+              <ArrowUpRight
+                className="size-5 shrink-0 text-[#25d366] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                aria-hidden
+              />
             </a>
 
             <ul className="mt-3 grid grid-cols-2 gap-3">

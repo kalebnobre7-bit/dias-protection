@@ -4,7 +4,19 @@ Next.js 15 · React 19 · Tailwind v4 · Framer Motion · TypeScript. Supabase e
 
 ```bash
 npm run dev   # http://localhost:3000 → redireciona pra /pt ou /en
+npm run check # lint + typecheck + prettier + testes (o que o CI roda em cada PR)
 ```
+
+## Qualidade
+
+| Comando | O que faz |
+|---|---|
+| `npm run lint` / `lint:fix` | ESLint (`next/core-web-vitals` + `next/typescript`, config em `eslint.config.mjs`) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run format` / `format:check` | Prettier (`.prettierrc`: 140 colunas, aspas duplas, vírgula final; Markdown fica de fora) |
+| `npm test` / `test:watch` | Vitest (`vitest.config.mts`), só regras puras: `src/lib/order.test.ts` (mensagem do WhatsApp), `src/lib/admin/finance.test.ts` (resumo mensal) e `src/lib/admin/proposals.test.ts` (numeração e totais) |
+
+`.github/workflows/ci.yml` roda tudo isso e o export estático em cada PR e em push na `main`. O deploy do Pages (`pages.yml`) não mudou.
 
 ## Rotas (todas em /pt e /en)
 

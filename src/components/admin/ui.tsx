@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Search as IconSearch, X as IconClose } from "lucide-react";
 
-
 /* ——— Estrutura de página ——— */
 
 export function PageHeader(props: { title: string; subtitle?: string; action?: React.ReactNode }) {
@@ -111,9 +110,13 @@ export function Avatar({ name, photo }: { name: string; photo?: string | null })
     .map((p) => p[0]?.toUpperCase())
     .join("");
   return photo ? (
+    // Foto do painel (data URL hoje, Storage na Fase 2): não passa pelo otimizador do next/image
+    // eslint-disable-next-line @next/next/no-img-element
     <img src={photo} alt="" className="size-10 shrink-0 rounded-full object-cover" />
   ) : (
-    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-navy-2 text-sm font-semibold text-silver">{initials || "?"}</span>
+    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-navy-2 text-sm font-semibold text-silver">
+      {initials || "?"}
+    </span>
   );
 }
 
@@ -122,16 +125,20 @@ export function SearchBox(props: { value: string; onChange: (v: string) => void;
     <label className="relative mb-4 block">
       <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
       <span className="sr-only">Buscar</span>
-      <input className="input !pl-10" type="search" value={props.value} onChange={(e) => props.onChange(e.target.value)} placeholder={props.placeholder} />
+      <input
+        className="input !pl-10"
+        type="search"
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value)}
+        placeholder={props.placeholder}
+      />
     </label>
   );
 }
 
 /* ——— Botões ——— */
 
-export function Button(
-  props: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" | "ghost" },
-) {
+export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" | "ghost" }) {
   const { variant = "primary", className = "", ...rest } = props;
   const styles = {
     primary: "bg-text text-ink hover:bg-white",
@@ -168,12 +175,7 @@ export function Switch(props: { checked: boolean; onChange: (v: boolean) => void
         {props.hint && <span className="block text-[0.8125rem] text-muted">{props.hint}</span>}
       </span>
       <span className="relative">
-        <input
-          type="checkbox"
-          className="peer sr-only"
-          checked={props.checked}
-          onChange={(e) => props.onChange(e.target.checked)}
-        />
+        <input type="checkbox" className="peer sr-only" checked={props.checked} onChange={(e) => props.onChange(e.target.checked)} />
         <span className="block h-7 w-12 rounded-full bg-white/12 transition-colors duration-300 peer-checked:bg-[#34c759] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent" />
         <span className="absolute left-0.5 top-0.5 size-6 rounded-full bg-white shadow transition-transform duration-300 ease-[var(--ease-snap)] peer-checked:translate-x-5" />
       </span>
@@ -204,10 +206,14 @@ export function Segmented<T extends string>(props: { value: T; onChange: (v: T) 
 }
 
 // Seleção múltipla em chips (agentes e veículos do serviço)
-export function ChipSelect(props: { options: { value: string; label: string }[]; value: string[]; onChange: (v: string[]) => void; empty: string }) {
+export function ChipSelect(props: {
+  options: { value: string; label: string }[];
+  value: string[];
+  onChange: (v: string[]) => void;
+  empty: string;
+}) {
   if (!props.options.length) return <p className="text-[0.875rem] text-muted">{props.empty}</p>;
-  const toggle = (id: string) =>
-    props.onChange(props.value.includes(id) ? props.value.filter((v) => v !== id) : [...props.value, id]);
+  const toggle = (id: string) => props.onChange(props.value.includes(id) ? props.value.filter((v) => v !== id) : [...props.value, id]);
   return (
     <div className="flex flex-wrap gap-2">
       {props.options.map((o) => {
@@ -274,7 +280,12 @@ export function Sheet(props: {
           >
             <div className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-line px-5">
               <h2 className="truncate text-lg font-semibold tracking-[-0.02em]">{props.title}</h2>
-              <button type="button" onClick={onClose} aria-label="Fechar" className="grid size-11 place-items-center rounded-full hover:bg-white/6">
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Fechar"
+                className="grid size-11 place-items-center rounded-full hover:bg-white/6"
+              >
                 <IconClose className="size-5" />
               </button>
             </div>

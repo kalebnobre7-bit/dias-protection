@@ -4,8 +4,7 @@ import { useState } from "react";
 
 import type { JobStatus } from "@/lib/admin/types";
 
-export const statusTone = (s: JobStatus) =>
-  (({ quote: "warn", scheduled: "accent", done: "good", canceled: "bad" }) as const)[s];
+export const statusTone = (s: JobStatus) => (({ quote: "warn", scheduled: "accent", done: "good", canceled: "bad" }) as const)[s];
 
 // Dia e mês em destaque, como no app Calendário
 export function DateTile({ value }: { value: string }) {
@@ -13,7 +12,9 @@ export function DateTile({ value }: { value: string }) {
   const d = new Date(value);
   return (
     <span className="flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-navy-2 leading-none">
-      <span className="text-[0.625rem] font-semibold uppercase text-danger">{d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span>
+      <span className="text-[0.625rem] font-semibold uppercase text-danger">
+        {d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}
+      </span>
       <span className="num mt-0.5 text-lg font-semibold">{d.getDate()}</span>
     </span>
   );

@@ -79,7 +79,13 @@ export default async function FleetPage({ params }: LocaleParams) {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={v.photoUrl} alt={v.model} className="absolute inset-0 size-full object-cover" />
                       ) : category?.image ? (
-                        <Image src={category.image} alt={v.model} fill sizes="(min-width: 640px) 40vw, 90vw" className="object-contain p-8" />
+                        <Image
+                          src={category.image}
+                          alt={v.model}
+                          fill
+                          sizes="(min-width: 640px) 40vw, 90vw"
+                          className="object-contain p-8"
+                        />
                       ) : null}
                       {v.armored && (
                         <span className="absolute left-4 top-4 rounded-full border border-accent/40 bg-ink/70 px-3 py-1 text-xs font-semibold text-accent backdrop-blur">
@@ -95,7 +101,9 @@ export default async function FleetPage({ params }: LocaleParams) {
                       <p className="mt-1 text-[0.9375rem] text-muted">
                         {[category?.name[locale], v.color, v.capacity ? `${v.capacity} ${t.seats}` : null].filter(Boolean).join(" · ")}
                       </p>
-                      {v.description[locale] && <p className="mt-3 text-[0.9375rem] leading-relaxed text-text/80">{v.description[locale]}</p>}
+                      {v.description[locale] && (
+                        <p className="mt-3 text-[0.9375rem] leading-relaxed text-text/80">{v.description[locale]}</p>
+                      )}
                     </div>
                   </StaggerItem>
                 );

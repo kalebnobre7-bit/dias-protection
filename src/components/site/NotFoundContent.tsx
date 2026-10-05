@@ -52,7 +52,12 @@ export function NotFoundContent({ locale }: { locale: Locale }) {
               </li>
             ))}
             <li>
-              <a href={whatsappUrl(localContent.company.whatsapp)} target="_blank" rel="noopener noreferrer" className="link-chevron min-h-11">
+              <a
+                href={whatsappUrl(localContent.company.whatsapp)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link-chevron min-h-11"
+              >
                 {dict.common.whatsappCta}
               </a>
             </li>

@@ -237,12 +237,7 @@ export const localContent: SiteContent = {
           "Logística de chegada e saída",
           "Equipe dimensionada ao evento",
         ],
-        en: [
-          "Event security planning",
-          "VIP guest protection",
-          "Arrival and departure logistics",
-          "Team sized to the event",
-        ],
+        en: ["Event security planning", "VIP guest protection", "Arrival and departure logistics", "Team sized to the event"],
       },
       idealFor: {
         pt: "Eventos corporativos, esportivos, lançamentos e recepções privadas.",

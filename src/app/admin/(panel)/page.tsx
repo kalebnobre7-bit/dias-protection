@@ -60,14 +60,22 @@ export default function AdminHome() {
       <div className="mt-10 grid gap-10 lg:grid-cols-2 [&>*]:min-w-0">
         <Section
           title={pipeline ? `Propostas · ${brl.format(pipeline)} em aberto` : "Propostas em aberto"}
-          action={<Link href="/admin/propostas" className="link-chevron text-[0.875rem]">Ver todas</Link>}
+          action={
+            <Link href="/admin/propostas" className="link-chevron text-[0.875rem]">
+              Ver todas
+            </Link>
+          }
         >
           {openProposals.length ? (
             <List>
               {openProposals.map((p) => (
                 <Row
                   key={p.id}
-                  leading={<span className="num grid h-12 w-16 shrink-0 place-items-center rounded-xl bg-navy-2 text-xs font-semibold text-silver">{p.number}</span>}
+                  leading={
+                    <span className="num grid h-12 w-16 shrink-0 place-items-center rounded-xl bg-navy-2 text-xs font-semibold text-silver">
+                      {p.number}
+                    </span>
+                  }
                   title={p.title || "Sem título"}
                   subtitle={`${clientName(p.clientId)} · até ${formatDate(p.validUntil)}`}
                   trailing={
@@ -83,12 +91,23 @@ export default function AdminHome() {
             <EmptyState
               title="Nenhuma proposta em aberto"
               text="Monte um orçamento com itens e validade e envie o documento."
-              action={<Link href="/admin/propostas?nova=1" className="link-chevron text-[0.9375rem]">Nova proposta</Link>}
+              action={
+                <Link href="/admin/propostas?nova=1" className="link-chevron text-[0.9375rem]">
+                  Nova proposta
+                </Link>
+              }
             />
           )}
         </Section>
 
-        <Section title="Próximos serviços" action={<Link href="/admin/servicos" className="link-chevron text-[0.875rem]">Ver todos</Link>}>
+        <Section
+          title="Próximos serviços"
+          action={
+            <Link href="/admin/servicos" className="link-chevron text-[0.875rem]">
+              Ver todos
+            </Link>
+          }
+        >
           {upcoming.length ? (
             <List>
               {upcoming.map((j) => (
@@ -106,7 +125,14 @@ export default function AdminHome() {
           )}
         </Section>
 
-        <Section title="A receber" action={<Link href="/admin/financeiro" className="link-chevron text-[0.875rem]">Financeiro</Link>}>
+        <Section
+          title="A receber"
+          action={
+            <Link href="/admin/financeiro" className="link-chevron text-[0.875rem]">
+              Financeiro
+            </Link>
+          }
+        >
           {receivable.length ? (
             <List>
               {receivable.map((j) => (

@@ -17,15 +17,42 @@ export const DEFAULT_PAYMENT = "50% na confirmação e 50% até 2 dias úteis ap
 
 // Catálogo rápido: preenche descrição, unidade e detalhe; o valor fica com o Gabriel
 export const ITEM_PRESETS: { label: string; item: Omit<ProposalItem, "id" | "unitPrice"> }[] = [
-  { label: "Agente de proteção (armado)", item: { description: "Agente de proteção armado", detail: "Diária de até 12h", qty: 1, unit: "diária" } },
-  { label: "Agente de proteção (desarmado)", item: { description: "Agente de proteção desarmado", detail: "Diária de até 12h", qty: 1, unit: "diária" } },
-  { label: "Motorista bilíngue", item: { description: "Motorista executivo bilíngue (PT/EN)", detail: "Diária de até 12h", qty: 1, unit: "diária" } },
-  { label: "Transfer executivo", item: { description: "Transfer executivo", detail: "Deslocamento ponto a ponto, com motorista", qty: 1, unit: "transfer" } },
-  { label: "Diária SUV executivo", item: { description: "SUV executivo com motorista", detail: "À disposição, até 12h", qty: 1, unit: "diária" } },
-  { label: "Diária SUV blindado", item: { description: "SUV blindado com motorista", detail: "Blindagem nível III-A, até 12h", qty: 1, unit: "diária" } },
-  { label: "Veículo de apoio (escolta)", item: { description: "Veículo de apoio com 2 agentes", detail: "Escolta veicular, até 12h", qty: 1, unit: "diária" } },
-  { label: "Advance / análise de risco", item: { description: "Advance e análise de risco", detail: "Reconhecimento prévio de locais e rotas", qty: 1, unit: "un." } },
-  { label: "Coordenação de evento", item: { description: "Coordenação de segurança do evento", detail: "Planejamento, briefing e supervisão", qty: 1, unit: "un." } },
+  {
+    label: "Agente de proteção (armado)",
+    item: { description: "Agente de proteção armado", detail: "Diária de até 12h", qty: 1, unit: "diária" },
+  },
+  {
+    label: "Agente de proteção (desarmado)",
+    item: { description: "Agente de proteção desarmado", detail: "Diária de até 12h", qty: 1, unit: "diária" },
+  },
+  {
+    label: "Motorista bilíngue",
+    item: { description: "Motorista executivo bilíngue (PT/EN)", detail: "Diária de até 12h", qty: 1, unit: "diária" },
+  },
+  {
+    label: "Transfer executivo",
+    item: { description: "Transfer executivo", detail: "Deslocamento ponto a ponto, com motorista", qty: 1, unit: "transfer" },
+  },
+  {
+    label: "Diária SUV executivo",
+    item: { description: "SUV executivo com motorista", detail: "À disposição, até 12h", qty: 1, unit: "diária" },
+  },
+  {
+    label: "Diária SUV blindado",
+    item: { description: "SUV blindado com motorista", detail: "Blindagem nível III-A, até 12h", qty: 1, unit: "diária" },
+  },
+  {
+    label: "Veículo de apoio (escolta)",
+    item: { description: "Veículo de apoio com 2 agentes", detail: "Escolta veicular, até 12h", qty: 1, unit: "diária" },
+  },
+  {
+    label: "Advance / análise de risco",
+    item: { description: "Advance e análise de risco", detail: "Reconhecimento prévio de locais e rotas", qty: 1, unit: "un." },
+  },
+  {
+    label: "Coordenação de evento",
+    item: { description: "Coordenação de segurança do evento", detail: "Planejamento, briefing e supervisão", qty: 1, unit: "un." },
+  },
 ];
 
 export const UNITS = ["diária", "transfer", "hora", "un."];
@@ -85,7 +112,10 @@ export function proposalFromJob(job: Job, id: string, existing: Proposal[]): Pro
     serviceIds: job.serviceTypeId ? [job.serviceTypeId] : [],
     period: start,
     location: [job.origin, job.destination].filter(Boolean).join(" → "),
-    items: job.price > 0 ? [{ id: `${id}-1`, description: serviceTypeName(job.serviceTypeId), detail: "", qty: 1, unit: "un.", unitPrice: job.price }] : [],
+    items:
+      job.price > 0
+        ? [{ id: `${id}-1`, description: serviceTypeName(job.serviceTypeId), detail: "", qty: 1, unit: "un.", unitPrice: job.price }]
+        : [],
     notes: job.notes,
   };
 }
@@ -136,7 +166,10 @@ export function proposalText(p: Proposal, client: Client | null): string {
     `${company.founderName} · ${company.brandName}`,
     `WhatsApp +${company.whatsapp} · ${company.email}`,
   ];
-  return lines.filter((l, i, arr) => !(l === "" && arr[i - 1] === "")).join("\n").trim();
+  return lines
+    .filter((l, i, arr) => !(l === "" && arr[i - 1] === ""))
+    .join("\n")
+    .trim();
 }
 
 export const onlyDigits = (s: string) => s.replace(/\D/g, "");

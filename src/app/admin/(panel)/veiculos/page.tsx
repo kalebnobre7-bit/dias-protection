@@ -4,7 +4,21 @@ import { useState } from "react";
 import { Plus as IconPlus } from "lucide-react";
 
 import { PhotoInput } from "@/components/admin/PhotoInput";
-import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, Section, Segmented, Sheet, Switch, useForm } from "@/components/admin/ui";
+import {
+  Badge,
+  Button,
+  DeleteButton,
+  EmptyState,
+  Field,
+  List,
+  PageHeader,
+  Row,
+  Section,
+  Segmented,
+  Sheet,
+  Switch,
+  useForm,
+} from "@/components/admin/ui";
 import { vehicleCategoryName, vehicleCategoryOptions } from "@/lib/admin/catalog";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Vehicle } from "@/lib/admin/types";
@@ -60,7 +74,7 @@ export default function VehiclesPage() {
                 <span className="flex flex-col items-end gap-1">
                   {!v.active ? <Badge tone="bad">Inativo</Badge> : v.published ? <Badge tone="good">No site</Badge> : null}
                   <Badge tone={v.owner === "own" ? "accent" : "neutral"}>
-                    {v.owner === "own" ? "Própria" : partners.find((p) => p.id === v.partnerId)?.name ?? "Parceiro"}
+                    {v.owner === "own" ? "Própria" : (partners.find((p) => p.id === v.partnerId)?.name ?? "Parceiro")}
                   </Badge>
                 </span>
               }
@@ -115,7 +129,13 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
     >
       <PhotoInput name={v.model || "Veículo"} value={v.photoUrl} onChange={(x) => set("photoUrl", x)} />
       <Field label="Modelo">
-        <input className="input" value={v.model} onChange={(e) => set("model", e.target.value)} autoFocus={props.isNew} placeholder="Ex.: Toyota SW4" />
+        <input
+          className="input"
+          value={v.model}
+          onChange={(e) => set("model", e.target.value)}
+          autoFocus={props.isNew}
+          placeholder="Ex.: Toyota SW4"
+        />
       </Field>
       <Field label="Categoria no site">
         <select className="input" value={v.categoryId ?? ""} onChange={(e) => set("categoryId", e.target.value || null)}>
@@ -183,17 +203,33 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
             </div>
           </div>
           <Field label="Descrição (PT)">
-            <textarea className="input resize-none" rows={2} value={v.descriptionPt} onChange={(e) => set("descriptionPt", e.target.value)} placeholder="Ex.: Vidros escurecidos, bancos em couro, Wi-Fi." />
+            <textarea
+              className="input resize-none"
+              rows={2}
+              value={v.descriptionPt}
+              onChange={(e) => set("descriptionPt", e.target.value)}
+              placeholder="Ex.: Vidros escurecidos, bancos em couro, Wi-Fi."
+            />
           </Field>
           <Field label="Descrição (EN)">
-            <textarea className="input resize-none" rows={2} value={v.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} />
+            <textarea
+              className="input resize-none"
+              rows={2}
+              value={v.descriptionEn}
+              onChange={(e) => set("descriptionEn", e.target.value)}
+            />
           </Field>
         </div>
       </Section>
       <div className="rounded-2xl border border-line px-4 py-2">
         <Switch checked={v.active} onChange={(x) => set("active", x)} label="Ativo" hint="Inativos não aparecem ao montar um serviço" />
         <div className="border-t border-line" />
-        <Switch checked={v.published} onChange={(x) => set("published", x)} label="Mostrar no site" hint="Foto, modelo, ano, lugares e descrição. A placa nunca aparece. Depois, publique na aba Site." />
+        <Switch
+          checked={v.published}
+          onChange={(x) => set("published", x)}
+          label="Mostrar no site"
+          hint="Foto, modelo, ano, lugares e descrição. A placa nunca aparece. Depois, publique na aba Site."
+        />
       </div>
       <Field label="Observações">
         <textarea className="input resize-none" rows={2} value={v.notes} onChange={(e) => set("notes", e.target.value)} />

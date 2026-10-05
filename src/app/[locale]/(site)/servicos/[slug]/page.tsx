@@ -78,7 +78,9 @@ export default async function ServicePage({ params }: Props) {
               <Link href={`/${locale}/servicos`} className="text-muted transition-colors duration-300 hover:text-text">
                 {dict.nav.services}
               </Link>
-              <span aria-hidden className="mx-2 text-muted">›</span>
+              <span aria-hidden className="mx-2 text-muted">
+                ›
+              </span>
             </nav>
             <h1 className="t-display mt-3 max-w-[16ch]">{service.name[locale]}</h1>
             <p className="t-lead mt-6 max-w-[48ch] !text-text/80">{service.summary[locale]}</p>
@@ -109,10 +111,7 @@ export default async function ServicePage({ params }: Props) {
                 </li>
               ))}
             </ul>
-            <Link
-              href={requestHref}
-              className="btn btn-primary mt-8 w-full"
-            >
+            <Link href={requestHref} className="btn btn-primary mt-8 w-full">
               {dict.common.requestThis}
             </Link>
           </div>
@@ -132,7 +131,10 @@ export default async function ServicePage({ params }: Props) {
                 >
                   <span className="t-h3">{s.name[locale]}</span>
                   <span className="hidden flex-1 text-right text-sm text-muted md:block">{s.summary[locale]}</span>
-                  <span aria-hidden className="text-2xl text-accent transition-transform duration-300 ease-[var(--ease-snap)] group-hover:translate-x-1">
+                  <span
+                    aria-hidden
+                    className="text-2xl text-accent transition-transform duration-300 ease-[var(--ease-snap)] group-hover:translate-x-1"
+                  >
                     ›
                   </span>
                 </Link>

@@ -15,9 +15,7 @@
   --color-danger: #f08c8c;
 
   /* SF Pro nativa no iPhone/Mac; Inter (com optical size) no resto */
-  --font-sans:
-    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--font-inter), "Helvetica Neue",
-    sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--font-inter), "Helvetica Neue", sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Motion "Physical": no máximo 3 curvas no projeto */

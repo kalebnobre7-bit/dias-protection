@@ -64,7 +64,9 @@ export default function JobsPage() {
   const q = query.trim().toLowerCase();
   const filtered = rows
     .filter((j) => filter === "all" || j.status === filter)
-    .filter((j) => !q || `${clientName(j.clientId)} ${serviceTypeName(j.serviceTypeId)} ${j.origin} ${j.destination}`.toLowerCase().includes(q))
+    .filter(
+      (j) => !q || `${clientName(j.clientId)} ${serviceTypeName(j.serviceTypeId)} ${j.origin} ${j.destination}`.toLowerCase().includes(q),
+    )
     .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
 
   return (
@@ -79,7 +81,10 @@ export default function JobsPage() {
         }
       />
       {!loading && !rows.length ? (
-        <EmptyState title="Nenhum serviço registrado" text="Registre cada pedido confirmado pelo WhatsApp para montar o histórico e o financeiro." />
+        <EmptyState
+          title="Nenhum serviço registrado"
+          text="Registre cada pedido confirmado pelo WhatsApp para montar o histórico e o financeiro."
+        />
       ) : (
         <>
           <div className="mb-4">
@@ -109,7 +114,9 @@ export default function JobsPage() {
                     <span className="flex flex-col items-end gap-1">
                       <span className="num font-medium">{brl.format(j.price)}</span>
                       <span className="flex gap-1">
-                        {j.status !== "canceled" && j.status !== "quote" && j.paymentStatus === "pending" && <Badge tone="warn">A receber</Badge>}
+                        {j.status !== "canceled" && j.status !== "quote" && j.paymentStatus === "pending" && (
+                          <Badge tone="warn">A receber</Badge>
+                        )}
                         <Badge tone={statusTone(j.status)}>{jobStatusLabel[j.status]}</Badge>
                       </span>
                     </span>
@@ -151,7 +158,17 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   const addCost = () =>
     setCosts([
       ...list,
-      { id: newId(), jobId: j.id, description: "", category: "agent", amount: 0, agentId: null, partnerId: null, paid: false, createdAt: new Date().toISOString() },
+      {
+        id: newId(),
+        jobId: j.id,
+        description: "",
+        category: "agent",
+        amount: 0,
+        agentId: null,
+        partnerId: null,
+        paid: false,
+        createdAt: new Date().toISOString(),
+      },
     ]);
 
   const save = async () => {
@@ -160,12 +177,23 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
     let clientId = clientChoice || null;
     if (clientChoice === NEW_CLIENT) {
       clientId = newId();
-      await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, notes: "", createdAt: new Date().toISOString() });
+      await repo.upsert("clients", {
+        id: clientId,
+        name: newClient.trim(),
+        company: "",
+        phone: "",
+        email: "",
+        language: null,
+        notes: "",
+        createdAt: new Date().toISOString(),
+      });
     }
     await repo.upsert("jobs", { ...j, clientId, paidAt: j.paymentStatus === "paid" ? j.paidAt || j.startsAt.slice(0, 10) : "" });
     await repo.replaceJobCosts(
       j.id,
-      list.filter((c) => c.description.trim() || c.amount > 0).map((c) => ({ ...c, description: c.description.trim() || costCategoryLabel[c.category] })),
+      list
+        .filter((c) => c.description.trim() || c.amount > 0)
+        .map((c) => ({ ...c, description: c.description.trim() || costCategoryLabel[c.category] })),
     );
     props.onClose();
   };
@@ -258,10 +286,20 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       <Section title="Equipe e veículos">
         <div className="space-y-5 rounded-2xl border border-line p-4">
           <Field label="Agentes">
-            <ChipSelect options={agentOptions} value={j.agentIds} onChange={(v) => set("agentIds", v)} empty="Cadastre agentes na aba Agentes." />
+            <ChipSelect
+              options={agentOptions}
+              value={j.agentIds}
+              onChange={(v) => set("agentIds", v)}
+              empty="Cadastre agentes na aba Agentes."
+            />
           </Field>
           <Field label="Veículos">
-            <ChipSelect options={vehicleOptions} value={j.vehicleIds} onChange={(v) => set("vehicleIds", v)} empty="Cadastre veículos na aba Veículos." />
+            <ChipSelect
+              options={vehicleOptions}
+              value={j.vehicleIds}
+              onChange={(v) => set("vehicleIds", v)}
+              empty="Cadastre veículos na aba Veículos."
+            />
           </Field>
         </div>
       </Section>
@@ -335,12 +373,22 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                   </select>
                   <MoneyInput value={c.amount} onChange={(v) => updateCost(c.id, { amount: v })} label="Valor do custo" />
                   <label className="flex min-h-11 items-center gap-2 text-[0.9375rem]">
-                    <input type="checkbox" className="size-4 accent-[#34c759]" checked={c.paid} onChange={(e) => updateCost(c.id, { paid: e.target.checked })} />
+                    <input
+                      type="checkbox"
+                      className="size-4 accent-[#34c759]"
+                      checked={c.paid}
+                      onChange={(e) => updateCost(c.id, { paid: e.target.checked })}
+                    />
                     Pago
                   </label>
                 </div>
                 {c.category === "agent" && (
-                  <select className="input" value={c.agentId ?? ""} onChange={(e) => updateCost(c.id, { agentId: e.target.value || null })} aria-label="Agente">
+                  <select
+                    className="input"
+                    value={c.agentId ?? ""}
+                    onChange={(e) => updateCost(c.id, { agentId: e.target.value || null })}
+                    aria-label="Agente"
+                  >
                     <option value="">Qual agente? (opcional)</option>
                     {agents.map((a) => (
                       <option key={a.id} value={a.id}>
@@ -350,7 +398,12 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                   </select>
                 )}
                 {c.category === "partner" && (
-                  <select className="input" value={c.partnerId ?? ""} onChange={(e) => updateCost(c.id, { partnerId: e.target.value || null })} aria-label="Parceiro">
+                  <select
+                    className="input"
+                    value={c.partnerId ?? ""}
+                    onChange={(e) => updateCost(c.id, { partnerId: e.target.value || null })}
+                    aria-label="Parceiro"
+                  >
                     <option value="">Qual parceiro? (opcional)</option>
                     {partners.map((p) => (
                       <option key={p.id} value={p.id}>
