@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Emblem } from "@/components/brand/Logo";
 import { Button, Field } from "@/components/admin/ui";
 import { signIn, useSession } from "@/lib/admin/auth";
+import { SUPABASE_SETUP_MESSAGE, supabaseConfigured } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,10 +23,11 @@ export default function LoginPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const ok = await signIn(email, password);
+    setError("");
+    const result = await signIn(email, password);
     setBusy(false);
-    if (ok) router.replace("/admin");
-    else setError("E-mail ou senha incorretos.");
+    if (result.ok) router.replace("/admin");
+    else setError(result.message);
   };
 
   return (
@@ -41,6 +43,7 @@ export default function LoginPage() {
           <p className="mt-1 text-[0.9375rem] text-muted">Entre para gerenciar serviços, equipe e financeiro.</p>
         </div>
         <div className="space-y-4 rounded-3xl border border-line bg-navy/60 p-6">
+          {!supabaseConfigured && <p className="text-[0.875rem] text-danger">{SUPABASE_SETUP_MESSAGE}</p>}
           <Field label="E-mail">
             <input
               className="input"
@@ -61,9 +64,13 @@ export default function LoginPage() {
               required
             />
           </Field>
-          {error && <p className="text-[0.875rem] text-danger">{error}</p>}
-          <Button type="submit" className="w-full" disabled={busy}>
-            Entrar
+          {error && (
+            <p role="alert" className="text-[0.875rem] text-danger">
+              {error}
+            </p>
+          )}
+          <Button type="submit" className="w-full" disabled={busy || !supabaseConfigured}>
+            {busy ? "Entrando…" : "Entrar"}
           </Button>
         </div>
       </form>

@@ -127,7 +127,7 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
         </>
       }
     >
-      <PhotoInput name={v.model || "Veículo"} value={v.photoUrl} onChange={(x) => set("photoUrl", x)} />
+      <PhotoInput name={v.model || "Veículo"} value={v.photoUrl} folder="vehicles" id={v.id} onChange={(x) => set("photoUrl", x)} />
       <Field label="Modelo">
         <input
           className="input"

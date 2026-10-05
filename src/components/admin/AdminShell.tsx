@@ -9,6 +9,7 @@ import {
   Building2 as IconPartners,
   Car as IconVehicles,
   ChartColumn as IconFinance,
+  Database as IconData,
   ExternalLink as IconExternal,
   FileText as IconProposals,
   Globe as IconSite,
@@ -16,13 +17,13 @@ import {
   LogOut as IconLogout,
   Menu as IconMenu,
   ShieldCheck as IconAgents,
-  Trash2,
+  TriangleAlert as IconWarn,
   Users as IconClients,
 } from "lucide-react";
 
 import { Emblem } from "@/components/brand/Logo";
 import { signOut, useSession } from "@/lib/admin/auth";
-import { repo } from "@/lib/admin/store";
+import { onStoreError } from "@/lib/admin/store";
 
 const nav = [
   { href: "/admin", label: "Início", Icon: IconHome },
@@ -34,6 +35,7 @@ const nav = [
   { href: "/admin/veiculos", label: "Veículos", Icon: IconVehicles },
   { href: "/admin/financeiro", label: "Financeiro", Icon: IconFinance },
   { href: "/admin/site", label: "Site", Icon: IconSite },
+  { href: "/admin/dados", label: "Dados", Icon: IconData },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -89,7 +91,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         >
           <IconExternal className="size-5" /> Ver site
         </a>
-        <ResetData />
         <button
           type="button"
           onClick={logout}
@@ -144,27 +145,39 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       <main className="mx-auto w-full min-w-0 max-w-5xl px-4 pb-16 pt-6 md:px-8 md:pt-10">{children}</main>
+      <StoreErrorToast />
     </div>
   );
 }
 
-// Enquanto não há Supabase: zera os dados de exemplo antes do uso real
-function ResetData() {
-  const [armed, setArmed] = useState(false);
-  const run = async () => {
-    if (!armed) return setArmed(true);
-    await repo.reset("empty");
-    setArmed(false);
-  };
+// Falhas de rede ou permissão ao gravar/ler no Supabase aparecem aqui, em qualquer tela
+function StoreErrorToast() {
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => onStoreError(setMessage), []);
+  useEffect(() => {
+    if (!message) return;
+    const t = window.setTimeout(() => setMessage(null), 8000);
+    return () => window.clearTimeout(t);
+  }, [message]);
+
   return (
-    <button
-      type="button"
-      onClick={run}
-      onBlur={() => setArmed(false)}
-      className={`flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-[0.9375rem] transition-colors hover:bg-white/4 ${armed ? "text-danger" : "text-muted hover:text-text"}`}
-    >
-      <Trash2 className="size-5" />
-      {armed ? "Apagar tudo? Toque de novo" : "Zerar dados de exemplo"}
-    </button>
+    <AnimatePresence>
+      {message && (
+        <motion.div
+          role="alert"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 16 }}
+          className="fixed inset-x-4 bottom-4 z-[60] mx-auto flex max-w-lg items-start gap-3 rounded-2xl border border-danger/40 bg-ink-2 p-4 text-[0.9375rem] shadow-xl"
+        >
+          <IconWarn className="mt-0.5 size-5 shrink-0 text-danger" />
+          <span className="min-w-0 flex-1">{message}</span>
+          <button type="button" onClick={() => setMessage(null)} className="text-muted hover:text-text" aria-label="Fechar">
+            ×
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

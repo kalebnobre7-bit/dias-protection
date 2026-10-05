@@ -65,11 +65,14 @@ export function proposalTotals(p: Proposal): { subtotal: number; discount: numbe
   return { subtotal, discount, total: subtotal - discount };
 }
 
-// "2026-003": sequencial dentro do ano
+// "2026-003": sequencial dentro do ano. Maior número + 1 (não contagem): excluir uma proposta
+// não repete número, e proposals.number é unique no banco.
 export function nextProposalNumber(existing: Proposal[], date = new Date()): string {
   const year = String(date.getFullYear());
-  const n = existing.filter((p) => p.number.startsWith(`${year}-`)).length + 1;
-  return `${year}-${String(n).padStart(3, "0")}`;
+  const last = existing
+    .filter((p) => p.number.startsWith(`${year}-`))
+    .reduce((max, p) => Math.max(max, Number.parseInt(p.number.slice(year.length + 1), 10) || 0), 0);
+  return `${year}-${String(last + 1).padStart(3, "0")}`;
 }
 
 const isoDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -114,7 +117,16 @@ export function proposalFromJob(job: Job, id: string, existing: Proposal[]): Pro
     location: [job.origin, job.destination].filter(Boolean).join(" → "),
     items:
       job.price > 0
-        ? [{ id: `${id}-1`, description: serviceTypeName(job.serviceTypeId), detail: "", qty: 1, unit: "un.", unitPrice: job.price }]
+        ? [
+            {
+              id: crypto.randomUUID(),
+              description: serviceTypeName(job.serviceTypeId),
+              detail: "",
+              qty: 1,
+              unit: "un.",
+              unitPrice: job.price,
+            },
+          ]
         : [],
     notes: job.notes,
   };

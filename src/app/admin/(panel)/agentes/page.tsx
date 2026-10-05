@@ -127,7 +127,7 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
         </>
       }
     >
-      <PhotoInput name={a.name} value={a.photoUrl} onChange={(v) => set("photoUrl", v)} />
+      <PhotoInput name={a.name} value={a.photoUrl} folder="agents" id={a.id} onChange={(v) => set("photoUrl", v)} />
       <Field label="Nome">
         <input className="input" value={a.name} onChange={(e) => set("name", e.target.value)} autoFocus={isNew} />
       </Field>
