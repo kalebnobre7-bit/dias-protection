@@ -61,7 +61,10 @@ export default function ProposalDocumentPage() {
     <Shell
       toolbar={
         <>
-          <Link href="/admin/propostas" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line-strong px-4 text-[0.9375rem] hover:border-silver">
+          <Link
+            href="/admin/propostas"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line-strong px-4 text-[0.9375rem] hover:border-silver"
+          >
             <IconBack className="size-4" /> Propostas
           </Link>
           <span className="text-[0.875rem] text-muted">
@@ -97,7 +100,9 @@ export default function ProposalDocumentPage() {
           {/* Título + partes */}
           <section className="mt-8">
             <h1 className="text-[1.75rem] font-semibold leading-tight tracking-[-0.03em] md:text-[2rem]">{p.title}</h1>
-            {p.serviceIds.length > 0 && <p className="mt-2 text-[0.9375rem] text-[#141922]/65">{p.serviceIds.map(serviceTypeName).join(" · ")}</p>}
+            {p.serviceIds.length > 0 && (
+              <p className="mt-2 text-[0.9375rem] text-[#141922]/65">{p.serviceIds.map(serviceTypeName).join(" · ")}</p>
+            )}
             <dl className="mt-6 grid gap-6 text-[0.9375rem] sm:grid-cols-2">
               <div>
                 <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Preparada para</dt>
@@ -106,7 +111,9 @@ export default function ProposalDocumentPage() {
                     <>
                       <span className="block font-semibold">{client.name}</span>
                       {client.company && <span className="block">{client.company}</span>}
-                      {(client.email || client.phone) && <span className="block text-[#141922]/65">{[client.email, client.phone].filter(Boolean).join(" · ")}</span>}
+                      {(client.email || client.phone) && (
+                        <span className="block text-[#141922]/65">{[client.email, client.phone].filter(Boolean).join(" · ")}</span>
+                      )}
                     </>
                   ) : (
                     <span className="text-[#141922]/55">—</span>
@@ -196,7 +203,10 @@ export default function ProposalDocumentPage() {
                   </>
                 )}
                 <tr>
-                  <td colSpan={3} className="pr-4 pt-4 text-right text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[#141922]/55">
+                  <td
+                    colSpan={3}
+                    className="pr-4 pt-4 text-right text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[#141922]/55"
+                  >
                     Total
                   </td>
                   <td className="num pt-3 text-right text-[1.375rem] font-semibold tracking-[-0.02em]">{brl.format(totals.total)}</td>
@@ -252,7 +262,8 @@ export default function ProposalDocumentPage() {
         </div>
       </article>
       <p className="mx-auto mt-6 max-w-[210mm] text-center text-xs text-muted print:hidden">
-        Gerado em {formatDateLong(new Date().toISOString())}. Na janela de impressão, escolha “Salvar como PDF” e desative cabeçalhos e rodapés.
+        Gerado em {formatDateLong(new Date().toISOString())}. Na janela de impressão, escolha “Salvar como PDF” e desative cabeçalhos e
+        rodapés.
       </p>
     </Shell>
   );

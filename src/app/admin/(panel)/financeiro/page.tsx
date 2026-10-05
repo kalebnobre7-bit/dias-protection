@@ -5,7 +5,21 @@ import { ChevronLeft as IconChevronLeft, ChevronRight as IconChevron, Plus as Ic
 
 import { DateTile, MoneyInput } from "@/components/admin/job-bits";
 import { MonthStats } from "@/components/admin/MonthStats";
-import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, Section, Segmented, Sheet, Switch, useForm } from "@/components/admin/ui";
+import {
+  Badge,
+  Button,
+  DeleteButton,
+  EmptyState,
+  Field,
+  List,
+  PageHeader,
+  Row,
+  Section,
+  Segmented,
+  Sheet,
+  Switch,
+  useForm,
+} from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { countsAsRevenue, currentMonth, jobCostTotal, monthlySummary, monthOf, shiftMonth } from "@/lib/admin/finance";
 import { brl, formatDateTime, formatMonth } from "@/lib/admin/labels";
@@ -21,7 +35,9 @@ export default function FinancePage() {
   const [editing, setEditing] = useState<Transaction | null>(null);
 
   const summary = monthlySummary(month, jobs, costs, transactions);
-  const monthJobs = jobs.filter((j) => countsAsRevenue(j) && monthOf(j.startsAt) === month).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const monthJobs = jobs
+    .filter((j) => countsAsRevenue(j) && monthOf(j.startsAt) === month)
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const monthTx = transactions.filter((t) => monthOf(t.date) === month).sort((a, b) => a.date.localeCompare(b.date));
   const clientName = (id: string | null) => clients.find((c) => c.id === id)?.name ?? "Sem cliente";
 
@@ -43,11 +59,21 @@ export default function FinancePage() {
         subtitle="Receita dos serviços, custos e lançamentos avulsos do mês."
         action={
           <div className="flex items-center gap-1 rounded-full border border-line p-1">
-            <button type="button" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Mês anterior" className="grid size-9 place-items-center rounded-full hover:bg-white/6">
+            <button
+              type="button"
+              onClick={() => setMonth(shiftMonth(month, -1))}
+              aria-label="Mês anterior"
+              className="grid size-9 place-items-center rounded-full hover:bg-white/6"
+            >
               <IconChevronLeft className="size-4" />
             </button>
             <span className="min-w-36 text-center text-[0.9375rem] font-medium">{formatMonth(month)}</span>
-            <button type="button" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Próximo mês" className="grid size-9 place-items-center rounded-full hover:bg-white/6">
+            <button
+              type="button"
+              onClick={() => setMonth(shiftMonth(month, 1))}
+              aria-label="Próximo mês"
+              className="grid size-9 place-items-center rounded-full hover:bg-white/6"
+            >
               <IconChevron className="size-4" />
             </button>
           </div>
@@ -73,7 +99,9 @@ export default function FinancePage() {
                   trailing={
                     <span className="flex flex-col items-end gap-1">
                       <span className="num font-medium">{brl.format(j.price - c)}</span>
-                      <Badge tone={j.paymentStatus === "paid" ? "good" : "warn"}>{j.paymentStatus === "paid" ? "Recebido" : "A receber"}</Badge>
+                      <Badge tone={j.paymentStatus === "paid" ? "good" : "warn"}>
+                        {j.paymentStatus === "paid" ? "Recebido" : "A receber"}
+                      </Badge>
                     </span>
                   }
                 />

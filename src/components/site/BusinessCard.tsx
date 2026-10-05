@@ -82,12 +82,7 @@ export function BusinessCard(p: Props) {
               </span>
               <span className="flex shrink-0 flex-col items-center gap-[1.2cqw]">
                 <span className="block rounded-[2cqw] bg-text p-[1.6cqw] text-ink">
-                  <svg
-                    viewBox={`0 0 ${p.qr.size} ${p.qr.size}`}
-                    className="block size-[22cqw]"
-                    shapeRendering="crispEdges"
-                    aria-hidden
-                  >
+                  <svg viewBox={`0 0 ${p.qr.size} ${p.qr.size}`} className="block size-[22cqw]" shapeRendering="crispEdges" aria-hidden>
                     <path d={p.qr.d} fill="currentColor" />
                   </svg>
                 </span>

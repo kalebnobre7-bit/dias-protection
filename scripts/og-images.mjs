@@ -40,7 +40,12 @@ function pages(locale) {
   return [
     { key: "home", eyebrow: dict.home.eyebrow, title: dict.home.title, image: "images/hero-suv.jpg" },
     { key: "servicos", eyebrow: `${dict.services.label} · ${brand}`, title: dict.services.title, image: "images/hotel.jpg" },
-    ...serviceTypes.map((s) => ({ key: `servicos-${s.id}`, eyebrow: `${dict.services.label} · ${brand}`, title: s.name[locale], image: s.image.slice(1) })),
+    ...serviceTypes.map((s) => ({
+      key: `servicos-${s.id}`,
+      eyebrow: `${dict.services.label} · ${brand}`,
+      title: s.name[locale],
+      image: s.image.slice(1),
+    })),
     { key: "sobre", eyebrow: `${dict.about.label} · ${brand}`, title: dict.about.title, image: "images/gabriel.jpg", portrait: true },
     { key: "equipe", eyebrow: `${dict.team.label} · ${brand}`, title: dict.team.title, image: "images/agent.jpg" },
     { key: "frota", eyebrow: `${dict.fleet.label} · ${brand}`, title: dict.fleet.title, image: "images/convoy.jpg" },

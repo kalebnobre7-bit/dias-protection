@@ -76,9 +76,7 @@ export function Configurator({ content, dict, locale }: Props) {
     }));
 
   const toggleService = (id: string) => {
-    setOrder((o) =>
-      o.services.includes(id) ? { ...o, services: o.services.filter((s) => s !== id) } : withServices(o, [id]),
-    );
+    setOrder((o) => (o.services.includes(id) ? { ...o, services: o.services.filter((s) => s !== id) } : withServices(o, [id])));
     setErrors((e) => ({ ...e, service: undefined }));
   };
 
@@ -193,11 +191,7 @@ export function Configurator({ content, dict, locale }: Props) {
                 exit="exit"
                 transition={{ duration: 0.3, ease: easeOut }}
               >
-                <StepHeader
-                  title={t.steps[key]}
-                  hint={stepHint(key, t, period)}
-                  tag={OPTIONAL.has(key) ? t.optional : undefined}
-                />
+                <StepHeader title={t.steps[key]} hint={stepHint(key, t, period)} tag={OPTIONAL.has(key) ? t.optional : undefined} />
 
                 {key === "service" && (
                   <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label={t.steps.service}>
@@ -280,9 +274,7 @@ export function Configurator({ content, dict, locale }: Props) {
                   <>
                     <SuggestToggle
                       active={order.guardsSuggest}
-                      onClick={() =>
-                        setOrder((o) => ({ ...o, guardsSuggest: !o.guardsSuggest, guardsArmed: 0, guardsUnarmed: 0 }))
-                      }
+                      onClick={() => setOrder((o) => ({ ...o, guardsSuggest: !o.guardsSuggest, guardsArmed: 0, guardsUnarmed: 0 }))}
                       label={t.suggest}
                       note={t.suggestNote}
                     />
@@ -340,7 +332,12 @@ export function Configurator({ content, dict, locale }: Props) {
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <Field label={t.origin}>
-                        <input value={order.origin} onChange={(e) => set("origin", e.target.value)} placeholder={t.originPh} className={inputClass()} />
+                        <input
+                          value={order.origin}
+                          onChange={(e) => set("origin", e.target.value)}
+                          placeholder={t.originPh}
+                          className={inputClass()}
+                        />
                       </Field>
                       <Field label={t.destination}>
                         <input
@@ -404,7 +401,11 @@ export function Configurator({ content, dict, locale }: Props) {
                           <p className="label mb-3">{t.eventKind}</p>
                           <div className="flex flex-wrap gap-2">
                             {eventKinds.map((k) => (
-                              <Chip key={k} active={order.eventKind === k} onClick={() => set("eventKind", order.eventKind === k ? null : k)}>
+                              <Chip
+                                key={k}
+                                active={order.eventKind === k}
+                                onClick={() => set("eventKind", order.eventKind === k ? null : k)}
+                              >
                                 {t.eventKinds[k]}
                               </Chip>
                             ))}
@@ -732,7 +733,12 @@ function Stepper(props: { value: number; onChange: (n: number) => void; label: s
       <output className="num w-8 text-center font-semibold" aria-live="polite">
         {props.value}
       </output>
-      <button type="button" className={btn} onClick={() => props.onChange(props.value + 1)} aria-label={`${props.dict.order.increase}: ${props.label}`}>
+      <button
+        type="button"
+        className={btn}
+        onClick={() => props.onChange(props.value + 1)}
+        aria-label={`${props.dict.order.increase}: ${props.label}`}
+      >
         +
       </button>
     </div>

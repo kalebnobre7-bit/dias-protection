@@ -4,12 +4,25 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Briefcase as IconJobs, Building2 as IconPartners, Car as IconVehicles, ChartColumn as IconFinance, ExternalLink as IconExternal, FileText as IconProposals, Globe as IconSite, House as IconHome, LogOut as IconLogout, Menu as IconMenu, ShieldCheck as IconAgents, Trash2, Users as IconClients } from "lucide-react";
+import {
+  Briefcase as IconJobs,
+  Building2 as IconPartners,
+  Car as IconVehicles,
+  ChartColumn as IconFinance,
+  ExternalLink as IconExternal,
+  FileText as IconProposals,
+  Globe as IconSite,
+  House as IconHome,
+  LogOut as IconLogout,
+  Menu as IconMenu,
+  ShieldCheck as IconAgents,
+  Trash2,
+  Users as IconClients,
+} from "lucide-react";
 
 import { Emblem } from "@/components/brand/Logo";
 import { signOut, useSession } from "@/lib/admin/auth";
 import { repo } from "@/lib/admin/store";
-
 
 const nav = [
   { href: "/admin", label: "Início", Icon: IconHome },
@@ -94,10 +107,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
       {/* Celular: barra superior + gaveta */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-ink/80 px-2 backdrop-blur-[16px] backdrop-saturate-[180%] lg:hidden">
-        <button type="button" onClick={() => setOpen(true)} aria-label="Abrir menu" className="grid size-11 place-items-center rounded-full">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Abrir menu"
+          className="grid size-11 place-items-center rounded-full"
+        >
           <IconMenu className="size-5" />
         </button>
-        <span className="font-semibold tracking-[-0.02em]">{nav.find((n) => (n.href === "/admin" ? pathname === "/admin" : pathname.startsWith(n.href)))?.label}</span>
+        <span className="font-semibold tracking-[-0.02em]">
+          {nav.find((n) => (n.href === "/admin" ? pathname === "/admin" : pathname.startsWith(n.href)))?.label}
+        </span>
         <span className="size-11" />
       </header>
       <AnimatePresence>

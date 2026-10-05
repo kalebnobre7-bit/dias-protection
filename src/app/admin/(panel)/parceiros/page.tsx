@@ -3,7 +3,21 @@
 import { useState } from "react";
 import { Plus as IconPlus } from "lucide-react";
 
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, useForm } from "@/components/admin/ui";
+import {
+  Avatar,
+  Badge,
+  Button,
+  DeleteButton,
+  EmptyState,
+  Field,
+  List,
+  PageHeader,
+  Row,
+  SearchBox,
+  Section,
+  Sheet,
+  useForm,
+} from "@/components/admin/ui";
 import { brl, formatDateTime } from "@/lib/admin/labels";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Partner } from "@/lib/admin/types";

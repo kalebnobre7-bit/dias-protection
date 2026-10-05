@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Check as IconCheck, Copy as IconCopy, FileText as IconDoc, Plus as IconPlus, Send as IconSend, X as IconClose } from "lucide-react";
+import {
+  Check as IconCheck,
+  Copy as IconCopy,
+  FileText as IconDoc,
+  Plus as IconPlus,
+  Send as IconSend,
+  X as IconClose,
+} from "lucide-react";
 
 import { MoneyInput } from "@/components/admin/job-bits";
 import {
@@ -118,7 +125,11 @@ export default function ProposalsPage() {
                 <Row
                   key={p.id}
                   onClick={() => setEditing(p)}
-                  leading={<span className="num grid h-12 w-16 shrink-0 place-items-center rounded-xl bg-navy-2 text-xs font-semibold text-silver">{p.number}</span>}
+                  leading={
+                    <span className="num grid h-12 w-16 shrink-0 place-items-center rounded-xl bg-navy-2 text-xs font-semibold text-silver">
+                      {p.number}
+                    </span>
+                  }
                   title={p.title || "Sem título"}
                   subtitle={`${clientName(p.clientId)} · válida até ${formatDate(p.validUntil)}`}
                   trailing={
@@ -154,8 +165,16 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
   const totals = proposalTotals(p);
   const text = useMemo(() => proposalText(p, client), [p, client]);
 
-  const updateItem = (id: string, patch: Partial<ProposalItem>) => set("items", p.items.map((i) => (i.id === id ? { ...i, ...patch } : i)));
-  const removeItem = (id: string) => set("items", p.items.filter((i) => i.id !== id));
+  const updateItem = (id: string, patch: Partial<ProposalItem>) =>
+    set(
+      "items",
+      p.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
+    );
+  const removeItem = (id: string) =>
+    set(
+      "items",
+      p.items.filter((i) => i.id !== id),
+    );
   const addItem = (presetLabel = "") => {
     const found = ITEM_PRESETS.find((x) => x.label === presetLabel)?.item;
     set("items", [...p.items, { id: newId(), unitPrice: 0, ...(found ?? { description: "", detail: "", qty: 1, unit: "un." }) }]);
@@ -175,7 +194,16 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
     let clientId = clientChoice || null;
     if (clientChoice === NEW_CLIENT) {
       clientId = newId();
-      await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, notes: "", createdAt: new Date().toISOString() });
+      await repo.upsert("clients", {
+        id: clientId,
+        name: newClient.trim(),
+        company: "",
+        phone: "",
+        email: "",
+        language: null,
+        notes: "",
+        createdAt: new Date().toISOString(),
+      });
       setClientChoice(clientId);
     }
     const saved: Proposal = {
@@ -327,7 +355,12 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Período">
-              <input className="input" value={p.period} onChange={(e) => set("period", e.target.value)} placeholder="10 a 15 de outubro, 8h às 20h" />
+              <input
+                className="input"
+                value={p.period}
+                onChange={(e) => set("period", e.target.value)}
+                placeholder="10 a 15 de outubro, 8h às 20h"
+              />
             </Field>
             <Field label="Local / trajeto">
               <input className="input" value={p.location} onChange={(e) => set("location", e.target.value)} placeholder="São Paulo · SP" />
@@ -363,7 +396,13 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
             {p.items.map((i) => (
               <li key={i.id} className="space-y-3 rounded-2xl border border-line p-4">
                 <div className="flex gap-2">
-                  <input className="input" value={i.description} onChange={(e) => updateItem(i.id, { description: e.target.value })} placeholder="Descrição" aria-label="Descrição do item" />
+                  <input
+                    className="input"
+                    value={i.description}
+                    onChange={(e) => updateItem(i.id, { description: e.target.value })}
+                    placeholder="Descrição"
+                    aria-label="Descrição do item"
+                  />
                   <button
                     type="button"
                     onClick={() => removeItem(i.id)}
@@ -373,7 +412,13 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                     <IconClose className="size-4" />
                   </button>
                 </div>
-                <input className="input !min-h-10 !text-[0.875rem]" value={i.detail} onChange={(e) => updateItem(i.id, { detail: e.target.value })} placeholder="Detalhe (ex.: 2 agentes · até 12h)" aria-label="Detalhe do item" />
+                <input
+                  className="input !min-h-10 !text-[0.875rem]"
+                  value={i.detail}
+                  onChange={(e) => updateItem(i.id, { detail: e.target.value })}
+                  placeholder="Detalhe (ex.: 2 agentes · até 12h)"
+                  aria-label="Detalhe do item"
+                />
                 <div className="grid grid-cols-[4.5rem_1fr_1fr] gap-2 sm:grid-cols-[4.5rem_7rem_1fr_auto] sm:items-center">
                   <input
                     className="input num"
@@ -385,7 +430,12 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                     onChange={(e) => updateItem(i.id, { qty: Math.max(0, Number(e.target.value) || 0) })}
                     aria-label="Quantidade"
                   />
-                  <select className="input" value={i.unit} onChange={(e) => updateItem(i.id, { unit: e.target.value })} aria-label="Unidade">
+                  <select
+                    className="input"
+                    value={i.unit}
+                    onChange={(e) => updateItem(i.id, { unit: e.target.value })}
+                    aria-label="Unidade"
+                  >
                     {[...new Set([...UNITS, i.unit])].map((u) => (
                       <option key={u} value={u}>
                         {u}
@@ -393,13 +443,17 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                     ))}
                   </select>
                   <MoneyInput value={i.unitPrice} onChange={(v) => updateItem(i.id, { unitPrice: v })} label="Valor unitário" />
-                  <span className="num col-span-3 text-right text-[0.9375rem] font-medium sm:col-span-1 sm:min-w-24">{brl.format(itemTotal(i))}</span>
+                  <span className="num col-span-3 text-right text-[0.9375rem] font-medium sm:col-span-1 sm:min-w-24">
+                    {brl.format(itemTotal(i))}
+                  </span>
                 </div>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-[0.9375rem] text-muted">Escolha um item do catálogo acima ou crie um em branco. Quantidade × valor unitário.</p>
+          <p className="text-[0.9375rem] text-muted">
+            Escolha um item do catálogo acima ou crie um em branco. Quantidade × valor unitário.
+          </p>
         )}
 
         <dl className="mt-4 space-y-2 rounded-2xl bg-navy/60 p-4 text-[0.9375rem]">

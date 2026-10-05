@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check as IconCheck, ExternalLink as IconExternal, Globe as IconGlobe, KeyRound as IconKey, UploadCloud as IconPublish } from "lucide-react";
+import {
+  Check as IconCheck,
+  ExternalLink as IconExternal,
+  Globe as IconGlobe,
+  KeyRound as IconKey,
+  UploadCloud as IconPublish,
+} from "lucide-react";
 
 import { Avatar, Badge, Button, EmptyState, Field, List, PageHeader, Row, Section, Switch } from "@/components/admin/ui";
 import { vehicleCategoryName } from "@/lib/admin/catalog";
@@ -47,7 +53,12 @@ export default function SitePage() {
       const r = await publishToGitHub(next, settings);
       setResult({ ok: true, ...r });
     } catch (e) {
-      const msg = e instanceof TypeError ? "Não foi possível falar com o GitHub. Verifique a conexão e tente de novo." : e instanceof Error ? e.message : "Não foi possível publicar.";
+      const msg =
+        e instanceof TypeError
+          ? "Não foi possível falar com o GitHub. Verifique a conexão e tente de novo."
+          : e instanceof Error
+            ? e.message
+            : "Não foi possível publicar.";
       setResult({ ok: false, message: msg });
     } finally {
       setBusy(false);
@@ -70,9 +81,7 @@ export default function SitePage() {
       <div className={`rounded-2xl border p-5 ${dirty ? "border-[#e8c27a]/40 bg-[#e8c27a]/6" : "border-line bg-navy/60"}`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-semibold">
-              {dirty ? "Há alterações ainda não publicadas" : "O site está igual ao painel"}
-            </p>
+            <p className="font-semibold">{dirty ? "Há alterações ainda não publicadas" : "O site está igual ao painel"}</p>
             <p className="mt-1 text-[0.9375rem] text-muted">
               No ar: <span className="num text-text">{live.agents.length}</span> agente(s) e{" "}
               <span className="num text-text">{live.vehicles.length}</span> veículo(s)
@@ -130,7 +139,9 @@ export default function SitePage() {
           ) : (
             <EmptyState title="Nenhum agente ativo" text="Cadastre a equipe na aba Agentes, com foto, bio e certificações." />
           )}
-          <p className="mt-3 px-1 text-[0.8125rem] text-muted">O site mostra nome, função, bio, idiomas, experiência, certificações e foto. Nunca telefone ou documento.</p>
+          <p className="mt-3 px-1 text-[0.8125rem] text-muted">
+            O site mostra nome, função, bio, idiomas, experiência, certificações e foto. Nunca telefone ou documento.
+          </p>
         </Section>
 
         <Section title={`Frota · ${next.vehicles.length} no site`}>
@@ -158,7 +169,9 @@ export default function SitePage() {
           ) : (
             <EmptyState title="Nenhum veículo ativo" text="Cadastre a frota na aba Veículos, com foto e descrição." />
           )}
-          <p className="mt-3 px-1 text-[0.8125rem] text-muted">O site mostra modelo, ano, cor, lugares, blindagem, descrição e foto. Nunca a placa.</p>
+          <p className="mt-3 px-1 text-[0.8125rem] text-muted">
+            O site mostra modelo, ano, cor, lugares, blindagem, descrição e foto. Nunca a placa.
+          </p>
         </Section>
       </div>
 
@@ -174,7 +187,8 @@ export default function SitePage() {
         {showSettings && settings && (
           <div className="space-y-4 rounded-2xl border border-line p-4">
             <p className="text-[0.9375rem] text-muted">
-              Publicar grava o arquivo <code className="text-silver">src/data/published.json</code> no repositório e o GitHub Pages republica o site. Crie um{" "}
+              Publicar grava o arquivo <code className="text-silver">src/data/published.json</code> no repositório e o GitHub Pages
+              republica o site. Crie um{" "}
               <a
                 href="https://github.com/settings/personal-access-tokens/new"
                 target="_blank"
@@ -183,7 +197,8 @@ export default function SitePage() {
               >
                 token fine-grained
               </a>{" "}
-              só para este repositório, com a permissão <strong className="text-text">Contents: Read and write</strong>. Ele fica salvo apenas neste navegador.
+              só para este repositório, com a permissão <strong className="text-text">Contents: Read and write</strong>. Ele fica salvo
+              apenas neste navegador.
             </p>
             <Field label="Token">
               <input

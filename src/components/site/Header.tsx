@@ -51,9 +51,7 @@ export function Header({ locale, dict }: Props) {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color] duration-300 ease-[var(--ease-in-out)] ${
-        scrolled || open
-          ? "border-line bg-ink/72 backdrop-blur-[16px] backdrop-saturate-[180%]"
-          : "border-transparent"
+        scrolled || open ? "border-line bg-ink/72 backdrop-blur-[16px] backdrop-saturate-[180%]" : "border-transparent"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
@@ -84,15 +82,8 @@ export function Header({ locale, dict }: Props) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <LocaleToggle
-            locale={locale}
-            hrefs={localeHrefs}
-            label={dict.nav.switchLabel}
-          />
-          <Link
-            href={`/${locale}/solicitar`}
-            className="btn btn-primary hidden !min-h-9 !px-4 !py-2 !text-[0.8125rem] sm:inline-flex"
-          >
+          <LocaleToggle locale={locale} hrefs={localeHrefs} label={dict.nav.switchLabel} />
+          <Link href={`/${locale}/solicitar`} className="btn btn-primary hidden !min-h-9 !px-4 !py-2 !text-[0.8125rem] sm:inline-flex">
             {dict.common.requestCta}
           </Link>
           <button
@@ -133,15 +124,14 @@ export function Header({ locale, dict }: Props) {
                     aria-current={pathname === l.href ? "page" : undefined}
                   >
                     {l.label}
-                    <span aria-hidden className="text-xl font-normal text-muted">›</span>
+                    <span aria-hidden className="text-xl font-normal text-muted">
+                      ›
+                    </span>
                   </Link>
                 </motion.li>
               ))}
             </ul>
-            <Link
-              href={`/${locale}/solicitar`}
-              className="btn btn-primary mt-auto w-full"
-            >
+            <Link href={`/${locale}/solicitar`} className="btn btn-primary mt-auto w-full">
               {dict.common.requestCta}
             </Link>
           </motion.nav>

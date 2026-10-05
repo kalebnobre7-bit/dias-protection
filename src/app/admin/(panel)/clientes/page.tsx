@@ -3,10 +3,32 @@
 import { useState } from "react";
 import { Plus as IconPlus } from "lucide-react";
 
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, useForm } from "@/components/admin/ui";
+import {
+  Avatar,
+  Badge,
+  Button,
+  DeleteButton,
+  EmptyState,
+  Field,
+  List,
+  PageHeader,
+  Row,
+  SearchBox,
+  Section,
+  Sheet,
+  useForm,
+} from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { countsAsRevenue } from "@/lib/admin/finance";
-import { brl, clientLanguageLabel, formatDate, formatDateTime, jobStatusLabel, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
+import {
+  brl,
+  clientLanguageLabel,
+  formatDate,
+  formatDateTime,
+  jobStatusLabel,
+  proposalStatusLabel,
+  proposalStatusTone,
+} from "@/lib/admin/labels";
 import { proposalTotals } from "@/lib/admin/proposals";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Client, Job } from "@/lib/admin/types";
@@ -132,7 +154,11 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
         </Field>
       </div>
       <Field label="Idioma de atendimento">
-        <select className="input" value={c.language ?? ""} onChange={(e) => set("language", (e.target.value || null) as Client["language"])}>
+        <select
+          className="input"
+          value={c.language ?? ""}
+          onChange={(e) => set("language", (e.target.value || null) as Client["language"])}
+        >
           <option value="">Não informado</option>
           {Object.entries(clientLanguageLabel).map(([v, l]) => (
             <option key={v} value={v}>
@@ -177,7 +203,9 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
                   trailing={
                     <span className="flex flex-col items-end gap-1">
                       <span className="num text-[0.9375rem] font-medium">{brl.format(j.price)}</span>
-                      <Badge tone={j.status === "done" ? "good" : j.status === "canceled" ? "bad" : "neutral"}>{jobStatusLabel[j.status]}</Badge>
+                      <Badge tone={j.status === "done" ? "good" : j.status === "canceled" ? "bad" : "neutral"}>
+                        {jobStatusLabel[j.status]}
+                      </Badge>
                     </span>
                   }
                 />

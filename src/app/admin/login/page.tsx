@@ -42,10 +42,24 @@ export default function LoginPage() {
         </div>
         <div className="space-y-4 rounded-3xl border border-line bg-navy/60 p-6">
           <Field label="E-mail">
-            <input className="input" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <input
+              className="input"
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </Field>
           <Field label="Senha">
-            <input className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <input
+              className="input"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
           </Field>
           {error && <p className="text-[0.875rem] text-danger">{error}</p>}
           <Button type="submit" className="w-full" disabled={busy}>

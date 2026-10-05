@@ -4,7 +4,21 @@ import { useState } from "react";
 import { Plus as IconPlus } from "lucide-react";
 
 import { PhotoInput } from "@/components/admin/PhotoInput";
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, Section, Sheet, Switch, useForm } from "@/components/admin/ui";
+import {
+  Avatar,
+  Badge,
+  Button,
+  DeleteButton,
+  EmptyState,
+  Field,
+  List,
+  PageHeader,
+  Row,
+  Section,
+  Sheet,
+  Switch,
+  useForm,
+} from "@/components/admin/ui";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { AgentRecord } from "@/lib/admin/types";
 
@@ -60,7 +74,13 @@ export default function AgentsPage() {
                 subtitle={[a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ")}
                 trailing={
                   <span className="flex flex-col items-end gap-1">
-                    {!a.active ? <Badge tone="bad">Inativo</Badge> : a.published ? <Badge tone="good">No site</Badge> : <Badge>Interno</Badge>}
+                    {!a.active ? (
+                      <Badge tone="bad">Inativo</Badge>
+                    ) : a.published ? (
+                      <Badge tone="good">No site</Badge>
+                    ) : (
+                      <Badge>Interno</Badge>
+                    )}
                     <span className="num text-xs text-muted">{count} serviço(s)</span>
                   </span>
                 }
@@ -130,7 +150,15 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
           <input
             className="input"
             defaultValue={a.languages.join(", ")}
-            onChange={(e) => set("languages", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+            onChange={(e) =>
+              set(
+                "languages",
+                e.target.value
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean),
+              )
+            }
           />
         </Field>
         <Field label="Anos de experiência">
@@ -149,7 +177,15 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
           className="input resize-none"
           rows={3}
           defaultValue={a.certifications.join("\n")}
-          onChange={(e) => set("certifications", e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))}
+          onChange={(e) =>
+            set(
+              "certifications",
+              e.target.value
+                .split("\n")
+                .map((s) => s.trim())
+                .filter(Boolean),
+            )
+          }
         />
       </Field>
 
@@ -157,7 +193,12 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
         <div className="rounded-2xl border border-line px-4 py-2">
           <Switch checked={a.active} onChange={(v) => set("active", v)} label="Ativo" hint="Inativos não aparecem na escala de serviços" />
           <div className="border-t border-line" />
-          <Switch checked={a.published} onChange={(v) => set("published", v)} label="Mostrar no site" hint="Nome, função, bio, idiomas, certificações e foto. Depois, publique na aba Site." />
+          <Switch
+            checked={a.published}
+            onChange={(v) => set("published", v)}
+            label="Mostrar no site"
+            hint="Nome, função, bio, idiomas, certificações e foto. Depois, publique na aba Site."
+          />
         </div>
       </Section>
 

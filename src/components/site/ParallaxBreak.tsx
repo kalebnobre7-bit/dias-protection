@@ -24,11 +24,7 @@ export function ParallaxBreak({ image, children }: Props) {
 
   return (
     <section ref={ref} className="relative isolate flex min-h-[40svh] items-center sm:min-h-[52svh] overflow-hidden">
-      <motion.div
-        aria-hidden
-        className="absolute inset-x-0 -inset-y-[10%] -z-20"
-        style={desktop && !reduced ? { y } : undefined}
-      >
+      <motion.div aria-hidden className="absolute inset-x-0 -inset-y-[10%] -z-20" style={desktop && !reduced ? { y } : undefined}>
         <Image src={image} alt="" fill sizes="100vw" className="object-cover" />
       </motion.div>
       <div aria-hidden className="absolute inset-0 -z-10 bg-ink/65" />

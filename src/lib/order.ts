@@ -123,12 +123,7 @@ function formatDate(date: string, locale: Locale): string {
 }
 
 // Monta o texto do WhatsApp (negrito com *…*) só com os campos preenchidos
-export function buildMessage(
-  order: Order,
-  content: SiteContent,
-  dict: Dictionary,
-  locale: Locale,
-): string {
+export function buildMessage(order: Order, content: SiteContent, dict: Dictionary, locale: Locale): string {
   const m = dict.message;
   const lines: string[] = [`*${m.title}*`, ""];
   const add = (label: string, value: string) => value && lines.push(`*${label}:* ${value}`);
@@ -164,9 +159,7 @@ export function buildMessage(
 
   const vehicleLines = order.vehiclesSuggest
     ? []
-    : content.vehicleCategories
-        .filter((v) => (order.vehicles[v.id] ?? 0) > 0)
-        .map((v) => `• ${order.vehicles[v.id]}× ${v.name[locale]}`);
+    : content.vehicleCategories.filter((v) => (order.vehicles[v.id] ?? 0) > 0).map((v) => `• ${order.vehicles[v.id]}× ${v.name[locale]}`);
   const wantsVehicle = vehicleLines.length > 0 || order.vehiclesSuggest;
   const guards = guardCount(order);
   const wantsGuards = guards > 0 || order.guardsSuggest;
