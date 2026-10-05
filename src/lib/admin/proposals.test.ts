@@ -26,10 +26,10 @@ describe("nextProposalNumber", () => {
     expect(nextProposalNumber([], at("2026-03-01"))).toBe("2026-001");
   });
 
-  it("conta só as propostas do mesmo ano", () => {
+  it("segue o maior número do mesmo ano", () => {
     const existing = [proposal({ number: "2025-007" }), proposal({ number: "2025-008" }), proposal({ number: "2026-001" })];
     expect(nextProposalNumber(existing, at("2026-03-01"))).toBe("2026-002");
-    expect(nextProposalNumber(existing, at("2025-12-31"))).toBe("2025-003");
+    expect(nextProposalNumber(existing, at("2025-12-31"))).toBe("2025-009");
   });
 
   it("preenche com zeros até três dígitos e passa de 999", () => {
@@ -38,9 +38,16 @@ describe("nextProposalNumber", () => {
     expect(nextProposalNumber(many, at("2026-06-01"))).toBe("2026-1000");
   });
 
-  // Hoje o número é contagem + 1, então excluir uma proposta do meio repete o número seguinte.
-  // Fica registrado aqui para virar maior + 1 quando a numeração for revista (sem mudar comportamento nesta fase).
-  it.todo("não repete número quando uma proposta do ano foi excluída");
+  it("não repete número quando uma proposta do ano foi excluída", () => {
+    // 2026-002 foi excluída: contagem + 1 daria 2026-003 de novo (e proposals.number é unique no banco)
+    const existing = [proposal({ number: "2026-001" }), proposal({ number: "2026-003" })];
+    expect(nextProposalNumber(existing, at("2026-06-01"))).toBe("2026-004");
+  });
+
+  it("ignora números fora do padrão", () => {
+    const existing = [proposal({ number: "2026-abc" }), proposal({ number: "rascunho" })];
+    expect(nextProposalNumber(existing, at("2026-06-01"))).toBe("2026-001");
+  });
 });
 
 describe("totais", () => {

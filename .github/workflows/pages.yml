@@ -30,6 +30,9 @@ jobs:
         env:
           GITHUB_PAGES: "true"
           NEXT_PUBLIC_SITE_URL: https://kalebnobre7-bit.github.io/dias-protection
+          # Painel: Settings → Secrets and variables → Actions → Variables (a anon key é pública; o RLS protege)
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       - run: cp scripts/pages-index.html out/index.html && touch out/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
