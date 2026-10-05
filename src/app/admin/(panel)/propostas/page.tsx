@@ -41,6 +41,7 @@ import {
   proposalText,
   proposalTotals,
 } from "@/lib/admin/proposals";
+import { alertLabel, proposalAlert, type ProposalAlert } from "@/lib/admin/funnel";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Proposal, ProposalItem, ProposalStatus } from "@/lib/admin/types";
 import { whatsappUrl } from "@/lib/order";
@@ -70,6 +71,7 @@ export default function ProposalsPage() {
   }, [loading]);
 
   const clientName = (id: string | null) => clients.find((c) => c.id === id)?.name ?? "Sem cliente";
+  const alertOf = (p: Proposal): ProposalAlert => proposalAlert(p);
   const q = query.trim().toLowerCase();
   const filtered = rows
     .filter((p) => filter === "all" || (filter === "open" ? p.status === "draft" || p.status === "sent" : p.status === filter))
@@ -135,7 +137,10 @@ export default function ProposalsPage() {
                   trailing={
                     <span className="flex flex-col items-end gap-1">
                       <span className="num font-medium">{brl.format(proposalTotals(p).total)}</span>
-                      <Badge tone={proposalStatusTone(p.status)}>{proposalStatusLabel[p.status]}</Badge>
+                      <span className="flex flex-wrap justify-end gap-1">
+                        {alertOf(p) && <Badge tone={alertOf(p)!.kind === "expired" ? "bad" : "warn"}>{alertLabel(alertOf(p)!)}</Badge>}
+                        <Badge tone={proposalStatusTone(p.status)}>{proposalStatusLabel[p.status]}</Badge>
+                      </span>
                     </span>
                   }
                 />

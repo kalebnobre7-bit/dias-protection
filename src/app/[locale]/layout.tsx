@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { notFound } from "next/navigation";
@@ -38,7 +39,11 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <html lang={locale === "pt" ? "pt-BR" : "en"} className={inter.variable}>
-      <body className="min-h-dvh">{children}</body>
+      <body className="min-h-dvh">
+        {children}
+        {/* Vercel Analytics (sem cookie): só entra no build da Vercel; no GitHub Pages não carrega nada */}
+        {process.env.VERCEL === "1" && <Analytics />}
+      </body>
     </html>
   );
 }

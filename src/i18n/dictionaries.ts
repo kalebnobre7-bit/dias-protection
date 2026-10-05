@@ -99,6 +99,7 @@ const pt = {
     title: "Quem estará ao seu lado.",
     lead: "Cada operação conta com uma equipe escolhida para aquela missão, conduzida pessoalmente pelo Gabriel.",
     criteriaLabel: "Como selecionamos",
+    criteriaTitle: "Quatro critérios dos quais não abrimos mão.",
     criteria: [
       { title: "Histórico verificado", text: "Profissionais com trajetória checada em segurança pública ou privada." },
       { title: "Formação e certificação", text: "Tiro defensivo, primeiros socorros táticos e direção defensiva." },
@@ -366,6 +367,7 @@ const en: Dictionary = {
     title: "Who will be by your side.",
     lead: "Every operation has a team chosen for that mission, personally led by Gabriel.",
     criteriaLabel: "How we select",
+    criteriaTitle: "Four standards we never bend.",
     criteria: [
       { title: "Verified track record", text: "Professionals with a checked background in public or private security." },
       { title: "Training & certification", text: "Defensive shooting, tactical first aid and defensive driving." },

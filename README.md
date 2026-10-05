@@ -15,7 +15,7 @@ npm run check                # lint + typecheck + prettier + testes (o que o CI 
 | `npm run lint` / `lint:fix` | ESLint (`next/core-web-vitals` + `next/typescript`, config em `eslint.config.mjs`) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run format` / `format:check` | Prettier (`.prettierrc`: 140 colunas, aspas duplas, vírgula final; Markdown fica de fora) |
-| `npm test` / `test:watch` | Vitest (`vitest.config.mts`), só regras puras: `src/lib/order.test.ts` (mensagem do WhatsApp), `src/lib/admin/finance.test.ts` (resumo mensal), `src/lib/admin/proposals.test.ts` (numeração e totais), `src/lib/admin/rows.test.ts` (painel ↔ Postgres) e `src/lib/admin/migrate.test.ts` (importação) |
+| `npm test` / `test:watch` | Vitest (`vitest.config.mts`), só regras puras: `src/lib/order.test.ts` (mensagem do WhatsApp), `src/lib/admin/finance.test.ts` (resumo mensal), `src/lib/admin/proposals.test.ts` (numeração e totais), `src/lib/admin/rows.test.ts` (painel ↔ Postgres), `src/lib/admin/migrate.test.ts` (importação), `src/lib/admin/funnel.test.ts` (alertas e funil) e `src/components/site/configurator/steps.test.ts` (trilha do pedido) |
 
 `.github/workflows/ci.yml` roda tudo isso e o export estático em cada PR e em push na `main`. O deploy do Pages (`pages.yml`) só ganhou as variáveis do Supabase.
 
@@ -45,6 +45,8 @@ A cada push na `main`, `.github/workflows/pages.yml` gera o export estático (`G
 - **Imagens de prévia (WhatsApp/LinkedIn)**: `public/og/*.jpg`, uma por página e idioma, geradas por `node --experimental-strip-types --no-warnings scripts/og-images.mjs` (precisa do Chromium do Playwright). Rodar de novo ao mudar textos ou fotos. São JPG fixos de ~50 KB porque o WhatsApp ignora imagem sem extensão ou acima de ~300 KB.
 - **Textos de interface PT/EN**: `src/i18n/dictionaries.ts`
 - **Mensagem do WhatsApp**: `src/lib/order.ts` (`buildMessage`)
+- **Configurador de pedido**: `src/components/site/configurator/`: `useConfigurator.ts` (todo o estado: pedido, erros, passo, navegação, envio), um componente por passo (`ServiceStep`, `VehiclesStep`, `GuardsStep`, `LogisticsStep`, `ContextStep`, `ContactStep`), `ProgressTrail`, `MobileBar`, `primitives.tsx` (campos, chips, stepper, prévia) e `steps.ts` (ordem dos passos, quais são opcionais e qual erro trava cada um; testado). `Configurator.tsx` é só o casco.
+- **Analytics**: `src/lib/analytics.ts` manda o evento `whatsapp_send` (serviços escolhidos, veículos, seguranças, intermunicipal, evento, PPE; nunca nome ou texto) pro Vercel Analytics. O `<Analytics />` só entra no build da Vercel (`VERCEL=1`); no GitHub Pages e em dev não carrega nada.
 - **Tokens de marca**: `src/app/globals.css` (`@theme`)
 - **Logo**: `public/brand/emblem.svg` e `wordmark.svg` (vetorizados das pranchetas; usados via máscara CSS, herdam `currentColor`)
 
@@ -54,7 +56,7 @@ O site ainda é estático, então o que aparece em **Equipe** e **Frota** passa 
 
 ## Painel admin (`/admin`)
 
-Início, Propostas (orçamento numerado por ano, itens com catálogo rápido, desconto, validade, condições; documento A4 para PDF, envio pelo WhatsApp; aceita vira serviço agendado), Serviços (com equipe, veículos, custos e lucro; em orçamento gera proposta), Clientes (com histórico e propostas), Parceiros, Agentes, Veículos (com foto, lugares, blindagem e descrição pra Frota), Financeiro (resumo mensal + lançamentos avulsos), Site (publicação de Equipe e Frota) e Dados (backup, importação, migração do painel antigo, apagar tudo).
+Início (resumo do mês, alerta de propostas vencendo em até 3 dias ou vencidas, funil enviada → aceita → realizada em `src/lib/admin/funnel.ts`), Propostas (orçamento numerado por ano, itens com catálogo rápido, desconto, validade, condições; documento A4 para PDF, envio pelo WhatsApp; aceita vira serviço agendado), Serviços (com equipe, veículos, custos e lucro; em orçamento gera proposta), Clientes (com histórico e propostas), Parceiros, Agentes, Veículos (com foto, lugares, blindagem e descrição pra Frota), Financeiro (resumo mensal + lançamentos avulsos), Site (publicação de Equipe e Frota) e Dados (backup, importação, migração do painel antigo, apagar tudo).
 
 Tudo grava no Supabase: Postgres com RLS (só usuário autenticado lê e escreve; o público só vê colunas publicadas), Supabase Auth com e-mail e senha (sessão persistente no navegador) e Storage para fotos. O painel continua client-side, por isso roda no export estático do GitHub Pages igual à Vercel.
 
