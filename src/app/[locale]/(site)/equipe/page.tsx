@@ -108,7 +108,7 @@ export default async function TeamPage({ params }: LocaleParams) {
       <section className="bg-ink-2">
         <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
           <Reveal>
-            <SectionHeading label={t.criteriaLabel} title={t.lead} />
+            <SectionHeading label={t.criteriaLabel} title={t.criteriaTitle} />
           </Reveal>
           <Stagger as="ol" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {t.criteria.map((c, i) => (
