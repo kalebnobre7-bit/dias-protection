@@ -1,9 +1,9 @@
 import { Check } from "lucide-react";
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { CompanyLogos } from "@/components/site/CompanyLogos";
 import { CtaBand } from "@/components/site/CtaBand";
 import { ParallaxBreak } from "@/components/site/ParallaxBreak";
 import { HeroIn, Reveal, Stagger, StaggerItem } from "@/components/site/Reveal";
@@ -68,13 +68,13 @@ export default async function Home({ params }: LocaleParams) {
 
       {/* Barra de números */}
       <section className="border-y border-line bg-ink-2">
-        <Stagger as="dl" className="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-line md:grid-cols-4">
+        <Stagger as="dl" className="mx-auto grid max-w-7xl gap-px bg-line sm:grid-cols-2">
           {founder.stats.map((s) => (
             <StaggerItem key={s.label.pt} className="bg-ink-2 px-4 py-8 md:px-8 md:py-10">
               <dt className="sr-only">{s.label[locale]}</dt>
               <dd>
                 <span className="t-stat block">{s.value}</span>
-                <span className="mt-3 block max-w-[18ch] text-[0.9375rem] leading-snug text-muted">{s.label[locale]}</span>
+                <span className="mt-3 block max-w-[44ch] text-[0.9375rem] leading-snug text-muted">{s.label[locale]}</span>
               </dd>
             </StaggerItem>
           ))}
@@ -188,7 +188,11 @@ export default async function Home({ params }: LocaleParams) {
             <p className="label">{t.founderLabel}</p>
             <h2 className="t-h2 mt-3">{company.founderName}</h2>
             <p className="mt-2 font-medium text-silver">{company.founderRole[locale]}</p>
-            <p className="mt-7 max-w-[56ch] text-text/85">{company.founderBio[locale]}</p>
+            {company.founderBio[locale].split("\n\n").map((p, i) => (
+              <p key={i} className={`max-w-[56ch] text-text/85 ${i ? "mt-4" : "mt-7"}`}>
+                {p}
+              </p>
+            ))}
 
             <ul className="mt-9 grid gap-3 sm:grid-cols-2">
               {t.credentials.map((c) => (
@@ -210,28 +214,10 @@ export default async function Home({ params }: LocaleParams) {
       <section className="border-t border-line">
         <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-24">
           <p className="label text-center">{t.experienceLabel}</p>
-          <Stagger
-            as="ul"
+          <CompanyLogos
+            items={founder.experienceWith}
             className="mt-10 grid grid-cols-2 place-items-center gap-x-6 gap-y-9 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-14 sm:gap-y-8"
-          >
-            {founder.experienceWith.map(({ name, logo, scale = 1 }) => (
-              <StaggerItem as="li" key={name} className="text-xl font-semibold tracking-[-0.02em] text-silver/70 md:text-2xl">
-                {logo ? (
-                  // Prata uniforme; a cor original aparece no hover
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={`${process.env.NEXT_PUBLIC_BASE_PATH}${logo}`}
-                    alt={name}
-                    loading="lazy"
-                    style={{ "--scale": scale } as CSSProperties}
-                    className="h-[calc(1.625rem*var(--scale))] w-auto opacity-60 transition-[opacity,filter] duration-300 ease-[var(--ease-in-out)] [filter:brightness(0)_invert(1)] hover:opacity-100 hover:[filter:none] sm:h-[calc(2rem*var(--scale))]"
-                  />
-                ) : (
-                  name
-                )}
-              </StaggerItem>
-            ))}
-          </Stagger>
+          />
         </div>
       </section>
 

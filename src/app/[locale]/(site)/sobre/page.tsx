@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Check } from "lucide-react";
 import Image from "next/image";
 
+import { CompanyLogos } from "@/components/site/CompanyLogos";
 import { CtaBand } from "@/components/site/CtaBand";
 import { HeroIn, Reveal, Stagger, StaggerItem } from "@/components/site/Reveal";
 import { SectionHeading } from "@/components/site/SectionHeading";
@@ -35,7 +36,11 @@ export default async function AboutPage({ params }: LocaleParams) {
           <HeroIn>
             <p className="label">{t.label}</p>
             <h1 className="t-display mt-4 max-w-[18ch]">{t.title}</h1>
-            <p className="t-lead mt-8 max-w-[54ch] !text-text/80">{company.founderBio[locale]}</p>
+            {company.founderBio[locale].split("\n\n").map((p, i) => (
+              <p key={i} className={`max-w-[60ch] text-text/80 ${i ? "mt-4" : "t-lead mt-8 !text-text/80"}`}>
+                {p}
+              </p>
+            ))}
             <p className="mt-8 font-semibold">{company.founderName}</p>
             <p className="mt-0.5 text-[0.9375rem] text-silver">{company.founderRole[locale]}</p>
           </HeroIn>
@@ -56,13 +61,13 @@ export default async function AboutPage({ params }: LocaleParams) {
 
       {/* Barra de números */}
       <section className="border-y border-line bg-ink-2">
-        <Stagger as="dl" className="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-line md:grid-cols-4">
+        <Stagger as="dl" className="mx-auto grid max-w-7xl gap-px bg-line sm:grid-cols-2">
           {founder.stats.map((s) => (
             <StaggerItem key={s.label.pt} className="bg-ink-2 px-4 py-10 md:px-8 md:py-14">
               <dt className="sr-only">{s.label[locale]}</dt>
               <dd>
                 <span className="t-stat block">{s.value}</span>
-                <span className="mt-3 block max-w-[18ch] text-[0.9375rem] leading-snug text-muted">{s.label[locale]}</span>
+                <span className="mt-3 block max-w-[44ch] text-[0.9375rem] leading-snug text-muted">{s.label[locale]}</span>
               </dd>
             </StaggerItem>
           ))}
@@ -81,7 +86,15 @@ export default async function AboutPage({ params }: LocaleParams) {
               <Reveal delay={i * 0.09}>
                 <p className="num text-[0.9375rem] font-medium text-accent">{m.period[locale]}</p>
                 <h3 className="t-h3 mt-2">{m.title[locale]}</h3>
-                <p className="mt-3 max-w-[60ch] text-muted">{m.text[locale]}</p>
+                <Paragraphs text={m.text[locale]} />
+                {m.logos && (
+                  <CompanyLogos
+                    items={founder.experienceWith}
+                    size="sm"
+                    className="mt-6 flex max-w-[60ch] flex-wrap items-center gap-x-10 gap-y-5"
+                  />
+                )}
+                {m.more && <Paragraphs text={m.more[locale]} />}
               </Reveal>
             </li>
           ))}
@@ -95,9 +108,9 @@ export default async function AboutPage({ params }: LocaleParams) {
             <p className="label">{t.certificationsLabel}</p>
             <ul className="mt-6 border-t border-line">
               {founder.certifications.map((c) => (
-                <li key={c} className="flex gap-4 border-b border-line py-4">
+                <li key={c.pt} className="flex gap-4 border-b border-line py-4">
                   <Check aria-hidden className="mt-1 size-4 shrink-0 text-accent" />
-                  <span>{c}</span>
+                  <span>{c[locale]}</span>
                 </li>
               ))}
             </ul>
@@ -131,37 +144,31 @@ export default async function AboutPage({ params }: LocaleParams) {
         </div>
       </section>
 
-      {/* Experiência internacional */}
-      <section>
-        <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
-          <p className="label">{dict.home.experienceLabel}</p>
-          <ul className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-line bg-line md:grid-cols-3">
-            {founder.experienceWith.map(({ name }) => (
-              <li key={name} className="bg-ink px-6 py-10 text-lg font-semibold tracking-[-0.02em] text-silver md:text-2xl">
-                {name}
+      {/* Só aparece com autorização do Gabriel */}
+      {founder.showNotableClients && (
+        <section className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
+          <p className="label">{t.clientsLabel}</p>
+          <p className="mt-2 text-sm text-muted">{t.clientsNote}</p>
+          <ul className="mt-8 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+            {founder.notableClients.map((c) => (
+              <li key={c.name} className="border-t border-line pt-4">
+                <p className="text-lg">{c.name}</p>
+                <p className="text-[0.9375rem] text-muted">{c.context}</p>
               </li>
             ))}
           </ul>
-
-          {/* Só aparece com autorização do Gabriel */}
-          {founder.showNotableClients && (
-            <div className="mt-20">
-              <p className="label">{t.clientsLabel}</p>
-              <p className="mt-2 text-sm text-muted">{t.clientsNote}</p>
-              <ul className="mt-8 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
-                {founder.notableClients.map((c) => (
-                  <li key={c.name} className="border-t border-line pt-4">
-                    <p className="text-lg">{c.name}</p>
-                    <p className="text-[0.9375rem] text-muted">{c.context}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      </section>
+        </section>
+      )}
 
       <CtaBand dict={dict} locale={locale} whatsapp={company.whatsapp} />
     </>
   );
+}
+
+function Paragraphs({ text }: { text: string }) {
+  return text.split("\n\n").map((p, i) => (
+    <p key={i} className="mt-3 max-w-[60ch] text-muted">
+      {p}
+    </p>
+  ));
 }

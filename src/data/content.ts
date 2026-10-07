@@ -15,8 +15,8 @@ export const localContent: SiteContent = {
       en: "Founder · Close Protection Officer",
     },
     founderBio: {
-      pt: "Ex-detetive da Polícia Civil de São Paulo e Close Protection Officer em operações de empresas globais de segurança. Gabriel planeja pessoalmente cada missão: análise de risco, rota, equipe e veículo. O atendimento começa e termina com ele.",
-      en: "Former São Paulo Civil Police detective and Close Protection Officer for global security firms. Gabriel personally plans every mission: risk assessment, route, team and vehicle. Service starts and ends with him.",
+      pt: "Com mais de 5 anos de experiência em investigações de alta complexidade e operações de alto risco na Polícia Civil do Estado de São Paulo.\n\nE mais de 5 anos de experiência em transporte e proteção executiva, operando e coordenando operações, viagens, eventos exclusivos e protegendo instalações e patrimônios de alto valor. Sua trajetória inclui atendimento a executivos de grandes corporações e personalidades internacionais, com atuação em análise de ameaças, planejamento preventivo, logística de deslocamentos, transporte de padrão executivo e segurança pessoal.",
+      en: "Over 5 years of experience in high-complexity investigations and high-risk operations with the São Paulo State Civil Police.\n\nAnd over 5 years of experience in executive transportation and protection, running and coordinating operations, travel and exclusive events, and protecting high-value facilities and assets. His track record includes serving executives of major corporations and international public figures, with work in threat analysis, preventive planning, movement logistics, executive-standard transportation and personal security.",
     },
     founderPhoto: "/images/gabriel.jpg",
     about: {
@@ -32,54 +32,66 @@ export const localContent: SiteContent = {
 
   founder: {
     stats: [
-      { value: "5+", label: { pt: "anos em proteção e investigação", en: "years in protection & investigation" } },
-      { value: "0", label: { pt: "incidentes em operação", en: "incidents on duty" } },
-      { value: "3", label: { pt: "idiomas no atendimento", en: "service languages" } },
-      { value: "24/7", label: { pt: "atendimento", en: "availability" } },
+      {
+        value: "5+",
+        label: {
+          pt: "anos de experiência em investigações de alta complexidade e coordenação de operações em áreas de risco",
+          en: "years of experience in high-complexity investigations and coordinating operations in high-risk areas",
+        },
+      },
+      { value: "0", label: { pt: "incidentes em serviço em todo o histórico", en: "incidents on duty across his entire record" } },
     ],
     timeline: [
       {
-        period: { pt: "2021–2024", en: "2021–2024" },
-        title: { pt: "Detetive · Polícia Civil de SP", en: "Detective · São Paulo Civil Police" },
+        period: { pt: "Desde 2021", en: "Since 2021" },
+        title: { pt: "Segurança Pública", en: "Law Enforcement" },
         text: {
-          pt: "Investigação, inteligência, vigilância e entrevistas. Promoção por mérito, dois elogios oficiais e atuação em investigação de repercussão nacional.",
-          en: "Investigation, intelligence, surveillance and interviews. Merit promotion, two official commendations and work on a nationally reported case.",
+          pt: "Investigação, gerenciamento de crises e conflitos e coordenação de operações sob stress.",
+          en: "Investigation, crisis and conflict management, and coordination of operations under stress.",
         },
       },
       {
-        period: { pt: "2022–hoje", en: "2022–present" },
-        title: { pt: "Close Protection Officer", en: "Close Protection Officer" },
+        period: { pt: "Desde 2021", en: "Since 2021" },
+        title: { pt: "Segurança executiva", en: "Executive protection" },
         text: {
-          pt: "Proteção executiva em operações de empresas globais de segurança: advance, análise de risco, movimentação segura, segurança de locais e interpretação.",
-          en: "Executive protection for global security firms: advance work, risk assessment, secure movement, venue security and interpreting.",
+          pt: "Histórico de operações de empresas globais de segurança.",
+          en: "A track record in operations for global security firms.",
         },
-      },
-      {
-        period: { pt: "2025–hoje", en: "2025–present" },
-        title: { pt: "Motorista executivo bilíngue", en: "Bilingual executive driver" },
-        text: {
-          pt: "Transporte seguro de executivos e VIPs, incluindo veículos blindados. Planejamento de rota, inspeção de veículo e direção defensiva, sem acidentes.",
-          en: "Secure transport for executives and VIPs, including armored vehicles. Route planning, vehicle inspection and defensive driving, accident-free.",
+        logos: true,
+        more: {
+          pt: "Coordenação completa de operações (condução de \"avançado\", análise de risco e logística de operações, transporte e proteção pessoal) em atendimento a C-levels de empresas globais, além de pessoas públicas e indivíduos de alto patrimônio.\n\nCoordenação da segurança de eventos e experiências VIP.",
+          en: "End-to-end coordination of operations (advance work, risk assessment and operational logistics, transportation and close protection) for C-level executives of global companies, as well as public figures and high-net-worth individuals.\n\nSecurity coordination for VIP events and experiences.",
         },
       },
       {
         period: { pt: "Hoje", en: "Today" },
         title: { pt: "Dias Protection", en: "Dias Protection" },
         text: {
-          pt: "Toda essa experiência reunida em uma operação própria, com equipe selecionada para cada missão.",
-          en: "All of that experience brought together in his own operation, with a team selected for each mission.",
+          pt: "Toda essa experiência reunida em uma operação própria. Contamos com um time de elite, do qual selecionamos de forma personalizada os melhores operadores para cada missão.",
+          en: "All of that experience brought together in our own operation. We rely on an elite team, from which we hand-pick the best operators for each mission.",
         },
       },
     ],
     certifications: [
-      "DSO · Defensive Shooting Officer (IDSC)",
-      "Stop The Bleed · American College of Surgeons",
-      "Heartsaver First Aid / CPR / AED · American Heart Association",
-      "TECC · Tactical Emergency Casualty Care",
-      "UNITAR · Introduction to the UN System",
-      "SENASP · Investigação e análise patrimonial",
-      "Direção defensiva",
-      "EF SET English C2",
+      {
+        pt: "Atleta e árbitro (DSO) pela Confederação Internacional de Tiro Defensivo (IDSC)",
+        en: "Defensive Shooting Officer (DSO) · International Defensive Shooting Confederation (IDSC)",
+      },
+      { pt: "Stop The Bleed · American College of Surgeons", en: "Stop The Bleed · American College of Surgeons" },
+      {
+        pt: "Primeiros Socorros com RCP e DEA (Salva Corações) · Hospital Albert Einstein e American Heart Association",
+        en: "Heartsaver First Aid / CPR / AED · Albert Einstein Hospital and American Heart Association",
+      },
+      { pt: "TECC · Tactical Emergency Casualty Care", en: "TECC · Tactical Emergency Casualty Care" },
+      {
+        pt: "Instituto de Treinamento para Operações de Paz da ONU (POTI) · An Introduction to the UN System and Its Role in International Peace and Security",
+        en: "UN Peace Operations Training Institute (POTI) · An Introduction to the UN System and Its Role in International Peace and Security",
+      },
+      {
+        pt: "Secretaria Nacional de Segurança Pública (SENASP) · Investigação e análise patrimonial",
+        en: "National Public Security Secretariat (SENASP) · Investigation and Asset Analysis",
+      },
+      { pt: "Direção defensiva", en: "Defensive Driving" },
     ],
     recognitions: [
       {
@@ -97,15 +109,13 @@ export const localContent: SiteContent = {
       { pt: "Tecnólogo em Tecnologia da Informação · Anhembi Morumbi", en: "Associate degree in IT · Anhembi Morumbi" },
     ],
     languages: { pt: "Português · Inglês fluente · Espanhol", en: "Portuguese · Fluent English · Spanish" },
-    // ⚠️ confirmar com o Gabriel se pode exibir
     // Logos baixadas dos sites oficiais; sem `logo` aparece como texto
     experienceWith: [
       { name: "Pinkerton", logo: "/images/logos/pinkerton.png" },
       { name: "Global Guardian", logo: "/images/logos/global-guardian.png" },
       { name: "SCS" }, // o logo oficial é só o símbolo, ilegível sem o nome
-      { name: "Crisol Group" },
       { name: "Royal American Group", logo: "/images/logos/royal-american.png", scale: 1.7 },
-      { name: "Fórmula 1", logo: "/images/logos/f1.svg" },
+      { name: "Crisol Group" },
     ],
     notableClients: [
       { name: "Mario Isola", context: "Pirelli · Fórmula 1" },

@@ -73,13 +73,14 @@ export type PublicVehicle = {
 // src/data/published.json: o que o painel publicou por último
 export type PublishedContent = { updatedAt: string | null; agents: Agent[]; vehicles: PublicVehicle[] };
 
-// Trajetória do fundador (página Sobre)
-export type Milestone = { period: Localized; title: Localized; text: Localized };
+// Trajetória do fundador (página Sobre). Parágrafos separados por linha em branco;
+// logos = mostra experienceWith depois de `text`, seguido de `more`
+export type Milestone = { period: Localized; title: Localized; text: Localized; logos?: boolean; more?: Localized };
 
 export type FounderProfile = {
   stats: { value: string; label: Localized }[];
   timeline: Milestone[];
-  certifications: string[];
+  certifications: Localized[];
   recognitions: Localized[];
   education: Localized[];
   languages: Localized;
