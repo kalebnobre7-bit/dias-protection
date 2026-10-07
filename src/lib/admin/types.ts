@@ -14,8 +14,10 @@ export type AgentRecord = {
   certifications: string[];
   photoUrl: string | null;
   // internos (nunca vão para o site)
+  career: string; // experiência profissional para o currículo, uma por linha
   phone: string;
   documentId: string;
+  cnhUrl: string | null; // imagem da CNH (vai só no documento de serviço fechado)
   notes: string;
   active: boolean;
   published: boolean;
@@ -44,6 +46,8 @@ export type Vehicle = {
   createdAt: string;
 };
 
+export type Representative = { id: string; name: string; role: string; contact: string };
+
 export type Client = {
   id: string;
   name: string;
@@ -51,6 +55,7 @@ export type Client = {
   phone: string;
   email: string;
   language: "pt" | "en" | "other" | null;
+  representatives: Representative[]; // pessoas da empresa cliente (nome, cargo, contato)
   notes: string;
   createdAt: string;
 };
@@ -137,6 +142,8 @@ export type Proposal = {
   period: string; // "10 a 15 de outubro de 2026", texto livre
   location: string;
   items: ProposalItem[];
+  agentIds: string[]; // motoristas e seguranças apresentados no documento
+  vehicleIds: string[];
   discount: number;
   paymentTerms: string;
   terms: string; // condições gerais (uma por linha)

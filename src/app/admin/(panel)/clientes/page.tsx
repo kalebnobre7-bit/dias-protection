@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus as IconPlus } from "lucide-react";
+import { Plus as IconPlus, X as IconClose } from "lucide-react";
 
 import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, useForm } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
@@ -9,7 +9,7 @@ import { countsAsRevenue } from "@/lib/admin/finance";
 import { brl, clientLanguageLabel, formatDate, formatDateTime, jobStatusLabel, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
 import { proposalTotals } from "@/lib/admin/proposals";
 import { newId, repo, useTable } from "@/lib/admin/store";
-import type { Client, Job } from "@/lib/admin/types";
+import type { Client, Job, Representative } from "@/lib/admin/types";
 
 const blank = (): Client => ({
   id: newId(),
@@ -18,6 +18,7 @@ const blank = (): Client => ({
   phone: "",
   email: "",
   language: "pt",
+  representatives: [],
   notes: "",
   createdAt: new Date().toISOString(),
 });
@@ -92,9 +93,13 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
   const history = [...props.history].sort((a, b) => b.startsAt.localeCompare(a.startsAt));
   const billed = history.filter(countsAsRevenue).reduce((s, j) => s + j.price, 0);
 
+  const updateRep = (id: string, patch: Partial<Representative>) =>
+    set("representatives", c.representatives.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+
   const save = async () => {
     if (!c.name.trim()) return setError("Informe o nome.");
-    await repo.upsert("clients", { ...c, name: c.name.trim() });
+    const representatives = c.representatives.filter((r) => r.name.trim()).map((r) => ({ ...r, name: r.name.trim() }));
+    await repo.upsert("clients", { ...c, name: c.name.trim(), representatives });
     props.onClose();
   };
   const remove = async () => {
@@ -141,6 +146,41 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
           ))}
         </select>
       </Field>
+      <Section
+        title="Representantes da empresa"
+        action={
+          <Button variant="ghost" className="!min-h-9 !px-3" onClick={() => set("representatives", [...c.representatives, { id: newId(), name: "", role: "", contact: "" }])}>
+            <IconPlus className="size-4" /> Adicionar
+          </Button>
+        }
+      >
+        {c.representatives.length ? (
+          <ul className="space-y-3">
+            {c.representatives.map((r) => (
+              <li key={r.id} className="space-y-2 rounded-2xl border border-line p-3">
+                <div className="flex gap-2">
+                  <input className="input" value={r.name} onChange={(e) => updateRep(r.id, { name: e.target.value })} placeholder="Nome" aria-label="Nome do representante" />
+                  <button
+                    type="button"
+                    onClick={() => set("representatives", c.representatives.filter((x) => x.id !== r.id))}
+                    aria-label="Remover representante"
+                    className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-white/6 hover:text-danger"
+                  >
+                    <IconClose className="size-4" />
+                  </button>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <input className="input" value={r.role} onChange={(e) => updateRep(r.id, { role: e.target.value })} placeholder="Cargo" aria-label="Cargo" />
+                  <input className="input" value={r.contact} onChange={(e) => updateRep(r.id, { contact: e.target.value })} placeholder="Telefone ou e-mail" aria-label="Contato" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="px-1 text-[0.9375rem] text-muted">Quem fala pela empresa: assistente, segurança corporativa, compras…</p>
+        )}
+      </Section>
+
       <Field label="Observações" hint="Preferências, restrições, quem indicou…">
         <textarea className="input resize-none" rows={3} value={c.notes} onChange={(e) => set("notes", e.target.value)} />
       </Field>

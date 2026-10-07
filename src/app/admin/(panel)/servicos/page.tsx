@@ -160,7 +160,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
     let clientId = clientChoice || null;
     if (clientChoice === NEW_CLIENT) {
       clientId = newId();
-      await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, notes: "", createdAt: new Date().toISOString() });
+      await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
     }
     await repo.upsert("jobs", { ...j, clientId, paidAt: j.paymentStatus === "paid" ? j.paidAt || j.startsAt.slice(0, 10) : "" });
     await repo.replaceJobCosts(

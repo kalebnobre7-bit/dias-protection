@@ -12,10 +12,20 @@ import type { Database, TableName, Tables } from "./types";
 const KEY = "dias-admin:db:v1";
 const listeners = new Set<() => void>();
 
+// Campos criados depois: linhas antigas do localStorage ganham o valor padrão
+function normalize(db: Database): Database {
+  return {
+    ...db,
+    agents: db.agents.map((a) => ({ ...a, career: a.career ?? "", cnhUrl: a.cnhUrl ?? null })),
+    clients: db.clients.map((c) => ({ ...c, representatives: c.representatives ?? [] })),
+    proposals: db.proposals.map((p) => ({ ...p, agentIds: p.agentIds ?? [], vehicleIds: p.vehicleIds ?? [] })),
+  };
+}
+
 function read(): Database {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...emptyDatabase(), ...(JSON.parse(raw) as Partial<Database>) };
+    if (raw) return normalize({ ...emptyDatabase(), ...(JSON.parse(raw) as Partial<Database>) });
   } catch {
     // storage bloqueado ou corrompido: cai nos dados de exemplo
   }

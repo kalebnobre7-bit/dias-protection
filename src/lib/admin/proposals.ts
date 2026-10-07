@@ -65,6 +65,8 @@ export function blankProposal(id: string, existing: Proposal[]): Proposal {
     period: "",
     location: "",
     items: [],
+    agentIds: [],
+    vehicleIds: [],
     discount: 0,
     paymentTerms: DEFAULT_PAYMENT,
     terms: DEFAULT_TERMS,
@@ -86,6 +88,8 @@ export function proposalFromJob(job: Job, id: string, existing: Proposal[]): Pro
     period: start,
     location: [job.origin, job.destination].filter(Boolean).join(" → "),
     items: job.price > 0 ? [{ id: `${id}-1`, description: serviceTypeName(job.serviceTypeId), detail: "", qty: 1, unit: "un.", unitPrice: job.price }] : [],
+    agentIds: job.agentIds,
+    vehicleIds: job.vehicleIds,
     notes: job.notes,
   };
 }
@@ -105,8 +109,8 @@ export function jobFromProposal(p: Proposal, id: string): Job {
     paymentStatus: "pending",
     paidAt: "",
     notes: `Proposta ${p.number} · ${p.title}`,
-    agentIds: [],
-    vehicleIds: [],
+    agentIds: p.agentIds,
+    vehicleIds: p.vehicleIds,
     createdAt: new Date().toISOString(),
   };
 }

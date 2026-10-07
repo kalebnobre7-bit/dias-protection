@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Check as IconCheck, Copy as IconCopy, FileText as IconDoc, Plus as IconPlus, Send as IconSend, X as IconClose } from "lucide-react";
+import { Check as IconCheck, Copy as IconCopy, FileCheck as IconDocClosed, FileText as IconDoc, Plus as IconPlus, Send as IconSend, X as IconClose } from "lucide-react";
 
 import { MoneyInput } from "@/components/admin/job-bits";
 import {
+  Avatar,
   Badge,
   Button,
   ChipSelect,
@@ -21,7 +22,7 @@ import {
   Sheet,
   useForm,
 } from "@/components/admin/ui";
-import { serviceTypeOptions } from "@/lib/admin/catalog";
+import { serviceTypeOptions, vehicleCategoryName } from "@/lib/admin/catalog";
 import { brl, formatDate, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
 import {
   ITEM_PRESETS,
@@ -149,6 +150,11 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [preset, setPreset] = useState("");
+  const [tab, setTab] = useState<"proposal" | "team" | "vehicles">("proposal");
+  const { rows: agents } = useTable("agents");
+  const { rows: vehicles } = useTable("vehicles");
+  const toggleIn = (key: "agentIds" | "vehicleIds", id: string) =>
+    set(key, p[key].includes(id) ? p[key].filter((x) => x !== id) : [...p[key], id]);
 
   const client = clients.find((c) => c.id === clientChoice) ?? null;
   const totals = proposalTotals(p);
@@ -175,7 +181,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
     let clientId = clientChoice || null;
     if (clientChoice === NEW_CLIENT) {
       clientId = newId();
-      await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, notes: "", createdAt: new Date().toISOString() });
+      await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
       setClientChoice(clientId);
     }
     const saved: Proposal = {
@@ -197,10 +203,11 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
     props.onClose();
   };
 
-  // Salva e abre o documento em outra aba
-  const openDocument = async () => {
+  // Salva e abre o documento em outra aba (comercial ou serviço fechado)
+  const openDocument = async (closed: boolean) => {
     const saved = await persist();
-    if (saved) window.open(`${process.env.NEXT_PUBLIC_BASE_PATH}/admin/propostas/documento?id=${saved.id}`, "_blank", "noopener");
+    if (saved)
+      window.open(`${process.env.NEXT_PUBLIC_BASE_PATH}/admin/propostas/documento?id=${saved.id}${closed ? "&modo=fechado" : ""}`, "_blank", "noopener");
   };
 
   // Salva como "Enviada" e abre o WhatsApp do cliente com o resumo
@@ -255,8 +262,11 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
     >
       {/* Ações principais ficam no topo: o Gabriel abre a proposta pra enviar, não pra editar */}
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" onClick={openDocument}>
-          <IconDoc className="size-4" /> Documento / PDF
+        <Button variant="secondary" onClick={() => openDocument(false)}>
+          <IconDoc className="size-4" /> Proposta comercial
+        </Button>
+        <Button variant="secondary" onClick={() => openDocument(true)}>
+          <IconDocClosed className="size-4" /> Serviço fechado
         </Button>
         <Button variant="secondary" onClick={sendWhatsApp}>
           <IconSend className="size-4" /> WhatsApp
@@ -271,169 +281,270 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         )}
       </div>
 
-      <Field label="Status">
-        <Segmented
-          value={p.status}
-          onChange={(v) => set("status", v)}
-          options={(Object.keys(proposalStatusLabel) as ProposalStatus[]).map((s) => ({ value: s, label: proposalStatusLabel[s] }))}
-        />
-      </Field>
+      <Segmented
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: "proposal", label: "Proposta" },
+          { value: "team", label: `Equipe${p.agentIds.length ? ` · ${p.agentIds.length}` : ""}` },
+          { value: "vehicles", label: `Veículos${p.vehicleIds.length ? ` · ${p.vehicleIds.length}` : ""}` },
+        ]}
+      />
 
-      <Field label="Título" hint="Aparece no topo do documento. Ex.: Proteção executiva · Visita da diretoria">
-        <input className="input" value={p.title} onChange={(e) => set("title", e.target.value)} autoFocus={props.isNew && !p.title} />
-      </Field>
-
-      <Field label="Cliente">
-        <select className="input" value={clientChoice} onChange={(e) => setClientChoice(e.target.value)}>
-          <option value="">Sem cliente</option>
-          {[...clients]
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-                {c.company ? ` · ${c.company}` : ""}
-              </option>
-            ))}
-          <option value={NEW_CLIENT}>+ Novo cliente…</option>
-        </select>
-      </Field>
-      {clientChoice === NEW_CLIENT && (
-        <Field label="Nome do novo cliente">
-          <input className="input" value={newClient} onChange={(e) => setNewClient(e.target.value)} autoFocus />
+      {tab === "proposal" && (
+        <>
+        <Field label="Status">
+          <Segmented
+            value={p.status}
+            onChange={(v) => set("status", v)}
+            options={(Object.keys(proposalStatusLabel) as ProposalStatus[]).map((s) => ({ value: s, label: proposalStatusLabel[s] }))}
+          />
         </Field>
-      )}
-      {client && !client.phone && (
-        <p className="-mt-3 text-xs text-muted">
-          Este cliente não tem telefone cadastrado: o WhatsApp abre sem destinatário.{" "}
-          <Link href="/admin/clientes" className="text-accent">
-            Completar cadastro
-          </Link>
-        </p>
-      )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Emitida em">
-          <input className="input" type="date" value={p.issuedAt} onChange={(e) => set("issuedAt", e.target.value)} />
+        <Field label="Título" hint="Aparece no topo do documento. Ex.: Proteção executiva · Visita da diretoria">
+          <input className="input" value={p.title} onChange={(e) => set("title", e.target.value)} autoFocus={props.isNew && !p.title} />
         </Field>
-        <Field label="Válida até">
-          <input className="input" type="date" value={p.validUntil} min={p.issuedAt} onChange={(e) => set("validUntil", e.target.value)} />
-        </Field>
-      </div>
 
-      <Section title="Escopo">
-        <div className="space-y-4">
-          <Field label="Serviços">
-            <ChipSelect options={serviceTypeOptions} value={p.serviceIds} onChange={(v) => set("serviceIds", v)} empty="" />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Período">
-              <input className="input" value={p.period} onChange={(e) => set("period", e.target.value)} placeholder="10 a 15 de outubro, 8h às 20h" />
-            </Field>
-            <Field label="Local / trajeto">
-              <input className="input" value={p.location} onChange={(e) => set("location", e.target.value)} placeholder="São Paulo · SP" />
-            </Field>
-          </div>
-          <Field label="Descrição do escopo" hint="Contexto da operação, em 2 ou 3 frases. Vai para o documento.">
-            <textarea className="input resize-none" rows={3} value={p.summary} onChange={(e) => set("summary", e.target.value)} />
-          </Field>
-        </div>
-      </Section>
-
-      <Section
-        title="Itens"
-        action={
-          <select
-            className="input !min-h-9 !w-auto !py-1 !text-[0.875rem]"
-            value={preset}
-            onChange={(e) => addItem(e.target.value)}
-            aria-label="Adicionar item do catálogo"
-          >
-            <option value="">+ Adicionar item…</option>
-            {ITEM_PRESETS.map((x) => (
-              <option key={x.label} value={x.label}>
-                {x.label}
-              </option>
-            ))}
-            <option value="__blank">Item em branco</option>
+        <Field label="Cliente">
+          <select className="input" value={clientChoice} onChange={(e) => setClientChoice(e.target.value)}>
+            <option value="">Sem cliente</option>
+            {[...clients]
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                  {c.company ? ` · ${c.company}` : ""}
+                </option>
+              ))}
+            <option value={NEW_CLIENT}>+ Novo cliente…</option>
           </select>
-        }
-      >
-        {p.items.length ? (
-          <ul className="space-y-3">
-            {p.items.map((i) => (
-              <li key={i.id} className="space-y-3 rounded-2xl border border-line p-4">
-                <div className="flex gap-2">
-                  <input className="input" value={i.description} onChange={(e) => updateItem(i.id, { description: e.target.value })} placeholder="Descrição" aria-label="Descrição do item" />
-                  <button
-                    type="button"
-                    onClick={() => removeItem(i.id)}
-                    aria-label="Remover item"
-                    className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-white/6 hover:text-danger"
-                  >
-                    <IconClose className="size-4" />
-                  </button>
-                </div>
-                <input className="input !min-h-10 !text-[0.875rem]" value={i.detail} onChange={(e) => updateItem(i.id, { detail: e.target.value })} placeholder="Detalhe (ex.: 2 agentes · até 12h)" aria-label="Detalhe do item" />
-                <div className="grid grid-cols-[4.5rem_1fr_1fr] gap-2 sm:grid-cols-[4.5rem_7rem_1fr_auto] sm:items-center">
-                  <input
-                    className="input num"
-                    type="number"
-                    min={0}
-                    step={1}
-                    inputMode="numeric"
-                    value={i.qty}
-                    onChange={(e) => updateItem(i.id, { qty: Math.max(0, Number(e.target.value) || 0) })}
-                    aria-label="Quantidade"
-                  />
-                  <select className="input" value={i.unit} onChange={(e) => updateItem(i.id, { unit: e.target.value })} aria-label="Unidade">
-                    {[...new Set([...UNITS, i.unit])].map((u) => (
-                      <option key={u} value={u}>
-                        {u}
-                      </option>
-                    ))}
-                  </select>
-                  <MoneyInput value={i.unitPrice} onChange={(v) => updateItem(i.id, { unitPrice: v })} label="Valor unitário" />
-                  <span className="num col-span-3 text-right text-[0.9375rem] font-medium sm:col-span-1 sm:min-w-24">{brl.format(itemTotal(i))}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-[0.9375rem] text-muted">Escolha um item do catálogo acima ou crie um em branco. Quantidade × valor unitário.</p>
+        </Field>
+        {clientChoice === NEW_CLIENT && (
+          <Field label="Nome do novo cliente">
+            <input className="input" value={newClient} onChange={(e) => setNewClient(e.target.value)} autoFocus />
+          </Field>
+        )}
+        {client && !client.phone && (
+          <p className="-mt-3 text-xs text-muted">
+            Este cliente não tem telefone cadastrado: o WhatsApp abre sem destinatário.{" "}
+            <Link href="/admin/clientes" className="text-accent">
+              Completar cadastro
+            </Link>
+          </p>
         )}
 
-        <dl className="mt-4 space-y-2 rounded-2xl bg-navy/60 p-4 text-[0.9375rem]">
-          <div className="flex justify-between text-muted">
-            <dt>Subtotal</dt>
-            <dd className="num">{brl.format(totals.subtotal)}</dd>
-          </div>
-          <div className="flex items-center justify-between gap-4 text-muted">
-            <dt>Desconto</dt>
-            <dd className="w-40">
-              <MoneyInput value={p.discount} onChange={(v) => set("discount", v)} label="Desconto" />
-            </dd>
-          </div>
-          <div className="flex justify-between border-t border-line pt-2 text-lg font-semibold">
-            <dt>Total</dt>
-            <dd className="num">{brl.format(totals.total)}</dd>
-          </div>
-        </dl>
-      </Section>
-
-      <Section title="Condições">
-        <div className="space-y-4">
-          <Field label="Pagamento">
-            <textarea className="input resize-none" rows={2} value={p.paymentTerms} onChange={(e) => set("paymentTerms", e.target.value)} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Emitida em">
+            <input className="input" type="date" value={p.issuedAt} onChange={(e) => set("issuedAt", e.target.value)} />
           </Field>
-          <Field label="Condições gerais" hint="Uma por linha. Viram a lista numerada do documento.">
-            <textarea className="input resize-none" rows={5} value={p.terms} onChange={(e) => set("terms", e.target.value)} />
+          <Field label="Válida até">
+            <input className="input" type="date" value={p.validUntil} min={p.issuedAt} onChange={(e) => set("validUntil", e.target.value)} />
           </Field>
         </div>
-      </Section>
 
-      <Field label="Observações internas" hint="Não aparecem no documento nem no WhatsApp.">
-        <textarea className="input resize-none" rows={2} value={p.notes} onChange={(e) => set("notes", e.target.value)} />
-      </Field>
+        <Section title="Escopo">
+          <div className="space-y-4">
+            <Field label="Serviços">
+              <ChipSelect options={serviceTypeOptions} value={p.serviceIds} onChange={(v) => set("serviceIds", v)} empty="" />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Período">
+                <input className="input" value={p.period} onChange={(e) => set("period", e.target.value)} placeholder="10 a 15 de outubro, 8h às 20h" />
+              </Field>
+              <Field label="Local / trajeto">
+                <input className="input" value={p.location} onChange={(e) => set("location", e.target.value)} placeholder="São Paulo · SP" />
+              </Field>
+            </div>
+            <Field label="Descrição do escopo" hint="Contexto da operação, em 2 ou 3 frases. Vai para o documento.">
+              <textarea className="input resize-none" rows={3} value={p.summary} onChange={(e) => set("summary", e.target.value)} />
+            </Field>
+          </div>
+        </Section>
+
+        <Section
+          title="Itens"
+          action={
+            <select
+              className="input !min-h-9 !w-auto !py-1 !text-[0.875rem]"
+              value={preset}
+              onChange={(e) => addItem(e.target.value)}
+              aria-label="Adicionar item do catálogo"
+            >
+              <option value="">+ Adicionar item…</option>
+              {ITEM_PRESETS.map((x) => (
+                <option key={x.label} value={x.label}>
+                  {x.label}
+                </option>
+              ))}
+              <option value="__blank">Item em branco</option>
+            </select>
+          }
+        >
+          {p.items.length ? (
+            <ul className="space-y-3">
+              {p.items.map((i) => (
+                <li key={i.id} className="space-y-3 rounded-2xl border border-line p-4">
+                  <div className="flex gap-2">
+                    <input className="input" value={i.description} onChange={(e) => updateItem(i.id, { description: e.target.value })} placeholder="Descrição" aria-label="Descrição do item" />
+                    <button
+                      type="button"
+                      onClick={() => removeItem(i.id)}
+                      aria-label="Remover item"
+                      className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-white/6 hover:text-danger"
+                    >
+                      <IconClose className="size-4" />
+                    </button>
+                  </div>
+                  <input className="input !min-h-10 !text-[0.875rem]" value={i.detail} onChange={(e) => updateItem(i.id, { detail: e.target.value })} placeholder="Detalhe (ex.: 2 agentes · até 12h)" aria-label="Detalhe do item" />
+                  <div className="grid grid-cols-[4.5rem_1fr_1fr] gap-2 sm:grid-cols-[4.5rem_7rem_1fr_auto] sm:items-center">
+                    <input
+                      className="input num"
+                      type="number"
+                      min={0}
+                      step={1}
+                      inputMode="numeric"
+                      value={i.qty}
+                      onChange={(e) => updateItem(i.id, { qty: Math.max(0, Number(e.target.value) || 0) })}
+                      aria-label="Quantidade"
+                    />
+                    <select className="input" value={i.unit} onChange={(e) => updateItem(i.id, { unit: e.target.value })} aria-label="Unidade">
+                      {[...new Set([...UNITS, i.unit])].map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                    </select>
+                    <MoneyInput value={i.unitPrice} onChange={(v) => updateItem(i.id, { unitPrice: v })} label="Valor unitário" />
+                    <span className="num col-span-3 text-right text-[0.9375rem] font-medium sm:col-span-1 sm:min-w-24">{brl.format(itemTotal(i))}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[0.9375rem] text-muted">Escolha um item do catálogo acima ou crie um em branco. Quantidade × valor unitário.</p>
+          )}
+
+          <dl className="mt-4 space-y-2 rounded-2xl bg-navy/60 p-4 text-[0.9375rem]">
+            <div className="flex justify-between text-muted">
+              <dt>Subtotal</dt>
+              <dd className="num">{brl.format(totals.subtotal)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 text-muted">
+              <dt>Desconto</dt>
+              <dd className="w-40">
+                <MoneyInput value={p.discount} onChange={(v) => set("discount", v)} label="Desconto" />
+              </dd>
+            </div>
+            <div className="flex justify-between border-t border-line pt-2 text-lg font-semibold">
+              <dt>Total</dt>
+              <dd className="num">{brl.format(totals.total)}</dd>
+            </div>
+          </dl>
+        </Section>
+
+        <Section title="Condições">
+          <div className="space-y-4">
+            <Field label="Pagamento">
+              <textarea className="input resize-none" rows={2} value={p.paymentTerms} onChange={(e) => set("paymentTerms", e.target.value)} />
+            </Field>
+            <Field label="Condições gerais" hint="Uma por linha. Viram a lista numerada do documento.">
+              <textarea className="input resize-none" rows={5} value={p.terms} onChange={(e) => set("terms", e.target.value)} />
+            </Field>
+          </div>
+        </Section>
+
+        <Field label="Observações internas" hint="Não aparecem no documento nem no WhatsApp.">
+          <textarea className="input resize-none" rows={2} value={p.notes} onChange={(e) => set("notes", e.target.value)} />
+        </Field>
+        </>
+      )}
+
+      {tab === "team" && (
+        <PickList
+          hint="Motoristas e seguranças apresentados no documento. Na proposta comercial vão foto e bio; no serviço fechado, currículo, contato e CNH."
+          empty="Cadastre a equipe em Agentes."
+          items={agents
+            .filter((a) => a.active || p.agentIds.includes(a.id))
+            .map((a) => ({
+              id: a.id,
+              leading: <Avatar name={a.name} photo={a.photoUrl} />,
+              title: a.name,
+              subtitle: [a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ") || "Sem função",
+              warn: a.cnhUrl ? "" : "Sem CNH",
+            }))}
+          selected={p.agentIds}
+          onToggle={(id) => toggleIn("agentIds", id)}
+        />
+      )}
+
+      {tab === "vehicles" && (
+        <PickList
+          hint="Veículos apresentados no documento com foto, categoria, modelo e ano. A placa só aparece no serviço fechado."
+          empty="Cadastre os veículos em Veículos."
+          items={vehicles
+            .filter((v) => v.active || p.vehicleIds.includes(v.id))
+            .map((v) => ({
+              id: v.id,
+              leading: v.photoUrl ? (
+                <img src={v.photoUrl} alt="" className="h-10 w-14 shrink-0 rounded-lg object-cover" />
+              ) : (
+                <span className="h-10 w-14 shrink-0 rounded-lg bg-navy-2" />
+              ),
+              title: v.model,
+              subtitle: [vehicleCategoryName(v.categoryId), v.year, v.color].filter(Boolean).join(" · "),
+              warn: v.photoUrl ? "" : "Sem foto",
+            }))}
+          selected={p.vehicleIds}
+          onToggle={(id) => toggleIn("vehicleIds", id)}
+        />
+      )}
     </Sheet>
+  );
+}
+
+// Lista de seleção da equipe e dos veículos da proposta
+function PickList(props: {
+  hint: string;
+  empty: string;
+  items: { id: string; leading: React.ReactNode; title: string; subtitle: string; warn: string }[];
+  selected: string[];
+  onToggle: (id: string) => void;
+}) {
+  if (!props.items.length) return <EmptyState title="Nada cadastrado" text={props.empty} />;
+  return (
+    <div className="space-y-3">
+      <p className="px-1 text-[0.875rem] text-muted">{props.hint}</p>
+      <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-navy/60">
+        {props.items.map((i) => {
+          const on = props.selected.includes(i.id);
+          return (
+            <li key={i.id}>
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={on}
+                onClick={() => props.onToggle(i.id)}
+                className="flex min-h-16 w-full items-center gap-4 px-4 py-3 text-left transition-colors duration-200 hover:bg-navy-2"
+              >
+                {i.leading}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{i.title}</span>
+                  <span className="mt-0.5 block truncate text-[0.875rem] text-muted">{i.subtitle}</span>
+                </span>
+                {i.warn && <Badge tone="warn">{i.warn}</Badge>}
+                <span
+                  aria-hidden
+                  className={`grid size-6 shrink-0 place-items-center rounded-full border transition-colors duration-200 ${
+                    on ? "border-[#34c759] bg-[#34c759] text-ink" : "border-line-strong"
+                  }`}
+                >
+                  {on && <IconCheck className="size-3.5" />}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

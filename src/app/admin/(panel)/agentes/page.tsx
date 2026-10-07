@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus as IconPlus } from "lucide-react";
+import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
-import { PhotoInput } from "@/components/admin/PhotoInput";
+import { DocumentInput, PhotoInput } from "@/components/admin/PhotoInput";
 import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, Section, Sheet, Switch, useForm } from "@/components/admin/ui";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { AgentRecord } from "@/lib/admin/types";
@@ -19,8 +19,10 @@ const blank = (): AgentRecord => ({
   yearsExperience: null,
   certifications: [],
   photoUrl: null,
+  career: "",
   phone: "",
   documentId: "",
+  cnhUrl: null,
   notes: "",
   active: true,
   published: false,
@@ -78,10 +80,25 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
   const { value: a, set } = useForm(agent);
   const [error, setError] = useState("");
 
+  const persist = async () => {
+    if (!a.name.trim()) {
+      setError("Informe o nome.");
+      return false;
+    }
+    try {
+      await repo.upsert("agents", { ...a, name: a.name.trim() });
+      return true;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+      return false;
+    }
+  };
   const save = async () => {
-    if (!a.name.trim()) return setError("Informe o nome.");
-    await repo.upsert("agents", { ...a, name: a.name.trim() });
-    onClose();
+    if (await persist()) onClose();
+  };
+  // Salva e abre o currículo em A4 em outra aba
+  const openCv = async () => {
+    if (await persist()) window.open(`${process.env.NEXT_PUBLIC_BASE_PATH}/admin/agentes/curriculo?id=${a.id}`, "_blank", "noopener");
   };
   const remove = async () => {
     try {
@@ -107,7 +124,12 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
         </>
       }
     >
-      <PhotoInput name={a.name} value={a.photoUrl} onChange={(v) => set("photoUrl", v)} />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <PhotoInput name={a.name} value={a.photoUrl} onChange={(v) => set("photoUrl", v)} />
+        <Button variant="secondary" onClick={openCv}>
+          <IconDoc className="size-4" /> Currículo / PDF
+        </Button>
+      </div>
       <Field label="Nome">
         <input className="input" value={a.name} onChange={(e) => set("name", e.target.value)} autoFocus={isNew} />
       </Field>
@@ -153,6 +175,10 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
         />
       </Field>
 
+      <Field label="Experiência profissional" hint="Uma por linha. Ex.: 2019–2024 · Agente de proteção · Empresa X. Vai só no currículo.">
+        <textarea className="input resize-none" rows={4} value={a.career} onChange={(e) => set("career", e.target.value)} />
+      </Field>
+
       <Section title="Visibilidade">
         <div className="rounded-2xl border border-line px-4 py-2">
           <Switch checked={a.active} onChange={(v) => set("active", v)} label="Ativo" hint="Inativos não aparecem na escala de serviços" />
@@ -170,6 +196,12 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
             <Field label="Documento" hint="CPF ou registro de vigilante">
               <input className="input" value={a.documentId} onChange={(e) => set("documentId", e.target.value)} />
             </Field>
+          </div>
+          {/* div em vez de Field: label com botões dentro dispararia o upload ao clicar no texto */}
+          <div>
+            <span className="mb-1.5 block text-[0.875rem] font-medium text-silver">CNH</span>
+            <DocumentInput label="CNH" value={a.cnhUrl} onChange={(v) => set("cnhUrl", v)} />
+            <span className="mt-1.5 block text-xs text-muted">Foto ou print da CNH. Só aparece no documento de serviço fechado.</span>
           </div>
           <Field label="Observações">
             <textarea className="input resize-none" rows={2} value={a.notes} onChange={(e) => set("notes", e.target.value)} />
