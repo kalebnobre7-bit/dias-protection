@@ -223,6 +223,26 @@ export function Configurator({ content, dict, locale }: Props) {
                       );
                     })}
                     {errors.service && <p className="text-sm text-danger sm:col-span-2">{errors.service}</p>}
+                    <div className="sm:col-span-2">
+                      <Collapse open={order.services.length > 0}>
+                        <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={order.escort}
+                          onClick={() => set("escort", !order.escort)}
+                          className={`mt-2 w-full rounded-2xl border border-dashed p-4 text-left transition-[border-color,background-color,transform] duration-300 ease-[var(--ease-snap)] active:scale-[0.98] ${
+                            order.escort ? "border-accent/60 bg-accent/[0.07]" : "border-line-strong hover:border-silver"
+                          }`}
+                        >
+                          <span className="flex items-center justify-between gap-3">
+                            <span className="font-medium">{t.escort.name}</span>
+                            <CheckBox active={order.escort} />
+                          </span>
+                          <span className="mt-1.5 block text-[0.8125rem] leading-relaxed text-muted">{t.escort.summary}</span>
+                        </button>
+                      </Collapse>
+                    </div>
+                    <p className="text-[0.8125rem] text-muted sm:col-span-2">{t.included}</p>
                   </div>
                 )}
 

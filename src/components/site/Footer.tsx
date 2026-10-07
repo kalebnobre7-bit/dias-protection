@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Emblem, Wordmark } from "@/components/brand/Logo";
+import { CompanyLogos } from "@/components/site/CompanyLogos";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { whatsappUrl } from "@/lib/order";
 import type { Company, Locale, ServiceType } from "@/lib/types";
@@ -25,6 +26,18 @@ export function Footer({ dict, company, services, locale }: Props) {
 
   return (
     <footer className="border-t border-line bg-ink-2">
+      {company.trustedBy.length > 0 && (
+        <div className="border-b border-line">
+          <div className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-16">
+            <p className="label text-center">{dict.footer.trustedBy}</p>
+            <CompanyLogos
+              items={company.trustedBy}
+              size="sm"
+              className="mt-10 grid grid-cols-2 place-items-center gap-x-6 gap-y-8 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-12 sm:gap-y-9"
+            />
+          </div>
+        </div>
+      )}
       <div className="mx-auto max-w-7xl px-4 pb-10 pt-16 md:px-8 md:pt-20">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>

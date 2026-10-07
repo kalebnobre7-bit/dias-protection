@@ -60,7 +60,7 @@ export function seedDatabase(): Database {
     vehicles: [
       { id: "ve-1", categoryId: "suv", model: "SUV preta (exemplo)", plate: "ABC1D23", color: "Preto", year: 2023, owner: "own", partnerId: null, active: true, notes: "", published: false, photoUrl: null, descriptionPt: "SUV executiva com vidros escurecidos e bancos em couro.", descriptionEn: "Executive SUV with tinted windows and leather seats.", capacity: 4, armored: false, createdAt: now },
       { id: "ve-2", categoryId: "suv-blindado", model: "SUV blindada (exemplo)", plate: "", color: "Preto", year: 2022, owner: "partner", partnerId: "pa-1", active: true, notes: "Nível III-A", published: false, photoUrl: null, descriptionPt: "Blindagem nível III-A para deslocamentos sensíveis.", descriptionEn: "Level III-A armor for sensitive journeys.", capacity: 4, armored: true, createdAt: now },
-      { id: "ve-3", categoryId: "sedan", model: "Sedã executivo (exemplo)", plate: "", color: "Prata", year: 2024, owner: "own", partnerId: null, active: true, notes: "", published: false, photoUrl: null, descriptionPt: "", descriptionEn: "", capacity: 3, armored: false, createdAt: now },
+      { id: "ve-3", categoryId: "sedan", model: "Sedã executivo (exemplo)", plate: "", color: "Preto", year: 2024, owner: "own", partnerId: null, active: true, notes: "", published: false, photoUrl: null, descriptionPt: "", descriptionEn: "", capacity: 3, armored: false, createdAt: now },
     ],
     clients: [
       { id: "cl-1", name: "Cliente Exemplo A", company: "Empresa Exemplo", phone: "", email: "", language: "en", notes: "Prefere atendimento em inglês.", createdAt: now },
@@ -74,7 +74,7 @@ export function seedDatabase(): Database {
     jobs: [
       { id: "jb-1", clientId: "cl-1", serviceTypeId: "transporte-executivo", startsAt: day(-12, "07:30"), endsAt: day(-12, "19:00"), origin: "Aeroporto de Guarulhos", destination: "Faria Lima", status: "done", price: 2800, paymentStatus: "paid", paidAt: day(-10, ""), notes: "", agentIds: ["ag-2"], vehicleIds: ["ve-1"], createdAt: now },
       { id: "jb-2", clientId: "cl-3", serviceTypeId: "protecao-executiva", startsAt: day(-4, "10:00"), endsAt: day(-4, "22:00"), origin: "Hotel Exemplo", destination: "Evento no Ibirapuera", status: "done", price: 6500, paymentStatus: "pending", paidAt: "", notes: "", agentIds: ["ag-1", "ag-2"], vehicleIds: ["ve-2"], createdAt: now },
-      { id: "jb-3", clientId: "cl-2", serviceTypeId: "escolta-veicular", startsAt: day(3, "08:00"), endsAt: "", origin: "Morumbi", destination: "Campinas", status: "scheduled", price: 4200, paymentStatus: "pending", paidAt: "", notes: "", agentIds: ["ag-1"], vehicleIds: ["ve-1", "ve-3"], createdAt: now },
+      { id: "jb-3", clientId: "cl-2", serviceTypeId: "protecao-executiva", startsAt: day(3, "08:00"), endsAt: "", origin: "Morumbi", destination: "Campinas", status: "scheduled", price: 4200, paymentStatus: "pending", paidAt: "", notes: "", agentIds: ["ag-1"], vehicleIds: ["ve-1", "ve-3"], createdAt: now },
       { id: "jb-4", clientId: "cl-1", serviceTypeId: "eventos", startsAt: day(9, "18:00"), endsAt: "", origin: "", destination: "Jantar corporativo", status: "quote", price: 3500, paymentStatus: "pending", paidAt: "", notes: "Aguardando confirmação.", agentIds: [], vehicleIds: [], createdAt: now },
     ],
     jobCosts: [
@@ -119,7 +119,7 @@ export function seedDatabase(): Database {
         status: "draft",
         issuedAt: day(0, ""),
         validUntil: day(10, ""),
-        serviceIds: ["escolta-veicular"],
+        serviceIds: ["protecao-executiva"],
         summary: "Escolta veicular com veículo de apoio e dois agentes armados para deslocamento rodoviário com retorno no mesmo dia.",
         period: "A definir",
         location: "São Paulo → Campinas",

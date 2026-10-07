@@ -51,7 +51,7 @@ export default async function ServicePage({ params }: Props) {
       serviceType: service.name[locale],
       url,
       image: `${siteUrl}${service.image}`,
-      areaServed: { "@type": "City", name: "São Paulo" },
+      areaServed: { "@type": "Country", name: "Brasil" },
       provider: { "@id": `${siteUrl}/#business` },
     },
     {

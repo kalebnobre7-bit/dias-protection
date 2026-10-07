@@ -32,6 +32,7 @@ export function optionsForService(serviceId: string): string[] {
 
 export type Order = {
   services: string[]; // ids de ServiceOption (pode escolher vários)
+  escort: boolean; // escolta veicular: adicional de qualquer serviço
   vehicles: Record<string, number>; // id da categoria → quantidade
   vehiclesSuggest: boolean; // cliente não sabe: a equipe sugere
   driverLanguage: LanguagePref;
@@ -59,6 +60,7 @@ export type Order = {
 
 export const emptyOrder: Order = {
   services: [],
+  escort: false,
   vehicles: {},
   vehiclesSuggest: false,
   driverLanguage: { choice: "pt", other: "" },
@@ -137,6 +139,7 @@ export function buildMessage(
   const chosen = options.filter((o) => order.services.includes(o.id)).map((o) => o.name);
   if (chosen.length === 1) add(m.service, chosen[0]);
   else if (chosen.length > 1) lines.push(`*${m.services}:*`, ...chosen.map((n) => `• ${n}`));
+  if (order.escort) add(m.escort, m.yes);
 
   if (order.date) {
     const start = formatDate(order.date, locale);

@@ -6,6 +6,9 @@ export type Locale = "pt" | "en";
 export type Localized = Record<Locale, string>;
 export type LocalizedList = Record<Locale, string[]>;
 
+// logo: arquivo em public/images/logos; scale compensa logos com muito respiro interno
+export type BrandLogo = { name: string; logo?: string; scale?: number };
+
 export type Company = {
   legalName: string;
   brandName: string;
@@ -21,6 +24,7 @@ export type Company = {
   instagram: string; // handle sem @
   linkedin: string; // slug do perfil
   city: string;
+  trustedBy: BrandLogo[]; // empresas atendidas, faixa no rodapé (autorizado pelo Gabriel em 10/2026)
 };
 
 export type ServiceType = {
@@ -85,8 +89,7 @@ export type FounderProfile = {
   education: Localized[];
   languages: Localized;
   // Empresas para as quais já atuou (currículo) e clientes atendidos
-  // logo: arquivo em public/images/logos; scale compensa logos com muito respiro interno
-  experienceWith: { name: string; logo?: string; scale?: number }[];
+  experienceWith: BrandLogo[];
   notableClients: { name: string; context: string }[];
   showNotableClients: boolean; // só liga com autorização do Gabriel
 };

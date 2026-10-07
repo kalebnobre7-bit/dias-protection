@@ -74,7 +74,7 @@ export function businessJsonLd(content: SiteContent, dict: Dictionary, locale: L
     telephone: `+${company.whatsapp}`,
     email: company.email,
     address: { "@type": "PostalAddress", addressLocality: "São Paulo", addressRegion: "SP", addressCountry: "BR" },
-    areaServed: { "@type": "City", name: "São Paulo" },
+    areaServed: { "@type": "Country", name: "Brasil" },
     knowsLanguage: ["pt-BR", "en", "es"],
     sameAs: [`https://instagram.com/${company.instagram}`, `https://www.linkedin.com/in/${company.linkedin}`],
     founder: {

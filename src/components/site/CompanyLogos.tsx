@@ -1,11 +1,10 @@
 import type { CSSProperties } from "react";
 
 import { Stagger, StaggerItem } from "@/components/site/Reveal";
-
-type Company = { name: string; logo?: string; scale?: number };
+import type { BrandLogo } from "@/lib/types";
 
 // Logos em prata uniforme; a cor original aparece no hover. Sem `logo` vira texto.
-export function CompanyLogos({ items, size = "md", className = "" }: { items: Company[]; size?: "sm" | "md"; className?: string }) {
+export function CompanyLogos({ items, size = "md", className = "" }: { items: BrandLogo[]; size?: "sm" | "md"; className?: string }) {
   const sm = size === "sm";
   return (
     <Stagger as="ul" className={className}>
