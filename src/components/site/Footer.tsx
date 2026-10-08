@@ -35,6 +35,43 @@ export function Footer({ dict, company, services, locale }: Props) {
               size="sm"
               className="mt-10 grid grid-cols-2 place-items-center gap-x-6 gap-y-8 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-12 sm:gap-y-9"
             />
+
+            {company.events.length > 0 && (
+              <div className="mt-16 border-t border-line pt-12">
+                <p className="label text-center">{dict.footer.eventsTitle}</p>
+                <p className="mx-auto mt-2 max-w-[60ch] text-center text-[0.8125rem] text-muted">{dict.footer.eventsNote}</p>
+                <ul className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">
+                  {company.events.map((e) => (
+                    <li key={e.name} className={`bg-ink-2 p-6 ${e.groups.length ? "sm:col-span-2" : ""}`}>
+                      <p className="flex min-h-7 items-center font-semibold tracking-[-0.01em] text-silver">
+                        {e.logo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={`${process.env.NEXT_PUBLIC_BASE_PATH}${e.logo}`}
+                            alt={e.name}
+                            loading="lazy"
+                            style={{ height: `${1.25 * (e.scale ?? 1)}rem` }}
+                            className="w-auto opacity-70 [filter:brightness(0)_invert(1)]"
+                          />
+                        ) : (
+                          e.name
+                        )}
+                      </p>
+                      {e.groups.length > 0 && (
+                        <dl className="mt-4 space-y-2 text-[0.8125rem] leading-relaxed">
+                          {e.groups.map((g, i) => (
+                            <div key={i} className="sm:flex sm:gap-3">
+                              {g.label && <dt className="shrink-0 text-muted sm:w-32">{g.label[locale]}</dt>}
+                              <dd className="text-silver/80">{g.names.join(" · ")}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       )}

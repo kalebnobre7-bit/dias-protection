@@ -32,9 +32,8 @@ export const localContent: SiteContent = {
     trustedBy: [
       { name: "Globo Esporte", logo: "/images/logos/clients/ge-globo.svg", scale: 1.4 },
       { name: "Bradesco", logo: "/images/logos/clients/bradesco.svg" },
-      { name: "SP Open" },
-      { name: "Fórmula 1", logo: "/images/logos/f1.svg" },
-      { name: "Fórmula E", logo: "/images/logos/clients/formula-e.svg", scale: 0.8 },
+      { name: "Pirelli", logo: "/images/logos/clients/pirelli.svg", scale: 0.85 },
+      { name: "Earl Bamber Motorsport", logo: "/images/logos/clients/earl-bamber.png", scale: 1.4 },
       { name: "Richemont", logo: "/images/logos/clients/richemont.svg", scale: 0.55 },
       { name: "IWC Schaffhausen", logo: "/images/logos/clients/iwc.svg", scale: 1.6 },
       { name: "Zoetis", logo: "/images/logos/clients/zoetis.svg" },
@@ -48,8 +47,28 @@ export const localContent: SiteContent = {
       { name: "Keystone Investors" },
       { name: "CrowdStrike", logo: "/images/logos/clients/crowdstrike.svg" },
       { name: "Experian", logo: "/images/logos/clients/experian.svg", scale: 1.2 },
-      { name: "ASICS", logo: "/images/logos/clients/asics.svg" },
+      { name: "Adidas", logo: "/images/logos/clients/adidas.svg", scale: 0.7 },
+      { name: "Colgate", logo: "/images/logos/clients/colgate.svg", scale: 0.9 },
       { name: "Amazon", logo: "/images/logos/clients/amazon.svg" },
+    ],
+    events: [
+      {
+        name: "Richemont · IWC Schaffhausen",
+        groups: [{ label: null, names: ["Panerai", "Frattina", "Mercedes-AMG Motorsport"] }],
+      },
+      {
+        name: "SP Open",
+        groups: [
+          { label: { pt: "Master", en: "Master" }, names: ["Claro", "Heineken 0.0", "Allos", "Shopping Villa-Lobos", "Bradesco", "Ministério do Esporte"] },
+          { label: { pt: "Host", en: "Host" }, names: ["Prudential", "Seara Gourmet", "B3", "LATAM Airlines", "Engie", "Mubadala", "Slyce", "Asics", "Accor"] },
+          { label: { pt: "Gold", en: "Gold" }, names: ["Mercedes-Benz", "Tegra", "World Wine", "EMS", "Copa Energia", "Zetaflex", "Mantecorp Skincare", "Faixa Azul", "True", "Fleury", "Liquidz", "Wellhub", "Wilson", "Ademicon", "Shopee"] },
+          { label: { pt: "Parceiros oficiais", en: "Official partners" }, names: ["SPTuris", "Prefeitura de São Paulo", "Faberg Tour Experience", "Mattos Filho", "Líder", "Revo", "Fortinet", "Prata", "P50 Segur", "Care Natural Beauty", "Melitta", "Pacco", "Grey Goose", "Lego", "Advanced Recovery for Athletes", "Zoox"] },
+          { label: { pt: "Mídia", en: "Media partners" }, names: ["Kallas Mídia OOH", "JCDecaux", "Neooh", "SporTV"] },
+          { label: { pt: "Realização", en: "Organized by" }, names: ["IMM", "Instituto RJ de Tênis", "Parque Villa-Lobos"] },
+        ],
+      },
+      { name: "Fórmula 1", logo: "/images/logos/f1.svg", groups: [] },
+      { name: "Fórmula E", logo: "/images/logos/clients/formula-e.svg", scale: 0.8, groups: [] },
     ],
   },
 

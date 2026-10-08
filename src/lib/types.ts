@@ -9,6 +9,9 @@ export type LocalizedList = Record<Locale, string[]>;
 // logo: arquivo em public/images/logos; scale compensa logos com muito respiro interno
 export type BrandLogo = { name: string; logo?: string; scale?: number };
 
+// Evento em que a equipe atuou; as marcas são patrocinadoras/parceiras do evento, não clientes diretos
+export type EventPartners = { name: string; logo?: string; scale?: number; groups: { label: Localized | null; names: string[] }[] };
+
 export type Company = {
   legalName: string;
   brandName: string;
@@ -25,6 +28,7 @@ export type Company = {
   linkedin: string; // slug do perfil
   city: string;
   trustedBy: BrandLogo[]; // empresas atendidas, faixa no rodapé (autorizado pelo Gabriel em 10/2026)
+  events: EventPartners[]; // seção à parte, para não parecer que foram clientes
 };
 
 export type ServiceType = {
