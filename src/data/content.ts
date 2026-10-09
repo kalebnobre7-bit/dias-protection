@@ -11,8 +11,8 @@ export const localContent: SiteContent = {
     founderName: "Gabriel Sabino Dias",
     founderShortName: "Gabriel Dias",
     founderRole: {
-      pt: "Fundador · Close Protection Officer",
-      en: "Founder · Close Protection Officer",
+      pt: "Global Operations Specialist",
+      en: "Global Operations Specialist",
     },
     founderBio: {
       pt: "Com mais de 5 anos de experiência em investigações de alta complexidade e operações de alto risco na Polícia Civil do Estado de São Paulo.\n\nE mais de 5 anos de experiência em transporte e proteção executiva, operando e coordenando operações, viagens, eventos exclusivos e protegendo instalações e patrimônios de alto valor. Sua trajetória inclui atendimento a executivos de grandes corporações e personalidades internacionais, com atuação em análise de ameaças, planejamento preventivo, logística de deslocamentos, transporte de padrão executivo e segurança pessoal.",
@@ -24,7 +24,7 @@ export const localContent: SiteContent = {
       en: "Dias Protection specializes in executive protection and tailored logistics support for business owners, executives, hotel guests and high-profile clients. We provide armed protection, vehicle escort, executive transportation, event and asset security, operating with discretion, agility and planning in every operation, anywhere in Brazil.",
     },
     whatsapp: "5511970717926", // ⚠️ número do Linktree; o currículo tem outro (11 97610-0121)
-    email: "gsdias94@gmail.com",
+    email: "contato@diasprotection.com.br", // ⚠️ provisório: domínio ainda não comprado, caixa ainda não existe
     instagram: "diasprotection",
     linkedin: "gabrielsabinodias",
     city: "São Paulo · Brasil",
