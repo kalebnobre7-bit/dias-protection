@@ -268,7 +268,6 @@ const pt = {
     flipHint: "Toque no cartão para ver o verso",
     call: "Ligar",
     chat: "Chamar no WhatsApp",
-    scan: "Escaneie",
   },
 };
 
@@ -542,7 +541,6 @@ const en: Dictionary = {
     flipHint: "Tap the card to see the back",
     call: "Call",
     chat: "Chat on WhatsApp",
-    scan: "Scan me",
   },
 };
 

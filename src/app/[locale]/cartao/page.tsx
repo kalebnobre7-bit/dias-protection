@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, Globe, Mail, MapPin, Phone, RotateCw, Send, UserPlus } from "lucide-react";
+import { ArrowUpRight, Globe, Mail, Phone, RotateCw, Send, UserPlus } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { Emblem } from "@/components/brand/Logo";
@@ -54,7 +54,8 @@ export default async function CardPage({ params }: Props) {
     {
       href: `mailto:${company.email}`,
       label: dict.card.email,
-      value: company.email,
+      // espaço invisível depois do @: em tela estreita o e-mail quebra ali, não no meio do domínio
+      value: company.email.replace("@", "@\u200B"),
       icon: <Mail className="size-5" strokeWidth={1.75} />,
       iconClass: "bg-text text-ink",
     },
@@ -97,7 +98,7 @@ export default async function CardPage({ params }: Props) {
               email={company.email}
               instagram={company.instagram}
               qr={qr}
-              labels={{ flip: dict.card.flip, scan: dict.card.scan }}
+              labels={{ flip: dict.card.flip }}
             />
             <p className="mt-3 flex items-center justify-center gap-1.5 text-[0.8125rem] text-muted">
               <RotateCw className="size-3.5" aria-hidden />
@@ -159,10 +160,6 @@ export default async function CardPage({ params }: Props) {
             <Globe className="size-4" aria-hidden />
             {dict.card.site}
           </Link>
-          <span className="flex items-center gap-1.5 text-[0.8125rem] text-muted">
-            <MapPin className="size-3.5" aria-hidden />
-            {company.city}
-          </span>
         </div>
       </div>
     </main>
@@ -188,7 +185,7 @@ function Tile({ href, label, value, icon, iconClass }: TileProps) {
       </span>
       <span className="min-w-0">
         <span className="block text-[0.9375rem] font-medium">{label}</span>
-        <span className="num block truncate text-[0.8125rem] text-muted">{value}</span>
+        <span className="num block text-[0.8125rem] text-muted [overflow-wrap:anywhere]">{value}</span>
       </span>
     </a>
   );
