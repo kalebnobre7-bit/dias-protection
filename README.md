@@ -43,7 +43,7 @@ O site é estático e o painel grava no navegador, então o que aparece em **Equ
 
 Início, Propostas (orçamento numerado por ano, itens com catálogo rápido, desconto, validade, condições; documento A4 para PDF, envio pelo WhatsApp; aceita vira serviço agendado), Serviços (com equipe, veículos, custos e lucro; em orçamento gera proposta), Clientes (com histórico e propostas), Parceiros, Agentes, Veículos (com foto, lugares, blindagem e descrição pra Frota), Financeiro (resumo mensal + lançamentos avulsos) e Site (publicação de Equipe e Frota).
 
-**Enquanto o Supabase não entra:** tudo é client-side e grava no `localStorage` do navegador (`src/lib/admin/store.ts`). Os dados ficam só naquele navegador, e o login é de demonstração (credenciais em `src/lib/admin/seed.ts`, sem segurança real). Vem com dados fictícios de exemplo; "Zerar dados de exemplo" no menu apaga tudo.
+**Enquanto o Supabase não entra:** tudo é client-side e grava no `localStorage` do navegador (`src/lib/admin/store.ts`). Os dados ficam só naquele navegador, e o login é de demonstração (credenciais em `src/lib/admin/auth.ts`, sem segurança real). O painel começa vazio.
 
 **Ao conectar o Supabase:** trocar só `store.ts` (as funções `repo.*` já são assíncronas) e `auth.ts` (Supabase Auth). Tipos em `src/lib/admin/types.ts` espelham as tabelas; `Job.agentIds`/`vehicleIds` viram `job_agents`/`job_vehicles`. O cálculo de `src/lib/admin/finance.ts` é o mesmo da view `monthly_summary`.
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { emptyDatabase, seedDatabase } from "./seed";
+import { emptyDatabase } from "./seed";
 import type { Database, TableName, Tables } from "./types";
 
 // Repositório do painel. Hoje grava no localStorage deste navegador.
@@ -27,11 +27,9 @@ function read(): Database {
     const raw = localStorage.getItem(KEY);
     if (raw) return normalize({ ...emptyDatabase(), ...(JSON.parse(raw) as Partial<Database>) });
   } catch {
-    // storage bloqueado ou corrompido: cai nos dados de exemplo
+    // storage bloqueado ou corrompido: começa vazio
   }
-  const db = seedDatabase();
-  write(db);
-  return db;
+  return emptyDatabase();
 }
 
 function write(db: Database) {
@@ -109,10 +107,6 @@ export const repo = {
   async replaceJobCosts(jobId: string, costs: Tables["jobCosts"][]): Promise<void> {
     const db = read();
     write({ ...db, jobCosts: [...db.jobCosts.filter((c) => c.jobId !== jobId), ...costs] });
-  },
-
-  async reset(mode: "empty" | "sample"): Promise<void> {
-    write(mode === "empty" ? emptyDatabase() : seedDatabase());
   },
 };
 

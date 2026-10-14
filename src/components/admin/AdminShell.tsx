@@ -4,11 +4,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Briefcase as IconJobs, Building2 as IconPartners, Car as IconVehicles, ChartColumn as IconFinance, ChartPie as IconReports, ExternalLink as IconExternal, FileText as IconProposals, Globe as IconSite, House as IconHome, LogOut as IconLogout, Menu as IconMenu, ShieldCheck as IconAgents, Trash2, Users as IconClients } from "lucide-react";
+import { Briefcase as IconJobs, Building2 as IconPartners, Car as IconVehicles, ChartColumn as IconFinance, ChartPie as IconReports, ExternalLink as IconExternal, FileText as IconProposals, Globe as IconSite, House as IconHome, LogOut as IconLogout, Menu as IconMenu, ShieldCheck as IconAgents, Users as IconClients } from "lucide-react";
 
 import { Emblem } from "@/components/brand/Logo";
 import { signOut, useSession } from "@/lib/admin/auth";
-import { repo } from "@/lib/admin/store";
 
 
 const nav = [
@@ -77,7 +76,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         >
           <IconExternal className="size-5" /> Ver site
         </a>
-        <ResetData />
         <button
           type="button"
           onClick={logout}
@@ -126,26 +124,5 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
       <main className="mx-auto w-full min-w-0 max-w-5xl px-4 pb-16 pt-6 md:px-8 md:pt-10">{children}</main>
     </div>
-  );
-}
-
-// Enquanto não há Supabase: zera os dados de exemplo antes do uso real
-function ResetData() {
-  const [armed, setArmed] = useState(false);
-  const run = async () => {
-    if (!armed) return setArmed(true);
-    await repo.reset("empty");
-    setArmed(false);
-  };
-  return (
-    <button
-      type="button"
-      onClick={run}
-      onBlur={() => setArmed(false)}
-      className={`flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-[0.9375rem] transition-colors hover:bg-white/4 ${armed ? "text-danger" : "text-muted hover:text-text"}`}
-    >
-      <Trash2 className="size-5" />
-      {armed ? "Apagar tudo? Toque de novo" : "Zerar dados de exemplo"}
-    </button>
   );
 }

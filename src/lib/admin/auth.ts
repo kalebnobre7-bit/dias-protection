@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { DEMO_LOGIN } from "./seed";
+// Login de demonstração (só até o Supabase Auth entrar; não protege nada de verdade)
+const DEMO_LOGIN = { email: "gabriel@diasprotection.com", password: "dias2026" };
 
 // Sessão de demonstração. Na Fase B vira Supabase Auth (signInWithPassword / getSession).
 const KEY = "dias-admin:session";
