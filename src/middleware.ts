@@ -6,6 +6,17 @@ import { defaultLocale, isLocale } from "@/i18n/config";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const first = pathname.split("/")[1] ?? "";
+
+  // Painel travado em produção enquanto o login é de demonstração; liberar com ADMIN_ENABLED=true
+  if (first === "admin") {
+    if (process.env.NODE_ENV === "production" && process.env.ADMIN_ENABLED !== "true") {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${defaultLocale}`;
+      return NextResponse.redirect(url);
+    }
+    return;
+  }
+
   if (isLocale(first)) return;
 
   const accept = request.headers.get("accept-language")?.toLowerCase() ?? "";
@@ -17,5 +28,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|admin|brand|icon|apple-icon|favicon.ico|.*\\..*).*)"],
+  matcher: ["/((?!_next|brand|icon|apple-icon|favicon.ico|.*\\..*).*)"],
 };
