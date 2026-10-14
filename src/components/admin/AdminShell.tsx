@@ -28,11 +28,21 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname().replace(/\/$/, "") || "/admin";
   const [open, setOpen] = useState(false);
+  const [failure, setFailure] = useState("");
 
   useEffect(() => {
     if (session === "out") router.replace("/admin/login");
   }, [session, router]);
   useEffect(() => setOpen(false), [pathname]);
+
+  // Gravações no Supabase podem falhar (rede, sessão expirada): avisa em vez de falhar calado
+  useEffect(() => {
+    const onReject = (e: PromiseRejectionEvent) => {
+      setFailure(e.reason instanceof Error ? e.reason.message : "Não foi possível salvar. Tente de novo.");
+    };
+    window.addEventListener("unhandledrejection", onReject);
+    return () => window.removeEventListener("unhandledrejection", onReject);
+  }, []);
 
   if (session !== "in") return <div className="min-h-dvh bg-ink" />;
 
@@ -123,6 +133,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       <main className="mx-auto w-full min-w-0 max-w-5xl px-4 pb-16 pt-6 md:px-8 md:pt-10">{children}</main>
+
+      {failure && (
+        <div role="alert" className="fixed inset-x-4 bottom-4 z-[60] mx-auto flex max-w-md items-start gap-3 rounded-2xl border border-line bg-ink-2 p-4 text-[0.9375rem] shadow-lg">
+          <p className="flex-1 text-danger">{failure}</p>
+          <button type="button" onClick={() => setFailure("")} className="text-muted hover:text-text">
+            Fechar
+          </button>
+        </div>
+      )}
     </div>
   );
 }

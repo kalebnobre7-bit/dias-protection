@@ -163,4 +163,3 @@ export type Tables = {
 };
 
 export type TableName = keyof Tables;
-export type Database = { [K in TableName]: Tables[K][] };

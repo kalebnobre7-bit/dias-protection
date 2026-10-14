@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const first = pathname.split("/")[1] ?? "";
 
-  // Painel travado em produção enquanto o login é de demonstração; liberar com ADMIN_ENABLED=true
+  // Trava de segurança: em produção o painel só abre com ADMIN_ENABLED=true (o login em si é do Supabase Auth)
   if (first === "admin") {
     if (process.env.NODE_ENV === "production" && process.env.ADMIN_ENABLED !== "true") {
       const url = request.nextUrl.clone();

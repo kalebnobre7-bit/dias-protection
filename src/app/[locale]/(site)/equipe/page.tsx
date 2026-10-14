@@ -61,8 +61,8 @@ export default async function TeamPage({ params }: LocaleParams) {
               <Reveal delay={((i + 1) % 3) * 0.06} className="h-full">
                 <article className="tile flex h-full flex-col">
                   <div className="relative aspect-[4/5] bg-[linear-gradient(180deg,var(--color-navy-2),var(--color-ink))]">
-                    {a.photoUrl?.startsWith("data:") ? (
-                      // Foto enviada pelo painel (embutida no JSON publicado)
+                    {a.photoUrl && /^(data:|https?:)/.test(a.photoUrl) ? (
+                      // Foto enviada pelo painel (URL do Supabase Storage)
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={a.photoUrl} alt={a.name} className="absolute inset-0 size-full object-cover grayscale" />
                     ) : a.photoUrl ? (

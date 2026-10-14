@@ -113,7 +113,7 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
         </>
       }
     >
-      <PhotoInput name={v.model || "Veículo"} value={v.photoUrl} onChange={(x) => set("photoUrl", x)} />
+      <PhotoInput name={v.model || "Veículo"} folder="vehicles" value={v.photoUrl} onChange={(x) => set("photoUrl", x)} />
       <Field label="Modelo">
         <input className="input" value={v.model} onChange={(e) => set("model", e.target.value)} autoFocus={props.isNew} placeholder="Ex.: Toyota SW4" />
       </Field>

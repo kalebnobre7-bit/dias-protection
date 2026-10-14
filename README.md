@@ -1,6 +1,6 @@
 # Dias Protection — site + configurador
 
-Next.js 15 · React 19 · Tailwind v4 · Framer Motion · TypeScript. Supabase entra na Fase B.
+Next.js 15 · React 19 · Tailwind v4 · Framer Motion · TypeScript · Supabase (painel, equipe e frota).
 
 ```bash
 npm run dev   # http://localhost:3000 → redireciona pra /pt ou /en
@@ -13,7 +13,7 @@ npm run dev   # http://localhost:3000 → redireciona pra /pt ou /en
 | `/` | Home: hero, credenciais, serviços, como funciona, fundador, CTA |
 | `/servicos` e `/servicos/[slug]` | Lista e página de cada serviço (botão abre o pedido já preenchido) |
 | `/sobre` | Trajetória, certificações e reconhecimentos do Gabriel |
-| `/equipe` | Fundador + agentes (vêm do painel na Fase B) + critérios de seleção |
+| `/equipe` | Fundador + agentes (vêm do painel, via Supabase) + critérios de seleção |
 | `/frota` | Categorias de veículo |
 | `/solicitar` | Configurador em passos (um por tela, trilha de progresso) → WhatsApp (`?servico=slug` pré-seleciona). Vários serviços por pedido (transporte vira transfer ou diária), armados x desarmados, idioma do motorista e dos agentes, período estimado, viagem intermunicipal, evento, pessoa pública/PPE e "quero sugestão" |
 | `/cartao` | Cartão de visita digital: cartão que vira (marca / contato + QR), compartilhar e salvar contato |
@@ -26,7 +26,7 @@ A cada push na `main`, `.github/workflows/pages.yml` gera o export estático (`G
 
 ## Onde mexer
 
-- **Conteúdo** (empresa, trajetória, serviços, frota, agentes): `src/data/content.ts`. Itens com ⚠️ aguardam confirmação do Gabriel. Clientes famosos só aparecem com `showNotableClients: true`.
+- **Conteúdo** (empresa, trajetória, serviços, categorias de veículo): `src/data/content.ts`. Agentes e veículos reais vêm do Supabase (painel). Itens com ⚠️ aguardam confirmação do Gabriel. Clientes famosos só aparecem com `showNotableClients: true`.
 - **Imagens**: `public/images/` (geradas por IA; originais em `docs/imagens-ia/`). `docs/` fica fora do git (tem dados pessoais).
 - **Domínio**: definir `NEXT_PUBLIC_SITE_URL` na Vercel (usado no sitemap e no preview de link).
 - **Imagens de prévia (WhatsApp/LinkedIn)**: `public/og/*.jpg`, uma por página e idioma, geradas por `node --experimental-strip-types --no-warnings scripts/og-images.mjs` (precisa do Chromium do Playwright). Rodar de novo ao mudar textos ou fotos. São JPG fixos de ~50 KB porque o WhatsApp ignora imagem sem extensão ou acima de ~300 KB.
@@ -37,18 +37,22 @@ A cada push na `main`, `.github/workflows/pages.yml` gera o export estático (`G
 
 ## Publicar equipe e frota no site
 
-O site é estático e o painel grava no navegador, então o que aparece em **Equipe** e **Frota** passa pela aba **Site** do painel: marque os agentes e veículos "no site" e clique em **Publicar no site**. O painel grava `src/data/published.json` no repositório pela API do GitHub (token fine-grained com *Contents: Read and write*, salvo só naquele navegador) e o GitHub Pages republica em ~2 min. O site lê esse JSON no build (`src/lib/content.ts`); fotos vão embutidas (data URL, 480px). Placa, telefone e documento nunca saem do painel.
+Na aba **Site** do painel, marque os agentes e veículos "no site". O site (Vercel) lê do Supabase no servidor (`src/lib/content.ts`, papel `anon`, revalidação de 60 s), então a mudança aparece em até 1 minuto, sem deploy. O `anon` só enxerga linhas publicadas e ativas e só as colunas públicas: placa, telefone, documento e CNH nunca saem do painel. Fotos de agentes e veículos ficam no bucket público `photos` (Storage). A CNH fica na tabela `agents`, nunca no bucket.
+
+Sem as variáveis do Supabase (build do GitHub Pages), o site usa só o conteúdo local e a Equipe/Frota ficam sem agentes e veículos.
 
 ## Painel admin (`/admin`)
 
 Início, Propostas (orçamento numerado por ano, itens com catálogo rápido, desconto, validade, condições; documento A4 para PDF, envio pelo WhatsApp; aceita vira serviço agendado), Serviços (com equipe, veículos, custos e lucro; em orçamento gera proposta), Clientes (com histórico e propostas), Parceiros, Agentes, Veículos (com foto, lugares, blindagem e descrição pra Frota), Financeiro (resumo mensal + lançamentos avulsos) e Site (publicação de Equipe e Frota).
 
-**Enquanto o Supabase não entra:** tudo é client-side e grava no `localStorage` do navegador (`src/lib/admin/store.ts`). Os dados ficam só naquele navegador, e o login é de demonstração (credenciais em `src/lib/admin/auth.ts`, sem segurança real). O painel começa vazio.
+Os dados ficam no Supabase. O login é o Supabase Auth (e-mail e senha do Gabriel, criado à mão em Authentication → Users; o cadastro público está desligado). `src/lib/admin/store.ts` é o repositório (`repo.*` e `useTable`), `auth.ts` faz login/sessão e `storage.ts` envia fotos. Os tipos em `src/lib/admin/types.ts` espelham as tabelas (camelCase ↔ snake_case); `Job.agentIds`/`vehicleIds` viram `job_agents`/`job_vehicles` e os itens da proposta, `proposal_items`. O cálculo de `src/lib/admin/finance.ts` é o mesmo da view `monthly_summary`. Falha ao gravar aparece como aviso no canto da tela (`AdminShell`).
 
-**Ao conectar o Supabase:** trocar só `store.ts` (as funções `repo.*` já são assíncronas) e `auth.ts` (Supabase Auth). Tipos em `src/lib/admin/types.ts` espelham as tabelas; `Job.agentIds`/`vehicleIds` viram `job_agents`/`job_vehicles`. O cálculo de `src/lib/admin/finance.ts` é o mesmo da view `monthly_summary`.
+Em produção, `/admin` só abre com `ADMIN_ENABLED=true` (trava no `src/middleware.ts`).
 
-## Fase B — Supabase
+## Supabase
 
-- `supabase/migrations/0001_init.sql`: schema completo (conteúdo, agentes, frota, clientes, parceiros, serviços com custos, lançamentos, view `monthly_summary`), RLS e bucket `photos`. Validado num Postgres 16 local.
-- Trocar `getSiteContent()` em `src/lib/content.ts` pra ler do Supabase. Os tipos em `src/lib/types.ts` já espelham as tabelas (`name` ↔ `name_pt`/`name_en`).
-- ⚠️ O papel `anon` só tem SELECT em colunas públicas de `agents`: a consulta precisa listar as colunas (não usar `select *`).
+Variáveis (Vercel e `.env.local`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (chave publishable, pública) e `ADMIN_ENABLED=true`.
+
+- `supabase/migrations/0001` a `0005`: schema (conteúdo, agentes, frota, clientes, parceiros, serviços com custos, lançamentos, propostas, view `monthly_summary`), RLS e bucket `photos`. Rodar em ordem no SQL Editor. Os catálogos `service_types` e `vehicle_categories` (espelho de `src/data/content.ts`) foram carregados direto no projeto do cliente e não estão nas migrações: num projeto novo, popular essas duas tabelas à parte.
+- RLS: `anon` lê só linhas publicadas e ativas; usuário autenticado (Gabriel) lê e escreve tudo.
+- ⚠️ O papel `anon` só tem SELECT em colunas públicas de `agents` e `vehicles`: a consulta precisa listar as colunas (não usar `select *`).

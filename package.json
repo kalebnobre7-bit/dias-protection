@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "country-flag-icons": "^1.6.20",
     "framer-motion": "^13.4.4",
     "lucide-react": "^1.48.0",

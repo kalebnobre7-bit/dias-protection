@@ -125,7 +125,7 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
       }
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <PhotoInput name={a.name} value={a.photoUrl} onChange={(v) => set("photoUrl", v)} />
+        <PhotoInput name={a.name} folder="agents" value={a.photoUrl} onChange={(v) => set("photoUrl", v)} />
         <Button variant="secondary" onClick={openCv}>
           <IconDoc className="size-4" /> Currículo / PDF
         </Button>

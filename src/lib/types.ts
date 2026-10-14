@@ -64,7 +64,7 @@ export type Agent = {
   sortOrder: number;
 };
 
-// Veículo publicado na página Frota (vem do painel via "Publicar no site"; sem placa)
+// Veículo publicado na página Frota (vem do Supabase; sem placa)
 export type PublicVehicle = {
   id: string;
   categoryId: string | null;
@@ -77,9 +77,6 @@ export type PublicVehicle = {
   photoUrl: string | null;
   sortOrder: number;
 };
-
-// src/data/published.json: o que o painel publicou por último
-export type PublishedContent = { updatedAt: string | null; agents: Agent[]; vehicles: PublicVehicle[] };
 
 // Trajetória do fundador (página Sobre). Parágrafos separados por linha em branco;
 // logos = mostra experienceWith depois de `text`, seguido de `more`

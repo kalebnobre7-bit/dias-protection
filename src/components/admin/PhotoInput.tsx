@@ -1,10 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
+
+import { uploadPhoto } from "@/lib/admin/storage";
 
 import { Avatar, Button } from "./ui";
 
-// Reduz a imagem no próprio navegador (vai para o Supabase Storage na Fase B)
+// Reduz a imagem no próprio navegador (usado só na CNH, que fica na tabela de agentes)
 async function resize(file: File, max = 480): Promise<string> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
@@ -15,34 +17,48 @@ async function resize(file: File, max = 480): Promise<string> {
   return canvas.toDataURL("image/jpeg", 0.82);
 }
 
-export function PhotoInput(props: { name: string; value: string | null; onChange: (v: string | null) => void }) {
+export function PhotoInput(props: { name: string; folder: "agents" | "vehicles"; value: string | null; onChange: (v: string | null) => void }) {
   const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   return (
-    <div className="flex items-center gap-4">
-      <span className="[&>*]:size-20">
-        <Avatar name={props.name} photo={props.value} />
-      </span>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" onClick={() => input.current?.click()}>
-          {props.value ? "Trocar foto" : "Adicionar foto"}
-        </Button>
-        {props.value && (
-          <Button variant="danger" onClick={() => props.onChange(null)}>
-            Remover
+    <div className="space-y-2">
+      <div className="flex items-center gap-4">
+        <span className="[&>*]:size-20">
+          <Avatar name={props.name} photo={props.value} />
+        </span>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" disabled={busy} onClick={() => input.current?.click()}>
+            {busy ? "Enviando…" : props.value ? "Trocar foto" : "Adicionar foto"}
           </Button>
-        )}
+          {props.value && (
+            <Button variant="danger" disabled={busy} onClick={() => props.onChange(null)}>
+              Remover
+            </Button>
+          )}
+        </div>
+        <input
+          ref={input}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (!file) return;
+            setBusy(true);
+            setError("");
+            try {
+              props.onChange(await uploadPhoto(file, props.folder));
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Não foi possível enviar a foto.");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
       </div>
-      <input
-        ref={input}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (file) props.onChange(await resize(file));
-          e.target.value = "";
-        }}
-      />
+      {error && <p className="text-[0.875rem] text-danger">{error}</p>}
     </div>
   );
 }
