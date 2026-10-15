@@ -230,7 +230,7 @@ export function ChipSelect(props: { options: { value: string; label: string }[];
   );
 }
 
-/* ——— Painel de edição (lateral no desktop, tela cheia no celular) ——— */
+/* ——— Painel de edição (janela central no desktop, tela cheia no celular) ——— */
 
 export function Sheet(props: {
   open: boolean;
@@ -256,7 +256,7 @@ export function Sheet(props: {
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={props.title}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center md:p-6" role="dialog" aria-modal="true" aria-label={props.title}>
           <motion.div
             className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
             onClick={onClose}
@@ -266,11 +266,11 @@ export function Sheet(props: {
             transition={{ duration: 0.25, ease: [0.65, 0, 0.35, 1] }}
           />
           <motion.div
-            className="absolute inset-y-0 right-0 flex w-full max-w-xl flex-col border-l border-line bg-ink-2"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 400, damping: 38 }}
+            className="relative flex h-full w-full flex-col overflow-hidden bg-ink-2 md:h-auto md:max-h-[min(90vh,56rem)] md:max-w-2xl md:rounded-2xl md:border md:border-line md:shadow-2xl"
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ type: "spring", stiffness: 420, damping: 34 }}
           >
             <div className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-line px-5">
               <h2 className="truncate text-lg font-semibold tracking-[-0.02em]">{props.title}</h2>
