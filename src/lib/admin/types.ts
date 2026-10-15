@@ -117,6 +117,14 @@ export type Transaction = {
   createdAt: string;
 };
 
+// Categoria personalizável dos lançamentos avulsos (o lançamento guarda o nome)
+export type FinanceCategory = {
+  id: string;
+  name: string;
+  kind: "expense" | "income" | "both";
+  createdAt: string;
+};
+
 // Calculadora de preço (espelho da planilha de precificação do Gabriel)
 export type PricingCost = {
   id: string;
@@ -184,6 +192,7 @@ export type Tables = {
   jobs: Job;
   jobCosts: JobCost;
   transactions: Transaction;
+  financeCategories: FinanceCategory;
   proposals: Proposal;
 };
 

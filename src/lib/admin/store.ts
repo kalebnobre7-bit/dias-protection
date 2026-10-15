@@ -17,7 +17,7 @@ const notify = () => listeners.forEach((fn) => fn());
 
 export const newId = () => crypto.randomUUID();
 
-const dbTable = (table: TableName) => (table === "jobCosts" ? "job_costs" : table);
+const dbTable = (table: TableName) => (table === "jobCosts" || table === "financeCategories" ? snake(table) : table);
 
 const snake = (k: string) => k.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 const camel = (k: string) => k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
