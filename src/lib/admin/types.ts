@@ -21,6 +21,7 @@ export type AgentRecord = {
   notes: string;
   active: boolean;
   published: boolean;
+  freelance: boolean; // avulso, criado direto no serviço ou na proposta
   sortOrder: number;
   createdAt: string;
 };

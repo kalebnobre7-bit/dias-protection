@@ -26,6 +26,7 @@ const blank = (): AgentRecord => ({
   notes: "",
   active: true,
   published: false,
+  freelance: false,
   sortOrder: 0,
   createdAt: new Date().toISOString(),
 });
@@ -34,7 +35,8 @@ export default function AgentsPage() {
   const { rows, loading } = useTable("agents");
   const { rows: jobs } = useTable("jobs");
   const [editing, setEditing] = useState<AgentRecord | null>(null);
-  const sorted = [...rows].sort((a, b) => Number(b.active) - Number(a.active) || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+  // Fixos primeiro, avulsos depois, inativos no fim
+  const sorted = [...rows].sort((a, b) => Number(b.active) - Number(a.active) || Number(a.freelance) - Number(b.freelance) || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
 
   return (
     <>
@@ -62,7 +64,15 @@ export default function AgentsPage() {
                 subtitle={[a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ")}
                 trailing={
                   <span className="flex flex-col items-end gap-1">
-                    {!a.active ? <Badge tone="bad">Inativo</Badge> : a.published ? <Badge tone="good">No site</Badge> : <Badge>Interno</Badge>}
+                    {!a.active ? (
+                      <Badge tone="bad">Inativo</Badge>
+                    ) : a.freelance ? (
+                      <Badge tone="warn">Avulso</Badge>
+                    ) : a.published ? (
+                      <Badge tone="good">No site</Badge>
+                    ) : (
+                      <Badge>Interno</Badge>
+                    )}
                     <span className="num text-xs text-muted">{count} serviço(s)</span>
                   </span>
                 }
@@ -183,7 +193,21 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
         <div className="rounded-2xl border border-line px-4 py-2">
           <Switch checked={a.active} onChange={(v) => set("active", v)} label="Ativo" hint="Inativos não aparecem na escala de serviços" />
           <div className="border-t border-line" />
-          <Switch checked={a.published} onChange={(v) => set("published", v)} label="Mostrar no site" hint="Nome, função, bio, idiomas, certificações e foto. Depois, publique na aba Site." />
+          <Switch
+            checked={a.freelance}
+            onChange={(v) => {
+              set("freelance", v);
+              if (v) set("published", false);
+            }}
+            label="Avulso (freelancer)"
+            hint="Não é fixo da empresa. Avulsos nunca vão para o site."
+          />
+          {!a.freelance && (
+            <>
+              <div className="border-t border-line" />
+              <Switch checked={a.published} onChange={(v) => set("published", v)} label="Mostrar no site" hint="Nome, função, bio, idiomas, certificações e foto. Depois, publique na aba Site." />
+            </>
+          )}
         </div>
       </Section>
 

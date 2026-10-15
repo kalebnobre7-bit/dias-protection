@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Check as IconCheck, Copy as IconCopy, FileCheck as IconDocClosed, FileText as IconDoc, Plus as IconPlus, Send as IconSend, X as IconClose } from "lucide-react";
 
+import { FreelanceForm } from "@/components/admin/FreelanceForm";
 import { MoneyInput } from "@/components/admin/job-bits";
 import { PricingCalculator } from "@/components/admin/PricingCalculator";
 import {
@@ -507,21 +508,24 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         ))}
 
       {tab === "team" && (
-        <PickList
-          hint="Motoristas e seguranças apresentados no documento. Na proposta comercial vão foto e bio; no serviço fechado, currículo, contato e CNH."
-          empty="Cadastre a equipe em Agentes."
-          items={agents
-            .filter((a) => a.active || p.agentIds.includes(a.id))
-            .map((a) => ({
-              id: a.id,
-              leading: <Avatar name={a.name} photo={a.photoUrl} />,
-              title: a.name,
-              subtitle: [a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ") || "Sem função",
-              warn: a.cnhUrl ? "" : "Sem CNH",
-            }))}
-          selected={p.agentIds}
-          onToggle={(id) => toggleIn("agentIds", id)}
-        />
+        <>
+          <PickList
+            hint="Motoristas e seguranças apresentados no documento. Na proposta comercial vão foto e bio; no serviço fechado, currículo, contato e CNH."
+            empty="Cadastre a equipe em Agentes."
+            items={agents
+              .filter((a) => a.active || p.agentIds.includes(a.id))
+              .map((a) => ({
+                id: a.id,
+                leading: <Avatar name={a.name} photo={a.photoUrl} />,
+                title: a.name,
+                subtitle: [a.freelance ? "Avulso" : "", a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ") || "Sem função",
+                warn: a.cnhUrl ? "" : "Sem CNH",
+              }))}
+            selected={p.agentIds}
+            onToggle={(id) => toggleIn("agentIds", id)}
+          />
+          <FreelanceForm onAdded={(id) => set("agentIds", [...p.agentIds, id])} />
+        </>
       )}
 
       {tab === "vehicles" && (

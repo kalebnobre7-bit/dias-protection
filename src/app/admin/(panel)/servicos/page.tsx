@@ -20,6 +20,7 @@ import {
   Sheet,
   useForm,
 } from "@/components/admin/ui";
+import { FreelanceForm } from "@/components/admin/FreelanceForm";
 import { DateTile, MoneyInput, statusTone } from "@/components/admin/job-bits";
 import { serviceTypeName, serviceTypeOptions } from "@/lib/admin/catalog";
 import { brl, costCategoryLabel, formatDateTime, jobStatusLabel } from "@/lib/admin/labels";
@@ -175,7 +176,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   };
 
   // Mostra os ativos + os já escalados (mesmo que tenham ficado inativos)
-  const agentOptions = agents.filter((a) => a.active || j.agentIds.includes(a.id)).map((a) => ({ value: a.id, label: a.name }));
+  const agentOptions = agents.filter((a) => a.active || j.agentIds.includes(a.id)).map((a) => ({ value: a.id, label: a.freelance ? `${a.name} (avulso)` : a.name }));
   const vehicleOptions = vehicles
     .filter((v) => v.active || j.vehicleIds.includes(v.id))
     .map((v) => ({ value: v.id, label: [v.model, v.plate].filter(Boolean).join(" · ") }));
@@ -260,6 +261,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
           <Field label="Agentes">
             <ChipSelect options={agentOptions} value={j.agentIds} onChange={(v) => set("agentIds", v)} empty="Cadastre agentes na aba Agentes." />
           </Field>
+          <FreelanceForm onAdded={(id) => set("agentIds", [...j.agentIds, id])} />
           <Field label="Veículos">
             <ChipSelect options={vehicleOptions} value={j.vehicleIds} onChange={(v) => set("vehicleIds", v)} empty="Cadastre veículos na aba Veículos." />
           </Field>

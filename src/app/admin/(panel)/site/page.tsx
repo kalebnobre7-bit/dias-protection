@@ -10,7 +10,7 @@ export default function SitePage() {
   const { rows: agents } = useTable("agents");
   const { rows: vehicles } = useTable("vehicles");
 
-  const activeAgents = [...agents].filter((a) => a.active).sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+  const activeAgents = [...agents].filter((a) => a.active && !a.freelance).sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
   const activeVehicles = [...vehicles].filter((v) => v.active).sort((a, b) => a.model.localeCompare(b.model));
   const onSite = { agents: activeAgents.filter((a) => a.published).length, vehicles: activeVehicles.filter((v) => v.published).length };
 
