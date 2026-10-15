@@ -15,8 +15,8 @@ import { useTable } from "@/lib/admin/store";
 // Linha de assinatura com o nome digitado em caligrafia
 function Signature({ name }: { name: string }) {
   return (
-    <div className="flex h-14 items-end overflow-hidden border-b border-[#141922]/40 pb-1">
-      <span className="truncate font-[family-name:var(--font-signature)] text-[2.25rem] leading-none text-[#141922]/85">{name}</span>
+    <div className="flex min-h-14 items-end border-b border-[#141922]/40 pb-1">
+      <span className="font-[family-name:var(--font-signature)] text-[2.5rem] leading-[1.3] text-[#141922]/85">{name}</span>
     </div>
   );
 }

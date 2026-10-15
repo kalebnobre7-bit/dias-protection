@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Great_Vibes, Inter } from "next/font/google";
+import { Hurricane, Inter } from "next/font/google";
 
 import "../globals.css";
 
 const inter = Inter({ subsets: ["latin"], axes: ["opsz"], variable: "--font-inter", display: "swap" });
 // Assinatura digitada nos documentos; sem preload, só baixa quando a proposta abre
-const signature = Great_Vibes({ subsets: ["latin"], weight: "400", variable: "--font-signature", display: "swap", preload: false });
+const signature = Hurricane({ subsets: ["latin"], weight: "400", variable: "--font-signature", display: "swap", preload: false });
 
 export const metadata: Metadata = {
   title: "Painel · Dias Protection",
