@@ -24,7 +24,7 @@ export const localContent: SiteContent = {
       en: "Dias Protection specializes in executive protection and tailored logistics support for business owners, executives, hotel guests and high-profile clients. We provide armed protection, vehicle escort, executive transportation, event and asset security, operating with discretion, agility and planning in every operation, anywhere in Brazil.",
     },
     whatsapp: "5511970717926", // ⚠️ número do Linktree; o currículo tem outro (11 97610-0121)
-    email: "contato@diasprotection.com.br", // ⚠️ provisório: domínio ainda não comprado, caixa ainda não existe
+    email: "contato@diasprotection.com",
     instagram: "diasprotection",
     linkedin: "gabrielsabinodias",
     city: "São Paulo · Brasil",

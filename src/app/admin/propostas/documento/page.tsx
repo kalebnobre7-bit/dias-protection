@@ -286,7 +286,7 @@ export default function ProposalDocumentPage() {
           {p.paymentTerms && (
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-lg bg-[#141922]/[0.05] px-4 py-3 text-[0.875rem]">
               <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Pagamento</h2>
-              <p className="font-medium">{p.paymentTerms}</p>
+              <p className="whitespace-pre-line font-medium">{p.paymentTerms}</p>
             </div>
           )}
           {terms.length > 0 && (

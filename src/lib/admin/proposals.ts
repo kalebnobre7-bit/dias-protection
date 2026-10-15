@@ -6,14 +6,18 @@ import type { Client, Job, Proposal, ProposalItem } from "./types";
 
 // Condições gerais padrão: uma por linha, editáveis em cada proposta
 export const DEFAULT_TERMS = [
-  "Valores válidos até a data indicada e sujeitos a disponibilidade de equipe e veículos.",
-  "Horas excedentes ao período contratado são cobradas proporcionalmente ao valor da diária.",
-  "Despesas de pedágio, estacionamento, combustível fora do perímetro urbano e hospedagem da equipe, quando aplicáveis, são repassadas ao cliente mediante comprovante.",
+  "Valores válidos até a data indicada e sujeitos à disponibilidade de equipe e veículos.",
+  "Horas excedentes correspondem a 10% do valor da diária.",
+  "Despesas de pedágio, estacionamento ou combustível, fora do perímetro urbano, além de hospedagem da equipe ou quaisquer outros custos não previstos, quando aplicáveis, serão repassadas ao cliente mediante comprovante de pagamento para reembolso em até 2 dias úteis a partir do final do serviço.",
   "Cancelamento com menos de 24 horas de antecedência implica cobrança de 50% do valor do serviço.",
   "Todas as informações do cliente, agenda e itinerários são tratadas com sigilo absoluto.",
 ].join("\n");
 
-export const DEFAULT_PAYMENT = "50% na confirmação e 50% até 2 dias úteis após o serviço. PIX ou transferência bancária.";
+export const DEFAULT_PAYMENT = [
+  "50% na confirmação.",
+  "50% até 15 dias corridos após o serviço.",
+  "Forma de pagamento: PIX ou transferência bancária.",
+].join("\n");
 
 // Catálogo rápido: preenche descrição, unidade e detalhe; o valor fica com o Gabriel
 export const ITEM_PRESETS: { label: string; item: Omit<ProposalItem, "id" | "unitPrice"> }[] = [
@@ -21,9 +25,9 @@ export const ITEM_PRESETS: { label: string; item: Omit<ProposalItem, "id" | "uni
   { label: "Agente de proteção (desarmado)", item: { description: "Agente de proteção desarmado", detail: "Diária de até 12h", qty: 1, unit: "diária" } },
   { label: "Motorista bilíngue", item: { description: "Motorista executivo bilíngue (PT/EN)", detail: "Diária de até 12h", qty: 1, unit: "diária" } },
   { label: "Transfer executivo", item: { description: "Transfer executivo", detail: "Deslocamento ponto a ponto, com motorista", qty: 1, unit: "transfer" } },
-  { label: "Diária SUV executivo", item: { description: "SUV executivo com motorista", detail: "À disposição, até 12h", qty: 1, unit: "diária" } },
-  { label: "Diária SUV blindado", item: { description: "SUV blindado com motorista", detail: "Blindagem nível III-A, até 12h", qty: 1, unit: "diária" } },
-  { label: "Veículo de apoio (escolta)", item: { description: "Veículo de apoio com 2 agentes", detail: "Escolta veicular, até 12h", qty: 1, unit: "diária" } },
+  { label: "Diária SUV executivo", item: { description: "SUV executivo com motorista", detail: "À disposição, até 10h", qty: 1, unit: "diária" } },
+  { label: "Diária SUV blindado", item: { description: "SUV blindado com motorista", detail: "Blindagem nível III-A, até 10h", qty: 1, unit: "diária" } },
+  { label: "Veículo de apoio (escolta)", item: { description: "Veículo de apoio com 2 agentes", detail: "Escolta veicular, até 10h", qty: 1, unit: "diária" } },
   { label: "Advance / análise de risco", item: { description: "Advance e análise de risco", detail: "Reconhecimento prévio de locais e rotas", qty: 1, unit: "un." } },
   { label: "Coordenação de evento", item: { description: "Coordenação de segurança do evento", detail: "Planejamento, briefing e supervisão", qty: 1, unit: "un." } },
 ];
