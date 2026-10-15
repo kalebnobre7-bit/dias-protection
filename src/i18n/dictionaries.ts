@@ -245,7 +245,6 @@ const pt = {
     coverage: "Atendemos todo o território nacional",
     trustedBy: "Empresas que confiaram na Dias Protection",
     eventsTitle: "Eventos em que atuamos",
-    eventsNote: "Marcas parceiras e patrocinadoras dos eventos. Não são clientes diretos da Dias Protection.",
     rights: "Todos os direitos reservados.",
   },
   notFound: {
@@ -518,7 +517,6 @@ const en: Dictionary = {
     coverage: "Serving clients nationwide across Brazil",
     trustedBy: "Companies that have trusted Dias Protection",
     eventsTitle: "Events we have worked at",
-    eventsNote: "Partner and sponsor brands of these events. They are not direct clients of Dias Protection.",
     rights: "All rights reserved.",
   },
   notFound: {

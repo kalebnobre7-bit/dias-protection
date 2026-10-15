@@ -39,10 +39,9 @@ export function Footer({ dict, company, services, locale }: Props) {
             {company.events.length > 0 && (
               <div className="mt-16 border-t border-line pt-12">
                 <p className="label text-center">{dict.footer.eventsTitle}</p>
-                <p className="mx-auto mt-2 max-w-[60ch] text-center text-[0.8125rem] text-muted">{dict.footer.eventsNote}</p>
                 <ul className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">
                   {company.events.map((e) => (
-                    <li key={e.name} className={`bg-ink-2 p-6 ${e.groups.length ? "sm:col-span-2" : ""}`}>
+                    <li key={e.name} className="bg-ink-2 p-6">
                       <p className="flex min-h-7 items-center font-semibold tracking-[-0.01em] text-silver">
                         {e.logo ? (
                           // eslint-disable-next-line @next/next/no-img-element
