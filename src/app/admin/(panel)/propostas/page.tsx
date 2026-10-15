@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Check as IconCheck, Copy as IconCopy, FileCheck as IconDocClosed, FileText as IconDoc, Plus as IconPlus, Send as IconSend, X as IconClose } from "lucide-react";
+import { Check as IconCheck, Copy as IconCopy, FileCheck as IconDocClosed, FileText as IconDoc, Minus as IconMinus, Plus as IconPlus, Send as IconSend, Sparkles as IconMagic, X as IconClose } from "lucide-react";
 
+import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { FreelanceForm } from "@/components/admin/FreelanceForm";
 import { MoneyInput } from "@/components/admin/job-bits";
 import { PricingCalculator } from "@/components/admin/PricingCalculator";
@@ -22,6 +23,7 @@ import {
   Section,
   Segmented,
   Sheet,
+  Switch,
   useForm,
 } from "@/components/admin/ui";
 import { serviceTypeOptions, vehicleCategoryName } from "@/lib/admin/catalog";
@@ -33,10 +35,14 @@ import {
   blankProposal,
   itemTotal,
   jobFromProposal,
+  mergeScopeItems,
   onlyDigits,
+  periodText,
   proposalFromJob,
   proposalText,
   proposalTotals,
+  scopeItems,
+  scopeSummary,
 } from "@/lib/admin/proposals";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Proposal, ProposalItem, ProposalStatus } from "@/lib/admin/types";
@@ -350,28 +356,67 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
           </p>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Emitida em">
-            <input className="input" type="date" value={p.issuedAt} onChange={(e) => set("issuedAt", e.target.value)} />
-          </Field>
-          <Field label="Válida até">
-            <input className="input" type="date" value={p.validUntil} min={p.issuedAt} onChange={(e) => set("validUntil", e.target.value)} />
-          </Field>
-        </div>
-
         <Section title="Escopo">
           <div className="space-y-4">
+            {/* Primeiro a operação (natureza, datas, seguranças); os itens saem daqui */}
+            <Field label="Natureza do serviço">
+              <Segmented
+                value={p.nature}
+                onChange={(v) => set("nature", v)}
+                options={[
+                  { value: "daily", label: "Diária" },
+                  { value: "transfer", label: "Transfer" },
+                ]}
+              />
+            </Field>
+            <div>
+              <span className="mb-1.5 block text-[0.875rem] font-medium text-silver">Período</span>
+              <DateRangePicker
+                start={p.startDate}
+                end={p.endDate}
+                onChange={(start, end) => {
+                  set("startDate", start);
+                  set("endDate", end);
+                  set("period", periodText(start, end));
+                }}
+              />
+            </div>
+            <Field label="Período no documento" hint="Preenchido pelo calendário. Dá pra completar com horário.">
+              <input className="input" value={p.period} onChange={(e) => set("period", e.target.value)} placeholder="10 a 15 de outubro, 8h às 20h" />
+            </Field>
+            <div className="rounded-2xl border border-line px-4 py-2">
+              <Switch checked={p.guards > 0} onChange={(v) => set("guards", v ? 1 : 0)} label="Com segurança" hint="Agentes de proteção junto com o transporte" />
+              {p.guards > 0 && (
+                <div className="flex items-center justify-between gap-4 border-t border-line py-3">
+                  <span className="font-medium">Número de seguranças</span>
+                  <span className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => set("guards", Math.max(1, p.guards - 1))}
+                      aria-label="Menos um segurança"
+                      className="grid size-9 place-items-center rounded-full border border-line-strong hover:border-silver"
+                    >
+                      <IconMinus className="size-4" />
+                    </button>
+                    <span className="num w-6 text-center text-lg font-semibold">{p.guards}</span>
+                    <button
+                      type="button"
+                      onClick={() => set("guards", Math.min(30, p.guards + 1))}
+                      aria-label="Mais um segurança"
+                      className="grid size-9 place-items-center rounded-full border border-line-strong hover:border-silver"
+                    >
+                      <IconPlus className="size-4" />
+                    </button>
+                  </span>
+                </div>
+              )}
+            </div>
+            <Field label="Local / trajeto">
+              <input className="input" value={p.location} onChange={(e) => set("location", e.target.value)} placeholder="São Paulo · SP" />
+            </Field>
             <Field label="Serviços">
               <ChipSelect options={serviceTypeOptions} value={p.serviceIds} onChange={(v) => set("serviceIds", v)} empty="" />
             </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Período">
-                <input className="input" value={p.period} onChange={(e) => set("period", e.target.value)} placeholder="10 a 15 de outubro, 8h às 20h" />
-              </Field>
-              <Field label="Local / trajeto">
-                <input className="input" value={p.location} onChange={(e) => set("location", e.target.value)} placeholder="São Paulo · SP" />
-              </Field>
-            </div>
             <Field label="Descrição do escopo" hint="Contexto da operação, em 2 ou 3 frases. Vai para o documento.">
               <textarea className="input resize-none" rows={3} value={p.summary} onChange={(e) => set("summary", e.target.value)} />
             </Field>
@@ -397,6 +442,14 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
             </select>
           }
         >
+          {scopeItems(p).length > 0 && (
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-line-strong px-4 py-3">
+              <span className="text-[0.875rem] text-muted">Escopo: {scopeSummary(p)}</span>
+              <Button variant="secondary" className="!min-h-9 !px-3" onClick={() => set("items", mergeScopeItems(p, newId))}>
+                <IconMagic className="size-4" /> {p.items.length ? "Refazer itens do escopo" : "Gerar itens do escopo"}
+              </Button>
+            </div>
+          )}
           {p.items.length ? (
             <ul className="space-y-3">
               {p.items.map((i) => (
@@ -458,6 +511,15 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
             </div>
           </dl>
         </Section>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Emitida em">
+            <input className="input" type="date" value={p.issuedAt} onChange={(e) => set("issuedAt", e.target.value)} />
+          </Field>
+          <Field label="Válida até">
+            <input className="input" type="date" value={p.validUntil} min={p.issuedAt} onChange={(e) => set("validUntil", e.target.value)} />
+          </Field>
+        </div>
 
         <Section title="Condições">
           <div className="space-y-4">

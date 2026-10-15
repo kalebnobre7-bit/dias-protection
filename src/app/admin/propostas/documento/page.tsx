@@ -9,7 +9,7 @@ import { localContent } from "@/data/content";
 import { useSession } from "@/lib/admin/auth";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { brl, formatDate, formatDateLong, proposalStatusLabel } from "@/lib/admin/labels";
-import { itemTotal, proposalTotals } from "@/lib/admin/proposals";
+import { itemTotal, proposalTotals, scopeSummary } from "@/lib/admin/proposals";
 import { useTable } from "@/lib/admin/store";
 
 // Linha de assinatura com o nome digitado em caligrafia
@@ -79,6 +79,7 @@ export default function ProposalDocumentPage() {
     .filter(Boolean)
     .join(" · ");
   const highlights = ([
+    ["Serviço", scopeSummary(p)],
     ["Período", p.period],
     ["Local", p.location],
     ["Equipe", crew],

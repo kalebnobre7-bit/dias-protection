@@ -34,7 +34,76 @@ export const ITEM_PRESETS: { label: string; item: Omit<ProposalItem, "id" | "uni
 
 export const UNITS = ["diária", "transfer", "hora", "un."];
 
-export const itemTotal = (i: ProposalItem) => (Number.isFinite(i.qty * i.unitPrice) ? i.qty * i.unitPrice : 0);
+// ——— Escopo estruturado: período, natureza e seguranças ———
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const toDate = (iso: string) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+};
+
+// Dias do período, contando o primeiro e o último (0 sem data)
+export function scopeDays(p: Pick<Proposal, "startDate" | "endDate">): number {
+  if (!p.startDate) return 0;
+  if (!p.endDate || p.endDate === p.startDate) return 1;
+  return Math.round((toDate(p.endDate).getTime() - toDate(p.startDate).getTime()) / 86_400_000) + 1;
+}
+
+// "26 a 30 de outubro de 2026", "28 de outubro a 2 de novembro de 2026", "26 de outubro de 2026"
+export function periodText(start: string, end: string): string {
+  if (!start) return "";
+  const a = toDate(start);
+  const long = (d: Date, opts: Intl.DateTimeFormatOptions) => d.toLocaleDateString("pt-BR", opts);
+  if (!end || end === start) return long(a, { day: "numeric", month: "long", year: "numeric" });
+  const b = toDate(end);
+  if (a.getFullYear() !== b.getFullYear())
+    return `${long(a, { day: "numeric", month: "long", year: "numeric" })} a ${long(b, { day: "numeric", month: "long", year: "numeric" })}`;
+  if (a.getMonth() !== b.getMonth()) return `${long(a, { day: "numeric", month: "long" })} a ${long(b, { day: "numeric", month: "long", year: "numeric" })}`;
+  return `${a.getDate()} a ${long(b, { day: "numeric", month: "long", year: "numeric" })}`;
+}
+
+// "5 diárias + 2 seguranças", "Transfer", "Transfer + 1 segurança"
+export function scopeSummary(p: Pick<Proposal, "startDate" | "endDate" | "nature" | "guards">): string {
+  if (!p.nature) return "";
+  const days = Math.max(1, scopeDays(p));
+  const base = p.nature === "daily" ? plural(days, "diária", "diárias") : days > 1 ? `${days} transfers` : "Transfer";
+  return p.guards > 0 ? `${base} + ${plural(p.guards, "segurança", "seguranças")}` : base;
+}
+
+const SCOPE_VEHICLE_DAILY = "Veículo executivo com motorista";
+const SCOPE_TRANSFER = "Transfer executivo";
+const SCOPE_GUARD = "Agente de proteção";
+
+// Itens que saem do escopo; o valor unitário fica com o Gabriel
+export function scopeItems(p: Proposal): Omit<ProposalItem, "id" | "unitPrice">[] {
+  if (!p.nature) return [];
+  const days = Math.max(1, scopeDays(p));
+  const cars = Math.max(1, p.vehicleIds.length);
+  const items: Omit<ProposalItem, "id" | "unitPrice">[] =
+    p.nature === "daily"
+      ? [{ description: SCOPE_VEHICLE_DAILY, detail: `${plural(cars, "veículo", "veículos")} · ${plural(days, "diária", "diárias")} de até 10h`, qty: cars * days, unit: "diária" }]
+      : [{ description: SCOPE_TRANSFER, detail: "Deslocamento ponto a ponto, com motorista", qty: cars * days, unit: "transfer" }];
+  if (p.guards > 0)
+    items.push({
+      description: SCOPE_GUARD,
+      detail: p.nature === "daily" ? `${plural(p.guards, "agente", "agentes")} · ${plural(days, "diária", "diárias")} de até 12h` : `${plural(p.guards, "agente", "agentes")} acompanhando o transfer`,
+      qty: p.guards * days,
+      unit: p.nature === "daily" ? "diária" : "transfer",
+    });
+  return items;
+}
+
+// Refaz as linhas do escopo mantendo os valores já digitados; itens manuais ficam intactos
+export function mergeScopeItems(p: Proposal, newId: () => string): ProposalItem[] {
+  const scopeNames = [SCOPE_VEHICLE_DAILY, SCOPE_TRANSFER, SCOPE_GUARD];
+  const generated = scopeItems(p).map((g) => {
+    const old = p.items.find((i) => i.description === g.description);
+    return { ...g, id: old?.id ?? newId(), unitPrice: old?.unitPrice ?? 0 };
+  });
+  return [...generated, ...p.items.filter((i) => !scopeNames.includes(i.description))];
+}
+
+export const itemTotal =(i: ProposalItem) => (Number.isFinite(i.qty * i.unitPrice) ? i.qty * i.unitPrice : 0);
 
 export function proposalTotals(p: Proposal): { subtotal: number; discount: number; total: number } {
   const subtotal = p.items.reduce((s, i) => s + itemTotal(i), 0);
@@ -67,6 +136,10 @@ export function blankProposal(id: string, existing: Proposal[]): Proposal {
     serviceIds: [],
     summary: "",
     period: "",
+    startDate: "",
+    endDate: "",
+    nature: "",
+    guards: 0,
     location: "",
     items: [],
     agentIds: [],
@@ -130,6 +203,7 @@ export function proposalText(p: Proposal, client: Client | null): string {
     p.title,
     "",
     client ? `*Cliente:* ${[client.name, client.company].filter(Boolean).join(" · ")}` : "",
+    scopeSummary(p) ? `*Serviço:* ${scopeSummary(p)}` : "",
     p.period ? `*Período:* ${p.period}` : "",
     p.location ? `*Local:* ${p.location}` : "",
     p.summary ? `\n${p.summary}` : "",

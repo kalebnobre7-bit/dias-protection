@@ -136,6 +136,8 @@ export type Pricing = {
 
 export type ProposalStatus = "draft" | "sent" | "accepted" | "declined" | "expired";
 
+export type ProposalNature = "daily" | "transfer" | "";
+
 export type ProposalItem = {
   id: string;
   description: string;
@@ -157,7 +159,11 @@ export type Proposal = {
   validUntil: string; // "YYYY-MM-DD"
   serviceIds: string[]; // tipos de serviço do site
   summary: string; // contexto e escopo, em texto corrido
-  period: string; // "10 a 15 de outubro de 2026", texto livre
+  period: string; // "10 a 15 de outubro de 2026"; gerado pelo calendário ou texto livre (propostas antigas)
+  startDate: string; // "YYYY-MM-DD" ou ""
+  endDate: string; // "YYYY-MM-DD" ou "" (transfer de um dia só)
+  nature: ProposalNature;
+  guards: number; // seguranças; 0 = sem segurança
   location: string;
   items: ProposalItem[];
   agentIds: string[]; // motoristas e seguranças apresentados no documento
