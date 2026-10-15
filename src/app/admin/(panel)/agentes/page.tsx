@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
 import { DocumentInput, PhotoInput } from "@/components/admin/PhotoInput";
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, Section, Sheet, Switch, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, Section, Sheet, Switch, useForm } from "@/components/admin/ui";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { AgentRecord } from "@/lib/admin/types";
 
@@ -35,6 +35,8 @@ export default function AgentsPage() {
   const { rows, loading } = useTable("agents");
   const { rows: jobs } = useTable("jobs");
   const [editing, setEditing] = useState<AgentRecord | null>(null);
+  // Modo "Exportar PDF": ids escolhidos (null = fora do modo)
+  const [picking, setPicking] = useState<string[] | null>(null);
   // Fixos primeiro, avulsos depois, inativos no fim
   const sorted = [...rows].sort((a, b) => Number(b.active) - Number(a.active) || Number(a.freelance) - Number(b.freelance) || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
 
@@ -44,11 +46,30 @@ export default function AgentsPage() {
         title="Agentes"
         subtitle="Perfil tipo currículo. Os publicados aparecem na página Equipe do site."
         action={
-          <Button onClick={() => setEditing(blank())}>
-            <IconPlus className="size-4" /> Novo agente
-          </Button>
+          picking ? (
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => setPicking(null)}>
+                Cancelar
+              </Button>
+              <Button disabled={!picking.length} onClick={() => exportPdf(picking)}>
+                <IconDoc className="size-4" /> Gerar PDF ({picking.length})
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              {rows.length > 0 && (
+                <Button variant="secondary" onClick={() => setPicking([])}>
+                  <IconDoc className="size-4" /> Exportar PDF
+                </Button>
+              )}
+              <Button onClick={() => setEditing(blank())}>
+                <IconPlus className="size-4" /> Novo agente
+              </Button>
+            </div>
+          )
         }
       />
+      {picking && <p className="-mt-4 mb-4 px-1 text-[0.875rem] text-muted">Toque nos agentes que vão no PDF. Sai um currículo por página, sem contato nem documentos.</p>}
       {!loading && !rows.length ? (
         <EmptyState title="Nenhum agente cadastrado" text="Cadastre a equipe com foto, idiomas e certificações." />
       ) : (
@@ -58,23 +79,27 @@ export default function AgentsPage() {
             return (
               <Row
                 key={a.id}
-                onClick={() => setEditing(a)}
+                onClick={() => (picking ? setPicking(picking.includes(a.id) ? picking.filter((x) => x !== a.id) : [...picking, a.id]) : setEditing(a))}
                 leading={<Avatar name={a.name} photo={a.photoUrl} />}
                 title={a.name}
                 subtitle={[a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ")}
                 trailing={
-                  <span className="flex flex-col items-end gap-1">
-                    {!a.active ? (
-                      <Badge tone="bad">Inativo</Badge>
-                    ) : a.freelance ? (
-                      <Badge tone="warn">Avulso</Badge>
-                    ) : a.published ? (
-                      <Badge tone="good">No site</Badge>
-                    ) : (
-                      <Badge>Interno</Badge>
-                    )}
-                    <span className="num text-xs text-muted">{count} serviço(s)</span>
-                  </span>
+                  picking ? (
+                    <PickMark on={picking.includes(a.id)} />
+                  ) : (
+                    <span className="flex flex-col items-end gap-1">
+                      {!a.active ? (
+                        <Badge tone="bad">Inativo</Badge>
+                      ) : a.freelance ? (
+                        <Badge tone="warn">Avulso</Badge>
+                      ) : a.published ? (
+                        <Badge tone="good">No site</Badge>
+                      ) : (
+                        <Badge>Interno</Badge>
+                      )}
+                      <span className="num text-xs text-muted">{count} serviço(s)</span>
+                    </span>
+                  )
                 }
               />
             );
@@ -85,6 +110,10 @@ export default function AgentsPage() {
     </>
   );
 }
+
+// Abre a apresentação em A4 (sem dados internos) em outra aba
+const exportPdf = (ids: string[]) =>
+  window.open(`${process.env.NEXT_PUBLIC_BASE_PATH}/admin/apresentacao?agentes=${ids.join(",")}`, "_blank", "noopener");
 
 function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: boolean; onClose: () => void }) {
   const { value: a, set } = useForm(agent);

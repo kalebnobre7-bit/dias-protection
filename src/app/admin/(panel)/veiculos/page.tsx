@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Plus as IconPlus } from "lucide-react";
+import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
 import { PhotoInput } from "@/components/admin/PhotoInput";
-import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, Section, Segmented, Sheet, Switch, useForm } from "@/components/admin/ui";
+import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, Section, Segmented, Sheet, Switch, useForm } from "@/components/admin/ui";
 import { vehicleCategoryName, vehicleCategoryOptions } from "@/lib/admin/catalog";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Vehicle } from "@/lib/admin/types";
@@ -33,6 +33,8 @@ export default function VehiclesPage() {
   const { rows, loading } = useTable("vehicles");
   const { rows: partners } = useTable("partners");
   const [editing, setEditing] = useState<Vehicle | null>(null);
+  // Modo "Exportar PDF": ids escolhidos (null = fora do modo)
+  const [picking, setPicking] = useState<string[] | null>(null);
   const sorted = [...rows].sort((a, b) => Number(b.active) - Number(a.active) || a.model.localeCompare(b.model));
 
   return (
@@ -41,11 +43,30 @@ export default function VehiclesPage() {
         title="Veículos"
         subtitle="Frota própria e de parceiros. Os publicados aparecem na página Frota do site."
         action={
-          <Button onClick={() => setEditing(blank())}>
-            <IconPlus className="size-4" /> Novo veículo
-          </Button>
+          picking ? (
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => setPicking(null)}>
+                Cancelar
+              </Button>
+              <Button disabled={!picking.length} onClick={() => exportPdf(picking)}>
+                <IconDoc className="size-4" /> Gerar PDF ({picking.length})
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              {rows.length > 0 && (
+                <Button variant="secondary" onClick={() => setPicking([])}>
+                  <IconDoc className="size-4" /> Exportar PDF
+                </Button>
+              )}
+              <Button onClick={() => setEditing(blank())}>
+                <IconPlus className="size-4" /> Novo veículo
+              </Button>
+            </div>
+          )
         }
       />
+      {picking && <p className="-mt-4 mb-4 px-1 text-[0.875rem] text-muted">Toque nos veículos que vão no PDF. Sai com foto e descrição, sem a placa.</p>}
       {!loading && !rows.length ? (
         <EmptyState title="Nenhum veículo cadastrado" />
       ) : (
@@ -53,16 +74,20 @@ export default function VehiclesPage() {
           {sorted.map((v) => (
             <Row
               key={v.id}
-              onClick={() => setEditing(v)}
+              onClick={() => (picking ? setPicking(picking.includes(v.id) ? picking.filter((x) => x !== v.id) : [...picking, v.id]) : setEditing(v))}
               title={v.model}
               subtitle={[vehicleCategoryName(v.categoryId), v.plate, v.color, v.year].filter(Boolean).join(" · ")}
               trailing={
-                <span className="flex flex-col items-end gap-1">
-                  {!v.active ? <Badge tone="bad">Inativo</Badge> : v.published ? <Badge tone="good">No site</Badge> : null}
-                  <Badge tone={v.owner === "own" ? "accent" : "neutral"}>
-                    {v.owner === "own" ? "Própria" : partners.find((p) => p.id === v.partnerId)?.name ?? "Parceiro"}
-                  </Badge>
-                </span>
+                picking ? (
+                  <PickMark on={picking.includes(v.id)} />
+                ) : (
+                  <span className="flex flex-col items-end gap-1">
+                    {!v.active ? <Badge tone="bad">Inativo</Badge> : v.published ? <Badge tone="good">No site</Badge> : null}
+                    <Badge tone={v.owner === "own" ? "accent" : "neutral"}>
+                      {v.owner === "own" ? "Própria" : partners.find((p) => p.id === v.partnerId)?.name ?? "Parceiro"}
+                    </Badge>
+                  </span>
+                )
               }
             />
           ))}
@@ -80,14 +105,33 @@ export default function VehiclesPage() {
   );
 }
 
+// Abre a apresentação em A4 (sem placa) em outra aba
+const exportPdf = (ids: string[]) =>
+  window.open(`${process.env.NEXT_PUBLIC_BASE_PATH}/admin/apresentacao?veiculos=${ids.join(",")}`, "_blank", "noopener");
+
 function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { value: string; label: string }[]; onClose: () => void }) {
   const { value: v, set } = useForm(props.vehicle);
   const [error, setError] = useState("");
 
+  const persist = async () => {
+    if (!v.model.trim()) {
+      setError("Informe o modelo.");
+      return false;
+    }
+    try {
+      await repo.upsert("vehicles", { ...v, model: v.model.trim(), partnerId: v.owner === "partner" ? v.partnerId : null });
+      return true;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+      return false;
+    }
+  };
   const save = async () => {
-    if (!v.model.trim()) return setError("Informe o modelo.");
-    await repo.upsert("vehicles", { ...v, model: v.model.trim(), partnerId: v.owner === "partner" ? v.partnerId : null });
-    props.onClose();
+    if (await persist()) props.onClose();
+  };
+  // Salva e abre a apresentação do veículo em A4 em outra aba
+  const openPdf = async () => {
+    if (await persist()) exportPdf([v.id]);
   };
   const remove = async () => {
     try {
@@ -113,7 +157,12 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
         </>
       }
     >
-      <PhotoInput name={v.model || "Veículo"} folder="vehicles" value={v.photoUrl} onChange={(x) => set("photoUrl", x)} />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <PhotoInput name={v.model || "Veículo"} folder="vehicles" value={v.photoUrl} onChange={(x) => set("photoUrl", x)} />
+        <Button variant="secondary" onClick={openPdf}>
+          <IconDoc className="size-4" /> PDF
+        </Button>
+      </div>
       <Field label="Modelo">
         <input className="input" value={v.model} onChange={(e) => set("model", e.target.value)} autoFocus={props.isNew} placeholder="Ex.: Toyota SW4" />
       </Field>

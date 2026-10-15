@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Search as IconSearch, X as IconClose } from "lucide-react";
+import { Check as IconCheck, Search as IconSearch, X as IconClose } from "lucide-react";
 
 
 /* ——— Estrutura de página ——— */
@@ -69,6 +69,20 @@ export function Row(props: {
         <div className="flex min-h-16 items-center gap-4 px-4 py-3">{content}</div>
       )}
     </li>
+  );
+}
+
+// Marcador de seleção (modo "Exportar PDF" das listas)
+export function PickMark({ on }: { on: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={`grid size-6 shrink-0 place-items-center rounded-full border transition-colors duration-200 ${
+        on ? "border-[#34c759] bg-[#34c759] text-ink" : "border-line-strong"
+      }`}
+    >
+      {on && <IconCheck className="size-3.5" />}
+    </span>
   );
 }
 
