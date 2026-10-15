@@ -120,7 +120,7 @@ export function proposalText(p: Proposal, client: Client | null): string {
   const { company } = localContent;
   const t = proposalTotals(p);
   const lines = [
-    `*Proposta ${p.number} · ${company.brandName}*`,
+    `*Proposta · ${company.brandName}*`,
     p.title,
     "",
     client ? `*Cliente:* ${[client.name, client.company].filter(Boolean).join(" · ")}` : "",

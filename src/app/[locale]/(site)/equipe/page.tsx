@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Emblem } from "@/components/brand/Logo";
+import { RichText } from "@/components/RichText";
 import { CtaBand } from "@/components/site/CtaBand";
 import { PageHero } from "@/components/site/PageHero";
 import { Reveal, Stagger, StaggerItem } from "@/components/site/Reveal";
@@ -80,7 +81,7 @@ export default async function TeamPage({ params }: LocaleParams) {
                   <div className="flex flex-1 flex-col p-6">
                     <h2 className="t-h3">{a.name}</h2>
                     <p className="mt-1 text-[0.9375rem] text-muted">{a.role[locale]}</p>
-                    <p className="mt-3 text-[0.9375rem] leading-relaxed text-text/80">{a.bio[locale]}</p>
+                    <RichText text={a.bio[locale]} className="mt-3 text-[0.9375rem] leading-relaxed text-text/80" />
                     <dl className="num mt-auto space-y-2 border-t border-line pt-5 text-sm">
                       <div className="flex justify-between gap-4">
                         <dt className="text-muted">{t.languages}</dt>

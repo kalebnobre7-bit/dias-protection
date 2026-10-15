@@ -115,7 +115,6 @@ export default function ProposalDocumentPage() {
       <DocSheet>
         {/* Cabeçalho: marca + número */}
         <DocBrandHeader kind={kind}>
-          <p className="num mt-1 text-[1.75rem] font-semibold leading-none tracking-[-0.03em]">{p.number}</p>
           <p className="mt-2 text-[0.8125rem] text-[#141922]/65">
             Emitida em {formatDate(p.issuedAt)}
             {!closed && ` · válida até ${formatDate(p.validUntil)}`}
@@ -311,7 +310,7 @@ export default function ProposalDocumentPage() {
       {closed &&
         team.map((a) => (
           <DocSheet key={a.id} className="mt-8 print:mt-0 print:break-before-page">
-            <DocBrandHeader kind={`Equipe · Proposta ${p.number}`} />
+            <DocBrandHeader kind="Equipe designada" />
             <div className="mt-8">
               <AgentCv agent={a} withPrivate />
             </div>
