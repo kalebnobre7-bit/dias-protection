@@ -12,6 +12,15 @@ import { brl, formatDate, formatDateLong, proposalStatusLabel } from "@/lib/admi
 import { itemTotal, proposalTotals } from "@/lib/admin/proposals";
 import { useTable } from "@/lib/admin/store";
 
+// Linha de assinatura com o nome digitado em caligrafia
+function Signature({ name }: { name: string }) {
+  return (
+    <div className="flex h-14 items-end overflow-hidden border-b border-[#141922]/40 pb-1">
+      <span className="truncate font-[family-name:var(--font-signature)] text-[2.25rem] leading-none text-[#141922]/85">{name}</span>
+    </div>
+  );
+}
+
 // Documento A4 da proposta: folha branca, pronto para imprimir ou salvar em PDF.
 // Rota estática (funciona no export do GitHub Pages); a proposta vem de ?id= e o modo de ?modo=
 // - comercial: apresenta equipe e veículos, sem contato nem documentos dos prestadores
@@ -283,14 +292,14 @@ export default function ProposalDocumentPage() {
         {/* Aceite */}
         <section className="mt-10 grid gap-10 border-t border-[#141922]/15 pt-8 text-[0.8125rem] sm:grid-cols-2">
           <div>
-            <div className="h-10 border-b border-[#141922]/40" />
+            <Signature name={company.founderName} />
             <p className="mt-2 font-medium">{company.founderName}</p>
             <p className="text-[#141922]/60">
               {company.brandName} · {company.legalName}
             </p>
           </div>
           <div>
-            <div className="h-10 border-b border-[#141922]/40" />
+            <Signature name={client?.name ?? ""} />
             <p className="mt-2 font-medium">{client?.name ?? "Cliente"}</p>
             <p className="text-[#141922]/60">De acordo · data: ____ / ____ / ________</p>
           </div>
