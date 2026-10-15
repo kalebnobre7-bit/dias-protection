@@ -74,6 +74,15 @@ export default function ProposalDocumentPage() {
     .split("\n")
     .map((t) => t.trim())
     .filter(Boolean);
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  const crew = [team.length ? plural(team.length, "agente", "agentes") : "", fleet.length ? plural(fleet.length, "veículo", "veículos") : ""]
+    .filter(Boolean)
+    .join(" · ");
+  const highlights = ([
+    ["Período", p.period],
+    ["Local", p.location],
+    ["Equipe", crew],
+  ] as const).filter(([, value]) => value);
   const phone = `+${company.whatsapp.slice(0, 2)} ${company.whatsapp.slice(2, 4)} ${company.whatsapp.slice(4, -4)}-${company.whatsapp.slice(-4)}`;
 
   return (
@@ -134,6 +143,21 @@ export default function ProposalDocumentPage() {
         <section className="mt-8">
           <h1 className="text-[1.75rem] font-semibold leading-tight tracking-[-0.03em] md:text-[2rem]">{p.title}</h1>
           {p.serviceIds.length > 0 && <p className="mt-2 text-[0.9375rem] text-[#141922]/65">{p.serviceIds.map(serviceTypeName).join(" · ")}</p>}
+
+          {/* Resumo em blocos: o essencial da proposta numa linha */}
+          <dl className="mt-6 grid grid-cols-2 gap-2 sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none">
+            {highlights.map(([label, value]) => (
+              <div key={label} className="rounded-lg bg-[#141922]/[0.05] px-4 py-3">
+                <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">{label}</dt>
+                <dd className="mt-1 text-[0.9375rem] font-semibold leading-snug">{value}</dd>
+              </div>
+            ))}
+            <div className="rounded-lg bg-[#141922] px-4 py-3 text-white">
+              <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-white/60">Total</dt>
+              <dd className="num mt-1 text-[1.125rem] font-semibold leading-snug tracking-[-0.01em]">{brl.format(totals.total)}</dd>
+            </div>
+          </dl>
+
           <dl className="mt-6 grid gap-6 text-[0.9375rem] sm:grid-cols-2">
             <div>
               <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Preparada para</dt>
@@ -167,22 +191,6 @@ export default function ProposalDocumentPage() {
                 </span>
               </dd>
             </div>
-            {(p.period || p.location) && (
-              <>
-                {p.period && (
-                  <div>
-                    <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Período</dt>
-                    <dd className="mt-1.5">{p.period}</dd>
-                  </div>
-                )}
-                {p.location && (
-                  <div>
-                    <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Local</dt>
-                    <dd className="mt-1.5">{p.location}</dd>
-                  </div>
-                )}
-              </>
-            )}
           </dl>
         </section>
 
@@ -263,26 +271,32 @@ export default function ProposalDocumentPage() {
                 <td colSpan={3} className="pr-4 pt-4 text-right text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[#141922]/55">
                   Total
                 </td>
-                <td className="num pt-3 text-right text-[1.375rem] font-semibold tracking-[-0.02em]">{brl.format(totals.total)}</td>
+                <td className="pt-3 text-right">
+                  <span className="num inline-block whitespace-nowrap rounded-lg bg-[#141922] px-4 py-2 text-[1.375rem] font-semibold tracking-[-0.02em] text-white">
+                    {brl.format(totals.total)}
+                  </span>
+                </td>
               </tr>
             </tfoot>
           </table>
         </section>
 
         {/* Condições */}
-        <section className="mt-8 grid gap-8 text-[0.875rem] leading-relaxed sm:grid-cols-[1fr_1.4fr]">
+        <section className="mt-8 space-y-5 leading-relaxed">
           {p.paymentTerms && (
-            <div>
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-lg bg-[#141922]/[0.05] px-4 py-3 text-[0.875rem]">
               <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Pagamento</h2>
-              <p className="mt-2">{p.paymentTerms}</p>
+              <p className="font-medium">{p.paymentTerms}</p>
             </div>
           )}
           {terms.length > 0 && (
             <div>
               <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Condições gerais</h2>
-              <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[#141922]/80">
+              <ol className="mt-2 list-decimal gap-x-10 pl-5 text-[0.75rem] text-[#141922]/75 sm:columns-2">
                 {terms.map((t, i) => (
-                  <li key={i}>{t}</li>
+                  <li key={i} className="mb-1 break-inside-avoid">
+                    {t}
+                  </li>
                 ))}
               </ol>
             </div>

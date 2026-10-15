@@ -84,7 +84,8 @@ export function AgentCard({ agent: a }: { agent: AgentRecord }) {
         <p className="text-[1rem] font-semibold">{a.name}</p>
         {a.rolePt && <p className="text-[#141922]/65">{a.rolePt}</p>}
         {agentMeta(a) && <p className="text-[0.8125rem] text-[#141922]/55">{agentMeta(a)}</p>}
-        {a.bioPt && <RichText text={a.bioPt} className="mt-1.5" />}
+        {/* Proposta: bio resumida; o currículo completo vai no serviço fechado */}
+        {a.bioPt && <RichText text={a.bioPt} className="mt-1.5 line-clamp-4" />}
       </div>
     </div>
   );

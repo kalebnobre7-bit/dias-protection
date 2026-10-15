@@ -313,6 +313,9 @@
   .doc-sheet {
     box-shadow: none !important;
     max-width: none !important;
+    /* imprime os fundos (faixa de resumo e caixa do total) mesmo sem "gráficos de fundo" */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .doc-sheet tr,
   .doc-sheet section {
