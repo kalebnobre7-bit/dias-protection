@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Helicopter, Plane } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Headset, Helicopter, Plane } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -491,8 +491,17 @@ export function Configurator({ content, dict, locale }: Props) {
                 )}
 
                 {key === "review" && (
-                  <div className="rounded-2xl border border-line p-5 md:p-6">
-                    <MessagePreview text={message} />
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4 rounded-2xl bg-navy/60 p-5 md:p-6">
+                      <Headset className="mt-0.5 size-6 shrink-0 text-accent" aria-hidden />
+                      <div>
+                        <p className="font-medium">{t.consultantTitle}</p>
+                        <p className="mt-1 text-[0.9375rem] text-muted">{t.consultantText}</p>
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-line p-5 md:p-6">
+                      <MessagePreview text={message} />
+                    </div>
                   </div>
                 )}
               </motion.div>
