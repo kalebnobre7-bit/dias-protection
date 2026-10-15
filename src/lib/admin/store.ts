@@ -25,7 +25,7 @@ const camel = (k: string) => k.replace(/_([a-z])/g, (_, c: string) => c.toUpperC
 // Campos que o tipo declara como `| null`; os demais textos usam "" no lugar de null
 const NULLABLE = new Set([
   "photoUrl", "cnhUrl", "yearsExperience", "categoryId", "partnerId", "clientId",
-  "serviceTypeId", "language", "jobId", "agentId", "capacity", "year",
+  "serviceTypeId", "language", "jobId", "agentId", "capacity", "year", "pricing",
 ]);
 // Colunas de data/hora que não aceitam "" (vão como null)
 const OPTIONAL_DATES = new Set(["endsAt", "paidAt"]);

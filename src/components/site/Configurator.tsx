@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Helicopter, Plane } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -260,7 +260,7 @@ export function Configurator({ content, dict, locale }: Props) {
                           const qty = order.vehicles[v.id] ?? 0;
                           return (
                             <li key={v.id} className="flex items-center gap-3 py-3 sm:gap-4">
-                              {v.image && (
+                              {v.image ? (
                                 <Image
                                   src={v.image}
                                   alt=""
@@ -271,6 +271,11 @@ export function Configurator({ content, dict, locale }: Props) {
                                     qty > 0 ? "scale-110" : ""
                                   }`}
                                 />
+                              ) : (
+                                // Sem ilustração (helicóptero, aeronave): ícone no mesmo espaço para alinhar a lista
+                                <span className="grid h-12 w-16 shrink-0 place-items-center text-silver sm:h-14 sm:w-20">
+                                  {v.id === "helicoptero" ? <Helicopter className="size-8" /> : <Plane className="size-8" />}
+                                </span>
                               )}
                               <span className="min-w-0 flex-1">
                                 <span className="block text-[0.9375rem] font-medium leading-snug sm:text-base">{v.name[locale]}</span>

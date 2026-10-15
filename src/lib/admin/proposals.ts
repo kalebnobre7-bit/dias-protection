@@ -71,6 +71,7 @@ export function blankProposal(id: string, existing: Proposal[]): Proposal {
     paymentTerms: DEFAULT_PAYMENT,
     terms: DEFAULT_TERMS,
     notes: "",
+    pricing: null,
     createdAt: today.toISOString(),
   };
 }
@@ -91,6 +92,7 @@ export function proposalFromJob(job: Job, id: string, existing: Proposal[]): Pro
     agentIds: job.agentIds,
     vehicleIds: job.vehicleIds,
     notes: job.notes,
+    pricing: null,
   };
 }
 

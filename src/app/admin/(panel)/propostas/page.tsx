@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Check as IconCheck, Copy as IconCopy, FileCheck as IconDocClosed, FileText as IconDoc, Plus as IconPlus, Send as IconSend, X as IconClose } from "lucide-react";
 
 import { MoneyInput } from "@/components/admin/job-bits";
+import { PricingCalculator } from "@/components/admin/PricingCalculator";
 import {
   Avatar,
   Badge,
@@ -24,6 +25,7 @@ import {
 } from "@/components/admin/ui";
 import { serviceTypeOptions, vehicleCategoryName } from "@/lib/admin/catalog";
 import { brl, formatDate, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
+import { blankPricing, pricingResult } from "@/lib/admin/pricing";
 import {
   ITEM_PRESETS,
   UNITS,
@@ -150,7 +152,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [preset, setPreset] = useState("");
-  const [tab, setTab] = useState<"proposal" | "team" | "vehicles">("proposal");
+  const [tab, setTab] = useState<"proposal" | "price" | "team" | "vehicles">("proposal");
   const { rows: agents } = useTable("agents");
   const { rows: vehicles } = useTable("vehicles");
   const toggleIn = (key: "agentIds" | "vehicleIds", id: string) =>
@@ -166,6 +168,19 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
     const found = ITEM_PRESETS.find((x) => x.label === presetLabel)?.item;
     set("items", [...p.items, { id: newId(), unitPrice: 0, ...(found ?? { description: "", detail: "", qty: 1, unit: "un." }) }]);
     setPreset("");
+  };
+
+  // Calculadora → total da proposta: cria o item se não houver, ou acerta o valor do item único
+  const price = p.pricing ? pricingResult(p.pricing).price : null;
+  const priceTarget = price === null ? null : Math.round((price + p.discount) * 100) / 100;
+  const priceMatches = priceTarget !== null && Math.abs(totals.total - (priceTarget - p.discount)) < 0.05;
+  const applyPrice = () => {
+    if (priceTarget === null) return;
+    if (!p.items.length) set("items", [{ id: newId(), description: p.title.trim() || "Serviço", detail: "", qty: 1, unit: "un.", unitPrice: priceTarget }]);
+    else if (p.items.length === 1) {
+      const qty = p.items[0].qty || 1;
+      set("items", [{ ...p.items[0], qty, unitPrice: Math.round((priceTarget / qty) * 100) / 100 }]);
+    }
   };
 
   // Resolve "+ Novo cliente" e grava
@@ -286,6 +301,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         onChange={setTab}
         options={[
           { value: "proposal", label: "Proposta" },
+          { value: "price", label: "Preço" },
           { value: "team", label: `Equipe${p.agentIds.length ? ` · ${p.agentIds.length}` : ""}` },
           { value: "vehicles", label: `Veículos${p.vehicleIds.length ? ` · ${p.vehicleIds.length}` : ""}` },
         ]}
@@ -458,6 +474,37 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         </Field>
         </>
       )}
+
+      {tab === "price" &&
+        (p.pricing ? (
+          <>
+            <PricingCalculator value={p.pricing} onChange={(v) => set("pricing", v)} />
+            <div className="space-y-3 rounded-2xl border border-line p-4 text-[0.9375rem]">
+              <p className="flex justify-between gap-4">
+                <span className="text-muted">Total da proposta</span>
+                <span className="num font-medium">{brl.format(totals.total)}</span>
+              </p>
+              {priceMatches ? (
+                <p className="flex items-center gap-2 text-accent">
+                  <IconCheck className="size-4" /> O total da proposta bate com o preço calculado.
+                </p>
+              ) : p.items.length > 1 ? (
+                <p className="text-muted">Com mais de um item, ajuste os valores na aba Proposta até chegar ao preço calculado.</p>
+              ) : (
+                <Button variant="secondary" onClick={applyPrice} disabled={priceTarget === null}>
+                  Usar o preço calculado na proposta
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted">Interno: custos e margem não aparecem no documento nem no WhatsApp.</p>
+          </>
+        ) : (
+          <EmptyState
+            title="Calcule o preço desta proposta"
+            text="Custos, margem e impostos da planilha de precificação. Fica salvo só aqui, o cliente não vê."
+            action={<Button onClick={() => set("pricing", blankPricing())}>Começar pela planilha</Button>}
+          />
+        ))}
 
       {tab === "team" && (
         <PickList

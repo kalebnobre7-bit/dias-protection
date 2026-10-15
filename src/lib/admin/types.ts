@@ -116,6 +116,23 @@ export type Transaction = {
   createdAt: string;
 };
 
+// Calculadora de preço (espelho da planilha de precificação do Gabriel)
+export type PricingCost = {
+  id: string;
+  category: string; // Equipe, Transporte, Amenidades, Outros
+  description: string;
+  qty: number;
+  unitCost: number;
+};
+
+// Percentuais em fração (0.25 = 25%), sobre o preço de venda
+export type Pricing = {
+  costs: PricingCost[];
+  margin: number;
+  taxes: number;
+  fees: number;
+};
+
 export type ProposalStatus = "draft" | "sent" | "accepted" | "declined" | "expired";
 
 export type ProposalItem = {
@@ -148,6 +165,7 @@ export type Proposal = {
   paymentTerms: string;
   terms: string; // condições gerais (uma por linha)
   notes: string; // internas, não vão para o documento
+  pricing: Pricing | null; // calculadora de preço, interna
   createdAt: string;
 };
 
