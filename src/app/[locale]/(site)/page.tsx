@@ -181,7 +181,8 @@ export default async function Home({ params }: LocaleParams) {
                 alt={company.founderName}
                 fill
                 sizes="(min-width: 768px) 40vw, 100vw"
-                className="object-cover"
+                // Celular (4/3): recorte alinhado ao alto pra não cortar a cabeça
+                className="object-cover object-[50%_10%] md:object-center"
               />
             </div>
           </Reveal>

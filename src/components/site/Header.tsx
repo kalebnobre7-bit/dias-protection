@@ -50,17 +50,18 @@ export function Header({ locale, dict }: Props) {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color] duration-300 ease-[var(--ease-in-out)] ${
+      // Parado: degradê escuro no topo pra ter contraste sobre a foto da hero. Rolado: fundo quase sólido com blur (sem saturate, que realçava a imagem atrás e dava aspecto de bug)
+      className={`fixed inset-x-0 top-0 z-50 isolate border-b transition-[background-color,border-color] duration-300 ease-[var(--ease-in-out)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-[150%] before:bg-gradient-to-b before:from-ink/85 before:to-transparent before:transition-opacity before:duration-300 ${
         scrolled || open
-          ? "border-line bg-ink/72 backdrop-blur-[16px] backdrop-saturate-[180%]"
+          ? "border-line bg-ink/92 backdrop-blur-[16px] before:opacity-0"
           : "border-transparent"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
+      <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
         <Link href={`/${locale}`} className="flex min-h-11 items-center gap-2.5 text-text" aria-label="Dias Protection">
-          <Emblem className="h-14" />
+          <Emblem className="h-11" />
           <span className="hidden sm:flex">
-            <Wordmark className="h-14" />
+            <Wordmark className="h-11" />
           </span>
         </Link>
 
@@ -118,7 +119,7 @@ export function Header({ locale, dict }: Props) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.65, 0, 0.35, 1] }}
             // `absolute` e não `fixed`: o backdrop-filter do header vira o bloco de referência de filhos fixed, e o painel ficava sem altura (texto vazava sobre a página, sem fundo)
-            className="absolute inset-x-0 top-full flex h-[calc(100dvh-4rem)] flex-col bg-ink px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 lg:hidden"
+            className="absolute inset-x-0 top-full flex h-[calc(100dvh-4.5rem)] flex-col bg-ink px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 lg:hidden"
           >
             <ul className="border-t border-line">
               {[{ href: `/${locale}`, label: dict.nav.home }, ...links].map((l, i) => (
