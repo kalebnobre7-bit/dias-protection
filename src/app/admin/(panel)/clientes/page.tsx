@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus as IconPlus, X as IconClose } from "lucide-react";
 
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, Skeleton, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, Skeleton, TextArea, useForm } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { countsAsRevenue } from "@/lib/admin/finance";
 import { brl, clientLanguageLabel, formatDate, formatDateTime, jobStatusLabel, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
@@ -193,7 +193,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
       </Section>
 
       <Field label="Observações" hint="Preferências, restrições, quem indicou…">
-        <textarea className="input resize-none" rows={3} value={c.notes} onChange={(e) => set("notes", e.target.value)} />
+        <TextArea rows={3} value={c.notes} onChange={(e) => set("notes", e.target.value)} />
       </Field>
 
       {!props.isNew && mineProposals.length > 0 && (

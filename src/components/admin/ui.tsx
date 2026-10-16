@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Check as IconCheck,
   ChevronLeft as IconChevronLeft,
@@ -236,6 +236,100 @@ export function Field(props: { label: string; hint?: string; className?: string;
       {props.children}
       {props.hint && <span className="mt-1.5 block text-xs text-muted">{props.hint}</span>}
     </label>
+  );
+}
+
+// Texto longo: cresce com o conteúdo (rows é a altura mínima), sem barra de rolagem interna
+export function TextArea({ rows = 3, className = "", onInput, ...rest }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const fit = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight + 2}px`; // + borda
+  };
+  useLayoutEffect(fit, [rest.value]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // largura muda (girar o celular, abrir a janela) → recalcula a altura
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <textarea
+      ref={ref}
+      rows={rows}
+      {...rest}
+      onInput={(e) => {
+        fit();
+        onInput?.(e);
+      }}
+      className={`input resize-none overflow-hidden leading-relaxed ${className}`}
+    />
+  );
+}
+
+// Número compacto: largura pelo tamanho do valor esperado (digits), unidade ao lado
+// e o campo pode ficar vazio enquanto digita (sem voltar para 0 sozinho)
+export function NumberInput(props: {
+  value: number | null;
+  onChange: (v: number | null) => void;
+  digits?: number;
+  suffix?: string;
+  min?: number;
+  max?: number;
+  decimal?: boolean;
+  fallback?: number; // valor quando o campo fica vazio (para números obrigatórios)
+  label?: string;
+  placeholder?: string;
+  className?: string;
+}) {
+  const show = (v: number | null) => (v == null ? "" : String(v).replace(".", ","));
+  const [text, setText] = useState(show(props.value));
+  const emitted = useRef(props.value);
+  useEffect(() => {
+    // só reescreve o texto quando o valor mudou por fora (ex.: itens refeitos pelo escopo)
+    if (props.value !== emitted.current) {
+      emitted.current = props.value;
+      setText(show(props.value));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.value]);
+
+  const width = `calc(${Math.max(props.digits ?? 3, 2)}ch + 1.75rem + 2px)`;
+  return (
+    <span className={`inline-flex max-w-full items-center gap-2 ${props.className ?? ""}`}>
+      <input
+        className="input num text-center"
+        style={{ width }}
+        inputMode={props.decimal ? "decimal" : "numeric"}
+        aria-label={props.label}
+        placeholder={props.placeholder}
+        value={text}
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => {
+          const raw = e.target.value.replace(props.decimal ? /[^\d,.]/g : /\D/g, "");
+          setText(raw);
+          let v: number | null = raw === "" ? (props.fallback ?? null) : Number(raw.replace(",", "."));
+          if (v != null && !Number.isFinite(v)) v = props.fallback ?? null;
+          if (v != null && props.max != null) v = Math.min(v, props.max);
+          emitted.current = v;
+          props.onChange(v);
+        }}
+        onBlur={() => {
+          // mínimo aplicado ao sair do campo, para não atrapalhar a digitação
+          const v = props.value != null && props.min != null ? Math.max(props.min, props.value) : props.value;
+          if (v !== props.value) {
+            emitted.current = v;
+            props.onChange(v);
+          }
+          setText(show(v));
+        }}
+      />
+      {props.suffix && <span className="shrink-0 text-[0.9375rem] text-muted">{props.suffix}</span>}
+    </span>
   );
 }
 

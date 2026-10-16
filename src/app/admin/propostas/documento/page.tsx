@@ -10,6 +10,7 @@ import { useSession } from "@/lib/admin/auth";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { brl, formatDate, formatDateLong, proposalStatusLabel } from "@/lib/admin/labels";
 import { itemTotal, proposalTotals, scopeSummary } from "@/lib/admin/proposals";
+import { useSettings } from "@/lib/admin/settings";
 import { useTable } from "@/lib/admin/store";
 
 // Linha de assinatura com o nome digitado em caligrafia
@@ -31,6 +32,7 @@ export default function ProposalDocumentPage() {
   const { rows: clients } = useTable("clients");
   const { rows: agents } = useTable("agents");
   const { rows: vehicles } = useTable("vehicles");
+  const { settings, loading: settingsLoading } = useSettings();
   const [id, setId] = useState<string | null>(null);
   const [closed, setClosed] = useState(false);
 
@@ -40,7 +42,7 @@ export default function ProposalDocumentPage() {
     setClosed(params.get("modo") === "fechado");
   }, []);
 
-  if (session === "loading" || loading || id === null) return <div className="min-h-dvh bg-[#e9ebee]" />;
+  if (session === "loading" || loading || settingsLoading || id === null) return <div className="min-h-dvh bg-[#e9ebee]" />;
   if (session === "out") {
     return (
       <Shell>
@@ -68,7 +70,8 @@ export default function ProposalDocumentPage() {
   const team = p.agentIds.map((x) => agents.find((a) => a.id === x)).filter((a) => a !== undefined);
   const fleet = p.vehicleIds.map((x) => vehicles.find((v) => v.id === x)).filter((v) => v !== undefined);
   const kind = closed ? "Serviço confirmado" : "Proposta comercial";
-  const { company } = localContent;
+  // Marca fixa do site; contato e assinatura vêm de Configurações
+  const company = { ...settings.company, brandName: localContent.company.brandName, tagline: localContent.company.tagline };
   const totals = proposalTotals(p);
   const terms = p.terms
     .split("\n")
@@ -84,7 +87,7 @@ export default function ProposalDocumentPage() {
     ["Local", p.location],
     ["Equipe", crew],
   ] as const).filter(([, value]) => value);
-  const phone = `+${company.whatsapp.slice(0, 2)} ${company.whatsapp.slice(2, 4)} ${company.whatsapp.slice(4, -4)}-${company.whatsapp.slice(-4)}`;
+  const phone = company.whatsapp && `+${company.whatsapp.slice(0, 2)} ${company.whatsapp.slice(2, 4)} ${company.whatsapp.slice(4, -4)}-${company.whatsapp.slice(-4)}`;
 
   return (
     <Shell
@@ -185,10 +188,10 @@ export default function ProposalDocumentPage() {
               <dd className="mt-1.5 leading-relaxed">
                 <span className="block font-semibold">{company.founderName}</span>
                 <span className="block">
-                  {company.founderRole.pt} · {company.brandName}
+                  {[company.founderRole, company.brandName].filter(Boolean).join(" · ")}
                 </span>
                 <span className="block text-[#141922]/65">
-                  {phone} · {company.email}
+                  {[phone, company.email].filter(Boolean).join(" · ")}
                 </span>
               </dd>
             </div>
@@ -310,7 +313,7 @@ export default function ProposalDocumentPage() {
             <Signature name={company.founderName} />
             <p className="mt-2 font-medium">{company.founderName}</p>
             <p className="text-[#141922]/60">
-              {company.brandName} · {company.legalName}
+              {[company.brandName, company.legalName].filter(Boolean).join(" · ")}
             </p>
           </div>
           <div>
@@ -322,10 +325,10 @@ export default function ProposalDocumentPage() {
 
         <footer className="mt-10 flex flex-wrap items-center justify-between gap-2 border-t border-[#141922]/15 pt-4 text-[0.75rem] text-[#141922]/55">
           <span>
-            {company.brandName} · {company.city} · {company.tagline}
+            {[company.brandName, company.city, company.tagline].filter(Boolean).join(" · ")}
           </span>
           <span>
-            WhatsApp {phone} · @{company.instagram}
+            {[phone && `WhatsApp ${phone}`, company.instagram && `@${company.instagram}`].filter(Boolean).join(" · ")}
           </span>
         </footer>
       </DocSheet>

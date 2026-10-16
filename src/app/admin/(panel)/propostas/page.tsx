@@ -17,6 +17,7 @@ import {
   EmptyState,
   Field,
   List,
+  NumberInput,
   PageHeader,
   Row,
   SearchBox,
@@ -25,14 +26,13 @@ import {
   Sheet,
   Skeleton,
   Switch,
+  TextArea,
   useForm,
 } from "@/components/admin/ui";
 import { serviceTypeOptions, vehicleCategoryName } from "@/lib/admin/catalog";
 import { brl, formatDate, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
 import { blankPricing, pricingResult } from "@/lib/admin/pricing";
 import {
-  ITEM_PRESETS,
-  UNITS,
   blankProposal,
   itemTotal,
   jobFromProposal,
@@ -45,6 +45,7 @@ import {
   scopeItems,
   scopeSummary,
 } from "@/lib/admin/proposals";
+import { useSettings } from "@/lib/admin/settings";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Proposal, ProposalItem, ProposalStatus } from "@/lib/admin/types";
 import { whatsappUrl } from "@/lib/order";
@@ -56,24 +57,26 @@ export default function ProposalsPage() {
   const { rows, loading } = useTable("proposals");
   const { rows: clients } = useTable("clients");
   const { rows: jobs } = useTable("jobs");
+  const { settings, loading: settingsLoading } = useSettings();
+  const blank = () => blankProposal(newId(), rows, settings.proposal);
   const [editing, setEditing] = useState<Proposal | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
   // Atalhos: /admin/propostas?nova=1, ?id=<proposalId> (vem do Início) e ?deServico=<jobId> (vem do serviço em orçamento)
   useEffect(() => {
-    if (loading) return;
+    if (loading || settingsLoading) return;
     const params = new URLSearchParams(window.location.search);
     const jobId = params.get("deServico");
     const existing = rows.find((p) => p.id === params.get("id"));
     if (existing) setEditing(existing);
     else if (jobId) {
       const job = jobs.find((j) => j.id === jobId);
-      if (job) setEditing(proposalFromJob(job, newId(), rows));
-    } else if (params.has("nova")) setEditing(blankProposal(newId(), rows));
+      if (job) setEditing(proposalFromJob(job, newId(), rows, settings.proposal));
+    } else if (params.has("nova")) setEditing(blank());
     // só na carga inicial
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
+  }, [loading, settingsLoading]);
 
   const clientName = (id: string | null) => clients.find((c) => c.id === id)?.name ?? "Sem cliente";
   const q = query.trim().toLowerCase();
@@ -91,7 +94,7 @@ export default function ProposalsPage() {
         title="Propostas"
         subtitle="Orçamentos com numeração, itens e documento pronto para enviar."
         action={
-          <Button disabled={loading} onClick={() => setEditing(blankProposal(newId(), rows))}>
+          <Button disabled={loading} onClick={() => setEditing(blank())}>
             <IconPlus className="size-4" /> Nova proposta
           </Button>
         }
@@ -103,7 +106,7 @@ export default function ProposalsPage() {
         <EmptyState
           title="Nenhuma proposta ainda"
           text="Monte a primeira com itens, validade e condições. Ela vira um documento institucional em PDF."
-          action={<Button onClick={() => setEditing(blankProposal(newId(), rows))}>Nova proposta</Button>}
+          action={<Button onClick={() => setEditing(blank())}>Nova proposta</Button>}
         />
       ) : (
         <>
@@ -172,13 +175,15 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
 
   const client = clients.find((c) => c.id === clientChoice) ?? null;
   const totals = proposalTotals(p);
-  const text = useMemo(() => proposalText(p, client), [p, client]);
+  const { settings } = useSettings();
+  const { presets, units } = settings.proposal;
+  const text = useMemo(() => proposalText(p, client, settings.company), [p, client, settings.company]);
 
   const updateItem = (id: string, patch: Partial<ProposalItem>) => set("items", p.items.map((i) => (i.id === id ? { ...i, ...patch } : i)));
   const removeItem = (id: string) => set("items", p.items.filter((i) => i.id !== id));
-  const addItem = (presetLabel = "") => {
-    const found = ITEM_PRESETS.find((x) => x.label === presetLabel)?.item;
-    set("items", [...p.items, { id: newId(), unitPrice: 0, ...(found ?? { description: "", detail: "", qty: 1, unit: "un." }) }]);
+  const addItem = (choice: string) => {
+    const found = /^\d+$/.test(choice) ? presets[Number(choice)] : undefined; // índice do catálogo ou "__blank"
+    set("items", [...p.items, { id: newId(), qty: 1, ...(found ?? { description: "", detail: "", unit: units[0] ?? "un.", unitPrice: 0 }) }]);
     setPreset("");
   };
 
@@ -440,7 +445,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
               <ChipSelect options={serviceTypeOptions} value={p.serviceIds} onChange={(v) => set("serviceIds", v)} empty="" />
             </Field>
             <Field label="Descrição do escopo" hint="Contexto da operação, em 2 ou 3 frases. Vai para o documento.">
-              <textarea className="input resize-none" rows={3} value={p.summary} onChange={(e) => set("summary", e.target.value)} />
+              <TextArea rows={3} value={p.summary} onChange={(e) => set("summary", e.target.value)} />
             </Field>
           </div>
         </Section>
@@ -455,9 +460,9 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
               aria-label="Adicionar item do catálogo"
             >
               <option value="">+ Adicionar item…</option>
-              {ITEM_PRESETS.map((x) => (
-                <option key={x.label} value={x.label}>
-                  {x.label}
+              {presets.map((x, n) => (
+                <option key={n} value={n}>
+                  {x.description}
                 </option>
               ))}
               <option value="__blank">Item em branco</option>
@@ -488,26 +493,21 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                     </button>
                   </div>
                   <input className="input !min-h-10 !text-[0.875rem]" value={i.detail} onChange={(e) => updateItem(i.id, { detail: e.target.value })} placeholder="Detalhe (ex.: 2 agentes · até 12h)" aria-label="Detalhe do item" />
-                  <div className="grid grid-cols-[4.5rem_1fr_1fr] gap-2 sm:grid-cols-[4.5rem_7rem_1fr_auto] sm:items-center">
-                    <input
-                      className="input num"
-                      type="number"
-                      min={0}
-                      step={1}
-                      inputMode="numeric"
-                      value={i.qty}
-                      onChange={(e) => updateItem(i.id, { qty: Math.max(0, Number(e.target.value) || 0) })}
-                      aria-label="Quantidade"
-                    />
-                    <select className="input" value={i.unit} onChange={(e) => updateItem(i.id, { unit: e.target.value })} aria-label="Unidade">
-                      {[...new Set([...UNITS, i.unit])].map((u) => (
+                  {/* quantidade · unidade × valor unitário = total; quebra linha no celular */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <NumberInput value={i.qty} onChange={(v) => updateItem(i.id, { qty: v ?? 0 })} fallback={0} digits={3} label="Quantidade" />
+                    <select className="input !w-auto" value={i.unit} onChange={(e) => updateItem(i.id, { unit: e.target.value })} aria-label="Unidade">
+                      {[...new Set([...units, i.unit])].map((u) => (
                         <option key={u} value={u}>
                           {u}
                         </option>
                       ))}
                     </select>
-                    <MoneyInput value={i.unitPrice} onChange={(v) => updateItem(i.id, { unitPrice: v })} label="Valor unitário" />
-                    <span className="num col-span-3 text-right text-[0.9375rem] font-medium sm:col-span-1 sm:min-w-24">{brl.format(itemTotal(i))}</span>
+                    <span className="text-muted" aria-hidden>
+                      ×
+                    </span>
+                    <MoneyInput value={i.unitPrice} onChange={(v) => updateItem(i.id, { unitPrice: v })} label="Valor unitário" className="min-w-[8.5rem] flex-1" />
+                    <span className="num ml-auto min-w-24 text-right text-[0.9375rem] font-medium">{brl.format(itemTotal(i))}</span>
                   </div>
                 </li>
               ))}
@@ -546,16 +546,16 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         <Section title="Condições">
           <div className="space-y-4">
             <Field label="Pagamento">
-              <textarea className="input resize-none" rows={2} value={p.paymentTerms} onChange={(e) => set("paymentTerms", e.target.value)} />
+              <TextArea rows={3} value={p.paymentTerms} onChange={(e) => set("paymentTerms", e.target.value)} />
             </Field>
             <Field label="Condições gerais" hint="Uma por linha. Viram a lista numerada do documento.">
-              <textarea className="input resize-none" rows={5} value={p.terms} onChange={(e) => set("terms", e.target.value)} />
+              <TextArea rows={5} value={p.terms} onChange={(e) => set("terms", e.target.value)} />
             </Field>
           </div>
         </Section>
 
         <Field label="Observações internas" hint="Não aparecem no documento nem no WhatsApp.">
-          <textarea className="input resize-none" rows={2} value={p.notes} onChange={(e) => set("notes", e.target.value)} />
+          <TextArea rows={2} value={p.notes} onChange={(e) => set("notes", e.target.value)} />
         </Field>
         </>
       )}

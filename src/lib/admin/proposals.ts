@@ -2,7 +2,7 @@ import { localContent } from "@/data/content";
 
 import { serviceTypeName } from "./catalog";
 import { brl, formatDate } from "./labels";
-import type { Client, Job, Proposal, ProposalItem } from "./types";
+import type { Client, ItemPreset, Job, Proposal, ProposalItem, Settings } from "./types";
 
 // Condições gerais padrão: uma por linha, editáveis em cada proposta
 export const DEFAULT_TERMS = [
@@ -19,17 +19,17 @@ export const DEFAULT_PAYMENT = [
   "Forma de pagamento: PIX ou transferência bancária.",
 ].join("\n");
 
-// Catálogo rápido: preenche descrição, unidade e detalhe; o valor fica com o Gabriel
-export const ITEM_PRESETS: { label: string; item: Omit<ProposalItem, "id" | "unitPrice"> }[] = [
-  { label: "Agente de proteção (armado)", item: { description: "Agente de proteção armado", detail: "Diária de até 12h", qty: 1, unit: "diária" } },
-  { label: "Agente de proteção (desarmado)", item: { description: "Agente de proteção desarmado", detail: "Diária de até 12h", qty: 1, unit: "diária" } },
-  { label: "Motorista bilíngue", item: { description: "Motorista executivo bilíngue (PT/EN)", detail: "Diária de até 12h", qty: 1, unit: "diária" } },
-  { label: "Transfer executivo", item: { description: "Transfer executivo", detail: "Deslocamento ponto a ponto, com motorista", qty: 1, unit: "transfer" } },
-  { label: "Diária SUV executivo", item: { description: "SUV executivo com motorista", detail: "À disposição, até 10h", qty: 1, unit: "diária" } },
-  { label: "Diária SUV blindado", item: { description: "SUV blindado com motorista", detail: "Blindagem nível III-A, até 10h", qty: 1, unit: "diária" } },
-  { label: "Veículo de apoio (escolta)", item: { description: "Veículo de apoio com 2 agentes", detail: "Escolta veicular, até 10h", qty: 1, unit: "diária" } },
-  { label: "Advance / análise de risco", item: { description: "Advance e análise de risco", detail: "Reconhecimento prévio de locais e rotas", qty: 1, unit: "un." } },
-  { label: "Coordenação de evento", item: { description: "Coordenação de segurança do evento", detail: "Planejamento, briefing e supervisão", qty: 1, unit: "un." } },
+// Catálogo rápido padrão (editável em Configurações): preenche descrição, detalhe e unidade; valor 0 = definir na proposta
+export const ITEM_PRESETS: ItemPreset[] = [
+  { description: "Agente de proteção armado", detail: "Diária de até 12h", unit: "diária", unitPrice: 0 },
+  { description: "Agente de proteção desarmado", detail: "Diária de até 12h", unit: "diária", unitPrice: 0 },
+  { description: "Motorista executivo bilíngue (PT/EN)", detail: "Diária de até 12h", unit: "diária", unitPrice: 0 },
+  { description: "Transfer executivo", detail: "Deslocamento ponto a ponto, com motorista", unit: "transfer", unitPrice: 0 },
+  { description: "SUV executivo com motorista", detail: "À disposição, até 10h", unit: "diária", unitPrice: 0 },
+  { description: "SUV blindado com motorista", detail: "Blindagem nível III-A, até 10h", unit: "diária", unitPrice: 0 },
+  { description: "Veículo de apoio com 2 agentes", detail: "Escolta veicular, até 10h", unit: "diária", unitPrice: 0 },
+  { description: "Advance e análise de risco", detail: "Reconhecimento prévio de locais e rotas", unit: "un.", unitPrice: 0 },
+  { description: "Coordenação de segurança do evento", detail: "Planejamento, briefing e supervisão", unit: "un.", unitPrice: 0 },
 ];
 
 export const UNITS = ["diária", "transfer", "hora", "un."];
@@ -120,10 +120,10 @@ export function nextProposalNumber(existing: Proposal[], date = new Date()): str
 
 const isoDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-export function blankProposal(id: string, existing: Proposal[]): Proposal {
+export function blankProposal(id: string, existing: Proposal[], defaults: Settings["proposal"]): Proposal {
   const today = new Date();
   const valid = new Date(today);
-  valid.setDate(valid.getDate() + 10);
+  valid.setDate(valid.getDate() + defaults.validityDays);
   return {
     id,
     number: nextProposalNumber(existing, today),
@@ -145,8 +145,8 @@ export function blankProposal(id: string, existing: Proposal[]): Proposal {
     agentIds: [],
     vehicleIds: [],
     discount: 0,
-    paymentTerms: DEFAULT_PAYMENT,
-    terms: DEFAULT_TERMS,
+    paymentTerms: defaults.paymentTerms,
+    terms: defaults.terms,
     notes: "",
     pricing: null,
     createdAt: today.toISOString(),
@@ -154,8 +154,8 @@ export function blankProposal(id: string, existing: Proposal[]): Proposal {
 }
 
 // Serviço em orçamento → proposta pré-preenchida
-export function proposalFromJob(job: Job, id: string, existing: Proposal[]): Proposal {
-  const base = blankProposal(id, existing);
+export function proposalFromJob(job: Job, id: string, existing: Proposal[], defaults: Settings["proposal"]): Proposal {
+  const base = blankProposal(id, existing, defaults);
   const start = job.startsAt ? formatDate(job.startsAt) + (job.startsAt.length > 10 ? `, ${job.startsAt.slice(11, 16)}` : "") : "";
   return {
     ...base,
@@ -195,11 +195,11 @@ export function jobFromProposal(p: Proposal, id: string): Job {
 }
 
 // Resumo em texto (WhatsApp / copiar). Negrito do WhatsApp com *…*
-export function proposalText(p: Proposal, client: Client | null): string {
-  const { company } = localContent;
+export function proposalText(p: Proposal, client: Client | null, company: Settings["company"]): string {
+  const { brandName } = localContent.company;
   const t = proposalTotals(p);
   const lines = [
-    `*Proposta · ${company.brandName}*`,
+    `*Proposta · ${brandName}*`,
     p.title,
     "",
     client ? `*Cliente:* ${[client.name, client.company].filter(Boolean).join(" · ")}` : "",
@@ -217,8 +217,8 @@ export function proposalText(p: Proposal, client: Client | null): string {
     p.paymentTerms ? `*Pagamento:* ${p.paymentTerms}` : "",
     `*Validade:* ${formatDate(p.validUntil)}`,
     "",
-    `${company.founderName} · ${company.brandName}`,
-    `WhatsApp +${company.whatsapp} · ${company.email}`,
+    `${company.founderName} · ${brandName}`,
+    [company.whatsapp && `WhatsApp +${company.whatsapp}`, company.email].filter(Boolean).join(" · "),
   ];
   return lines.filter((l, i, arr) => !(l === "" && arr[i - 1] === "")).join("\n").trim();
 }

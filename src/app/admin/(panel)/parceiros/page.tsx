@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus as IconPlus } from "lucide-react";
 
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, Skeleton, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, Skeleton, TextArea, useForm } from "@/components/admin/ui";
 import { brl, formatDateTime } from "@/lib/admin/labels";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Partner } from "@/lib/admin/types";
@@ -133,7 +133,7 @@ function PartnerSheet(props: { partner: Partner; isNew: boolean; onClose: () => 
         </Field>
       </div>
       <Field label="Observações">
-        <textarea className="input resize-none" rows={3} value={p.notes} onChange={(e) => set("notes", e.target.value)} />
+        <TextArea rows={3} value={p.notes} onChange={(e) => set("notes", e.target.value)} />
       </Field>
 
       {!props.isNew && (

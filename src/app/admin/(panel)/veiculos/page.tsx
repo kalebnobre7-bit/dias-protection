@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
 import { PhotoInput } from "@/components/admin/PhotoInput";
-import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, SearchBox, Section, Segmented, Sheet, Skeleton, Switch, useForm } from "@/components/admin/ui";
+import { Badge, Button, DeleteButton, EmptyState, Field, List, NumberInput, PageHeader, PickMark, Row, SearchBox, Section, Segmented, Sheet, Skeleton, Switch, TextArea, useForm } from "@/components/admin/ui";
 import { vehicleCategoryName, vehicleCategoryOptions } from "@/lib/admin/catalog";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Vehicle } from "@/lib/admin/types";
@@ -190,19 +190,13 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
       </Field>
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Placa">
-          <input className="input uppercase" value={v.plate} onChange={(e) => set("plate", e.target.value.toUpperCase())} />
+          <input className="input num uppercase" maxLength={8} value={v.plate} onChange={(e) => set("plate", e.target.value.toUpperCase())} placeholder="ABC1D23" />
         </Field>
         <Field label="Cor">
           <input className="input" value={v.color} onChange={(e) => set("color", e.target.value)} />
         </Field>
         <Field label="Ano">
-          <input
-            className="input num"
-            type="number"
-            inputMode="numeric"
-            value={v.year ?? ""}
-            onChange={(e) => set("year", e.target.value === "" ? null : Number(e.target.value))}
-          />
+          <NumberInput value={v.year} onChange={(y) => set("year", y)} digits={4} max={2100} placeholder="2024" label="Ano" />
         </Field>
       </div>
       <Field label="Proprietário">
@@ -231,24 +225,17 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Lugares">
-              <input
-                className="input num"
-                type="number"
-                min={1}
-                inputMode="numeric"
-                value={v.capacity ?? ""}
-                onChange={(e) => set("capacity", e.target.value === "" ? null : Number(e.target.value))}
-              />
+              <NumberInput value={v.capacity} onChange={(c) => set("capacity", c)} digits={2} min={1} max={99} suffix="lugares" label="Lugares" />
             </Field>
             <div className="rounded-xl border border-line px-4 py-1">
               <Switch checked={v.armored} onChange={(x) => set("armored", x)} label="Blindado" />
             </div>
           </div>
           <Field label="Descrição (PT)">
-            <textarea className="input resize-none" rows={2} value={v.descriptionPt} onChange={(e) => set("descriptionPt", e.target.value)} placeholder="Ex.: Vidros escurecidos, bancos em couro, Wi-Fi." />
+            <TextArea rows={3} value={v.descriptionPt} onChange={(e) => set("descriptionPt", e.target.value)} placeholder="Ex.: Vidros escurecidos, bancos em couro, Wi-Fi." />
           </Field>
           <Field label="Descrição (EN)">
-            <textarea className="input resize-none" rows={2} value={v.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} />
+            <TextArea rows={3} value={v.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} />
           </Field>
         </div>
       </Section>
@@ -258,7 +245,7 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
         <Switch checked={v.published} onChange={(x) => set("published", x)} label="Mostrar no site" hint="Foto, modelo, ano, lugares e descrição. A placa nunca aparece. Depois, publique na aba Site." />
       </div>
       <Field label="Observações">
-        <textarea className="input resize-none" rows={2} value={v.notes} onChange={(e) => set("notes", e.target.value)} />
+        <TextArea rows={2} value={v.notes} onChange={(e) => set("notes", e.target.value)} />
       </Field>
     </Sheet>
   );

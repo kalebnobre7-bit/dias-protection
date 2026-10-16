@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { JobStatus } from "@/lib/admin/types";
 
@@ -29,24 +29,47 @@ export function NumberTile({ number }: { number: string }) {
   );
 }
 
-// Campo de dinheiro: aceita "1.500,50" ou "1500.5"
-export function MoneyInput({ value, onChange, label }: { value: number; onChange: (v: number) => void; label?: string }) {
-  const [text, setText] = useState(value ? String(value).replace(".", ",") : "");
+// "1.500,50", "1500.5" ou "1.500" (milhar) → número
+export function parseMoney(raw: string): number {
+  const t = raw.trim().replace(/[^\d,.]/g, "");
+  if (!t) return 0;
+  const n = t.includes(",")
+    ? Number(t.replace(/\./g, "").replace(",", "."))
+    : /^\d{1,3}(\.\d{3})+$/.test(t)
+      ? Number(t.replace(/\./g, ""))
+      : Number(t);
+  return Number.isFinite(n) ? n : 0;
+}
+
+const showMoney = (v: number) => (v ? v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "");
+
+// Campo de dinheiro: R$ na frente, formata ao sair ("1.500,00") e acompanha mudanças de fora
+export function MoneyInput({ value, onChange, label, className = "" }: { value: number; onChange: (v: number) => void; label?: string; className?: string }) {
+  const [text, setText] = useState(showMoney(value));
+  const emitted = useRef(value);
+  useEffect(() => {
+    if (value !== emitted.current) {
+      emitted.current = value;
+      setText(showMoney(value));
+    }
+  }, [value]);
   return (
-    <span className="relative block">
-      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted">R$</span>
+    <span className={`relative block w-full max-w-[13rem] ${className}`}>
+      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[0.875rem] text-muted">R$</span>
       <input
-        className="input num !pl-10"
+        className="input num !pl-10 text-right"
         inputMode="decimal"
         aria-label={label}
         value={text}
         placeholder="0,00"
+        onFocus={(e) => e.target.select()}
         onChange={(e) => {
           setText(e.target.value);
-          const raw = e.target.value.trim();
-          const n = Number(raw.includes(",") ? raw.replace(/\./g, "").replace(",", ".") : raw);
-          onChange(Number.isFinite(n) ? n : 0);
+          const n = parseMoney(e.target.value);
+          emitted.current = n;
+          onChange(n);
         }}
+        onBlur={() => setText(showMoney(value))}
       />
     </span>
   );

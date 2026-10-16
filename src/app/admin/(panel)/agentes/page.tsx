@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
 import { DocumentInput, PhotoInput } from "@/components/admin/PhotoInput";
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, SearchBox, Section, Sheet, Skeleton, Switch, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, NumberInput, PageHeader, PickMark, Row, SearchBox, Section, Sheet, Skeleton, Switch, TextArea, useForm } from "@/components/admin/ui";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { AgentRecord } from "@/lib/admin/types";
 
@@ -194,10 +194,10 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
         </Field>
       </div>
       <Field label="Bio (PT)">
-        <textarea className="input resize-none" rows={3} value={a.bioPt} onChange={(e) => set("bioPt", e.target.value)} />
+        <TextArea rows={4} value={a.bioPt} onChange={(e) => set("bioPt", e.target.value)} />
       </Field>
       <Field label="Bio (EN)">
-        <textarea className="input resize-none" rows={3} value={a.bioEn} onChange={(e) => set("bioEn", e.target.value)} />
+        <TextArea rows={4} value={a.bioEn} onChange={(e) => set("bioEn", e.target.value)} />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Idiomas" hint="Separados por vírgula">
@@ -208,19 +208,11 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
           />
         </Field>
         <Field label="Anos de experiência">
-          <input
-            className="input num"
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={a.yearsExperience ?? ""}
-            onChange={(e) => set("yearsExperience", e.target.value === "" ? null : Number(e.target.value))}
-          />
+          <NumberInput value={a.yearsExperience} onChange={(y) => set("yearsExperience", y)} digits={2} max={60} suffix="anos" label="Anos de experiência" />
         </Field>
       </div>
       <Field label="Certificações" hint="Uma por linha">
-        <textarea
-          className="input resize-none"
+        <TextArea
           rows={3}
           defaultValue={a.certifications.join("\n")}
           onChange={(e) => set("certifications", e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))}
@@ -228,7 +220,7 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
       </Field>
 
       <Field label="Experiência profissional" hint="Uma por linha. Ex.: 2019–2024 · Agente de proteção · Empresa X. Vai só no currículo.">
-        <textarea className="input resize-none" rows={4} value={a.career} onChange={(e) => set("career", e.target.value)} />
+        <TextArea rows={5} value={a.career} onChange={(e) => set("career", e.target.value)} />
       </Field>
 
       <Section title="Visibilidade">
@@ -270,7 +262,7 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
             <span className="mt-1.5 block text-xs text-muted">Foto ou print da CNH. Só aparece no documento de serviço fechado.</span>
           </div>
           <Field label="Observações">
-            <textarea className="input resize-none" rows={2} value={a.notes} onChange={(e) => set("notes", e.target.value)} />
+            <TextArea rows={2} value={a.notes} onChange={(e) => set("notes", e.target.value)} />
           </Field>
         </div>
       </Section>

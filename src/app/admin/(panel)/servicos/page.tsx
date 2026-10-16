@@ -6,8 +6,8 @@ import { FileText as IconDoc, Plus as IconPlus, X as IconClose } from "lucide-re
 
 import {
   Badge,
-  buttonClass,
   Button,
+  buttonClass,
   ChipSelect,
   DeleteButton,
   EmptyState,
@@ -20,6 +20,7 @@ import {
   Segmented,
   Sheet,
   Skeleton,
+  TextArea,
   useForm,
 } from "@/components/admin/ui";
 import { FreelanceForm } from "@/components/admin/FreelanceForm";
@@ -320,7 +321,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
 
       <Section title="Valor">
         <div className="space-y-4 rounded-2xl border border-line p-4">
-          <Field label="Valor cobrado (R$)">
+          <Field label="Valor cobrado">
             <MoneyInput value={j.price} onChange={(v) => set("price", v)} />
           </Field>
           <div className="flex flex-wrap items-end gap-4">
@@ -446,7 +447,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       </dl>
 
       <Field label="Observações">
-        <textarea className="input resize-none" rows={3} value={j.notes} onChange={(e) => set("notes", e.target.value)} />
+        <TextArea rows={3} value={j.notes} onChange={(e) => set("notes", e.target.value)} />
       </Field>
     </Sheet>
   );

@@ -184,6 +184,36 @@ export type Proposal = {
   createdAt: string;
 };
 
+// Item pronto do catálogo da proposta (preenche descrição, detalhe, unidade e valor)
+export type ItemPreset = {
+  description: string;
+  detail: string;
+  unit: string;
+  unitPrice: number;
+};
+
+// Configurações do painel: uma linha só (id "app")
+export type Settings = {
+  id: string;
+  company: {
+    founderName: string;
+    founderRole: string;
+    legalName: string;
+    whatsapp: string; // só números, com DDI e DDD
+    email: string;
+    instagram: string;
+    city: string;
+  };
+  proposal: {
+    validityDays: number;
+    paymentTerms: string;
+    terms: string;
+    units: string[];
+    presets: ItemPreset[];
+  };
+  createdAt: string;
+};
+
 export type Tables = {
   agents: AgentRecord;
   vehicles: Vehicle;
@@ -194,6 +224,7 @@ export type Tables = {
   transactions: Transaction;
   financeCategories: FinanceCategory;
   proposals: Proposal;
+  settings: Settings;
 };
 
 export type TableName = keyof Tables;

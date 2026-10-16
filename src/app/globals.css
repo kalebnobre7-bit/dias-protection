@@ -271,7 +271,16 @@
   background: var(--color-ink);
   padding: 0.625rem 0.875rem;
   font-size: 1rem;
+  color-scheme: dark; /* ícone do calendário e lista do select no tema escuro */
   transition: border-color 0.3s var(--ease-in-out);
+
+  /* iOS: data sem largura mínima própria nem altura encolhida */
+  &[type="date"],
+  &[type="datetime-local"] {
+    min-width: 0;
+    appearance: none;
+    text-align: left;
+  }
 
   &::placeholder {
     color: rgb(138 148 163 / 0.6);

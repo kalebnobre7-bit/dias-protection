@@ -3,7 +3,7 @@
 import { Plus as IconPlus, X as IconClose } from "lucide-react";
 
 import { MoneyInput } from "@/components/admin/job-bits";
-import { Field, Section } from "@/components/admin/ui";
+import { Field, NumberInput, Section } from "@/components/admin/ui";
 import { brl } from "@/lib/admin/labels";
 import { PRICING_CATEGORIES, pricingResult } from "@/lib/admin/pricing";
 import type { Pricing, PricingCost } from "@/lib/admin/types";
@@ -33,16 +33,6 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
           {p.costs.map((c) => (
             <li key={c.id} className="space-y-3 rounded-2xl border border-line p-4">
               <div className="flex gap-2">
-                <select
-                  className="input !w-36 shrink-0"
-                  value={c.category}
-                  onChange={(e) => updateCost(c.id, { category: e.target.value })}
-                  aria-label="Categoria"
-                >
-                  {[...new Set([...PRICING_CATEGORIES, c.category])].map((cat) => (
-                    <option key={cat}>{cat}</option>
-                  ))}
-                </select>
                 <input
                   className="input"
                   value={c.description}
@@ -59,19 +49,21 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
                   <IconClose className="size-4" />
                 </button>
               </div>
-              <div className="grid grid-cols-[4.5rem_1fr_auto] items-center gap-2">
-                <input
-                  className="input num"
-                  type="number"
-                  min={0}
-                  step={1}
-                  inputMode="numeric"
-                  value={c.qty}
-                  onChange={(e) => updateCost(c.id, { qty: Math.max(0, Number(e.target.value) || 0) })}
-                  aria-label="Quantidade"
-                />
-                <MoneyInput value={c.unitCost} onChange={(v) => updateCost(c.id, { unitCost: v })} label="Custo unitário" />
-                <span className="num min-w-24 text-right text-[0.9375rem] font-medium">{brl.format(c.qty * c.unitCost)}</span>
+              {/* categoria · quantidade × custo unitário = total; quebra linha no celular */}
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  className="input !w-auto"
+                  value={c.category}
+                  onChange={(e) => updateCost(c.id, { category: e.target.value })}
+                  aria-label="Categoria"
+                >
+                  {[...new Set([...PRICING_CATEGORIES, c.category])].map((cat) => (
+                    <option key={cat}>{cat}</option>
+                  ))}
+                </select>
+                <NumberInput value={c.qty} onChange={(v) => updateCost(c.id, { qty: v ?? 0 })} fallback={0} digits={3} suffix="×" label="Quantidade" />
+                <MoneyInput value={c.unitCost} onChange={(v) => updateCost(c.id, { unitCost: v })} label="Custo unitário" className="min-w-[8.5rem] flex-1" />
+                <span className="num ml-auto min-w-24 text-right text-[0.9375rem] font-medium">{brl.format(c.qty * c.unitCost)}</span>
               </div>
             </li>
           ))}
@@ -83,7 +75,7 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
       </Section>
 
       <Section title="Percentuais sobre o preço de venda">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid gap-4 sm:grid-cols-3">
           <PercentInput label="Margem de lucro" value={p.margin} onChange={(v) => set("margin", v)} />
           <PercentInput label="Impostos" value={p.taxes} onChange={(v) => set("taxes", v)} />
           <PercentInput label="Outras taxas" value={p.fees} onChange={(v) => set("fees", v)} />
@@ -123,19 +115,7 @@ function ResultRow({ label, value }: { label: string; value: string }) {
 function PercentInput({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
     <Field label={label}>
-      <span className="relative block">
-        <input
-          className="input num !pr-9"
-          type="number"
-          min={0}
-          max={100}
-          step={0.5}
-          inputMode="decimal"
-          value={Math.round(value * 1000) / 10}
-          onChange={(e) => onChange(Math.max(0, Number(e.target.value) || 0) / 100)}
-        />
-        <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted">%</span>
-      </span>
+      <NumberInput value={Math.round(value * 1000) / 10} onChange={(v) => onChange((v ?? 0) / 100)} fallback={0} max={100} decimal digits={4} suffix="%" label={label} />
     </Field>
   );
 }

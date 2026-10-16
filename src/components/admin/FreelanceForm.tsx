@@ -7,7 +7,7 @@ import { newId, repo } from "@/lib/admin/store";
 import type { AgentRecord } from "@/lib/admin/types";
 
 import { PhotoInput } from "./PhotoInput";
-import { Button, Field } from "./ui";
+import { Button, Field, TextArea } from "./ui";
 
 // Avulso (freelancer): vira um agente marcado como avulso e já entra na escala de quem chamou
 export function FreelanceForm({ onAdded }: { onAdded: (id: string) => void }) {
@@ -84,7 +84,7 @@ export function FreelanceForm({ onAdded }: { onAdded: (id: string) => void }) {
         </Field>
       </div>
       <Field label="Biografia">
-        <textarea className="input resize-none" rows={3} value={bio} onChange={(e) => setBio(e.target.value)} />
+        <TextArea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} />
       </Field>
       {error && (
         <p role="alert" className="text-[0.875rem] text-danger">
