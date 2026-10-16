@@ -175,14 +175,14 @@ export default async function Home({ params }: LocaleParams) {
       <section className="bg-ink-2">
         <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 md:grid-cols-[0.9fr_1.1fr] md:items-center md:gap-20 md:px-8 md:py-28">
           <Reveal>
-            <div className="tile relative aspect-[4/3] md:aspect-square">
+            {/* Celular: 3/4 em pé mostra a altura inteira da foto (quadrada); desktop: quadrado */}
+            <div className="tile relative aspect-[3/4] md:aspect-square">
               <Image
                 src={company.founderPhoto}
                 alt={company.founderName}
                 fill
                 sizes="(min-width: 768px) 40vw, 100vw"
-                // Celular (4/3): recorte alinhado ao alto pra não cortar a cabeça
-                className="object-cover object-[50%_10%] md:object-center"
+                className="object-cover"
               />
             </div>
           </Reveal>
