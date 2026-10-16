@@ -50,7 +50,7 @@ export default function SitePage() {
                   title={a.name}
                   subtitle={[a.rolePt, a.photoUrl ? null : "sem foto"].filter(Boolean).join(" · ")}
                   trailing={
-                    <Switch checked={a.published} onChange={(v) => repo.upsert("agents", { ...a, published: v })} label="No site" />
+                    <Switch checked={a.published} onChange={(v) => repo.upsert("agents", { ...a, published: v })} label="No site" compact />
                   }
                 />
               ))}
@@ -80,7 +80,7 @@ export default function SitePage() {
                   title={v.model}
                   subtitle={[vehicleCategoryName(v.categoryId), v.year, v.armored ? "blindado" : null].filter(Boolean).join(" · ")}
                   trailing={
-                    <Switch checked={v.published} onChange={(x) => repo.upsert("vehicles", { ...v, published: x })} label="No site" />
+                    <Switch checked={v.published} onChange={(x) => repo.upsert("vehicles", { ...v, published: x })} label="No site" compact />
                   }
                 />
               ))}

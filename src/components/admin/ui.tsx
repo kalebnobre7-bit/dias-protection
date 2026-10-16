@@ -371,10 +371,11 @@ export function DocInput(props: { value: string; onChange: (v: string) => void; 
   );
 }
 
-export function Switch(props: { checked: boolean; onChange: (v: boolean) => void; label: string; hint?: string }) {
+// `compact`: no celular o rótulo fica só para leitor de tela (listas onde o contexto já diz o que o toggle faz)
+export function Switch(props: { checked: boolean; onChange: (v: boolean) => void; label: string; hint?: string; compact?: boolean }) {
   return (
     <label className="flex min-h-10 cursor-pointer items-center justify-between gap-4">
-      <span>
+      <span className={props.compact ? "max-sm:sr-only" : undefined}>
         <span className="block text-sm font-medium">{props.label}</span>
         {props.hint && <span className="block text-xs text-muted">{props.hint}</span>}
       </span>
