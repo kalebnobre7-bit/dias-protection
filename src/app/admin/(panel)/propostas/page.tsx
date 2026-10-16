@@ -60,12 +60,14 @@ export default function ProposalsPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
-  // Atalhos: /admin/propostas?nova=1 e ?deServico=<jobId> (vem do serviço em orçamento)
+  // Atalhos: /admin/propostas?nova=1, ?id=<proposalId> (vem do Início) e ?deServico=<jobId> (vem do serviço em orçamento)
   useEffect(() => {
     if (loading) return;
     const params = new URLSearchParams(window.location.search);
     const jobId = params.get("deServico");
-    if (jobId) {
+    const existing = rows.find((p) => p.id === params.get("id"));
+    if (existing) setEditing(existing);
+    else if (jobId) {
       const job = jobs.find((j) => j.id === jobId);
       if (job) setEditing(proposalFromJob(job, newId(), rows));
     } else if (params.has("nova")) setEditing(blankProposal(newId(), rows));
@@ -155,7 +157,7 @@ export default function ProposalsPage() {
 }
 
 function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () => void }) {
-  const { value: p, set } = useForm(props.proposal);
+  const { value: p, set, dirty } = useForm(props.proposal);
   const { rows: clients } = useTable("clients");
   const [clientChoice, setClientChoice] = useState(props.proposal.clientId ?? "");
   const [newClient, setNewClient] = useState("");
@@ -287,6 +289,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
     <Sheet
       open
       error={error}
+      dirty={dirty}
       onClose={props.onClose}
       title={props.isNew ? `Proposta ${p.number}` : `Proposta ${p.number} · ${p.title || "Sem título"}`}
       footer={
@@ -336,7 +339,10 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
           <Segmented
             value={p.status}
             onChange={(v) => set("status", v)}
-            options={(Object.keys(proposalStatusLabel) as ProposalStatus[]).map((s) => ({ value: s, label: proposalStatusLabel[s] }))}
+            // "Aceita" só pelo botão "Marcar aceita e agendar", que também cria o serviço
+            options={(Object.keys(proposalStatusLabel) as ProposalStatus[])
+              .filter((s) => s !== "accepted" || p.status === "accepted")
+              .map((s) => ({ value: s, label: proposalStatusLabel[s] }))}
           />
         </Field>
 

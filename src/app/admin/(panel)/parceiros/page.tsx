@@ -71,7 +71,7 @@ export default function PartnersPage() {
 }
 
 function PartnerSheet(props: { partner: Partner; isNew: boolean; onClose: () => void }) {
-  const { value: p, set } = useForm(props.partner);
+  const { value: p, set, dirty } = useForm(props.partner);
   const { rows: costs } = useTable("jobCosts");
   const { rows: jobs } = useTable("jobs");
   const { rows: vehicles } = useTable("vehicles");
@@ -103,6 +103,7 @@ function PartnerSheet(props: { partner: Partner; isNew: boolean; onClose: () => 
     <Sheet
       open
       error={error}
+      dirty={dirty}
       onClose={props.onClose}
       title={props.isNew ? "Novo parceiro" : p.name || "Parceiro"}
       footer={

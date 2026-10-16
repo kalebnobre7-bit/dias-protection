@@ -88,7 +88,7 @@ export default function ClientsPage() {
 }
 
 function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; onClose: () => void }) {
-  const { value: c, set } = useForm(props.client);
+  const { value: c, set, dirty } = useForm(props.client);
   const { rows: proposals } = useTable("proposals");
   const [error, setError] = useState("");
   const mineProposals = proposals.filter((p) => p.clientId === c.id).sort((a, b) => b.number.localeCompare(a.number));
@@ -121,6 +121,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
     <Sheet
       open
       error={error}
+      dirty={dirty}
       onClose={props.onClose}
       title={props.isNew ? "Novo cliente" : c.name || "Cliente"}
       footer={
@@ -201,6 +202,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
             {mineProposals.map((p) => (
               <Row
                 key={p.id}
+                href={dirty ? undefined : `/admin/propostas?id=${p.id}`} // com alteração não salva, não sai da janela
                 title={`${p.number} · ${p.title || "Sem título"}`}
                 subtitle={`Válida até ${formatDate(p.validUntil)}`}
                 trailing={
@@ -222,6 +224,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
               {history.map((j) => (
                 <Row
                   key={j.id}
+                  href={dirty ? undefined : `/admin/servicos?id=${j.id}`}
                   title={serviceTypeName(j.serviceTypeId)}
                   subtitle={[formatDateTime(j.startsAt), j.destination].filter(Boolean).join(" · ")}
                   trailing={

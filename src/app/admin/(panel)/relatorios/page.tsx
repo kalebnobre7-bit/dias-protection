@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft as IconChevronLeft, ChevronRight as IconChevron } from "lucide-react";
 
-import { EmptyState, PageHeader, Section, Segmented, Skeleton } from "@/components/admin/ui";
+import { EmptyState, PageHeader, PeriodStepper, Section, Segmented, Skeleton } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { countsAsRevenue, currentMonth, jobCostTotal, monthlySummary, shiftMonth } from "@/lib/admin/finance";
 import { brl, costCategoryLabel, formatMonth } from "@/lib/admin/labels";
@@ -64,15 +63,13 @@ export default function ReportsPage() {
         title="Relatórios"
         subtitle="Receita, custos e margem por serviço, cliente, categoria ou mês."
         action={
-          <div className="flex items-center gap-1 rounded-full border border-line p-1">
-            <button type="button" onClick={() => step(-1)} aria-label="Período anterior" className="grid size-9 place-items-center rounded-full hover:bg-white/6">
-              <IconChevronLeft className="size-4" />
-            </button>
-            <span className="min-w-36 text-center text-[0.9375rem] font-medium">{effectiveScope === "month" ? formatMonth(month) : `Ano de ${year}`}</span>
-            <button type="button" onClick={() => step(1)} aria-label="Próximo período" className="grid size-9 place-items-center rounded-full hover:bg-white/6">
-              <IconChevron className="size-4" />
-            </button>
-          </div>
+          <PeriodStepper
+            label={effectiveScope === "month" ? formatMonth(month) : `Ano de ${year}`}
+            onStep={step}
+            onToday={(effectiveScope === "month" ? month !== currentMonth() : year !== currentMonth().slice(0, 4)) ? () => setMonth(currentMonth()) : undefined}
+            prevLabel="Período anterior"
+            nextLabel="Próximo período"
+          />
         }
       />
 
@@ -171,7 +168,9 @@ function AmountTable({ title, rows }: { title: string; rows: { label: string; am
   );
 }
 
-// Primeira coluna é o rótulo; as demais, valores alinhados à direita
+// Primeira coluna é o rótulo e fica fixa ao rolar para o lado no celular; as demais, valores alinhados à direita
+const STICKY = "sticky left-0 bg-[color-mix(in_srgb,var(--color-navy)_60%,var(--color-ink))]";
+
 function Table({ head, rows, foot }: { head: string[]; rows: string[][]; foot: string[] }) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-line bg-navy/60">
@@ -179,7 +178,7 @@ function Table({ head, rows, foot }: { head: string[]; rows: string[][]; foot: s
         <thead>
           <tr className="border-b border-line text-[0.8125rem] text-muted">
             {head.map((h, i) => (
-              <th key={h} className={`px-4 py-3 font-medium ${i ? "text-right" : "text-left"}`}>
+              <th key={h} className={`px-4 py-3 font-medium ${i ? "text-right" : `text-left ${STICKY}`}`}>
                 {h}
               </th>
             ))}
@@ -189,7 +188,7 @@ function Table({ head, rows, foot }: { head: string[]; rows: string[][]; foot: s
           {rows.map((r, ri) => (
             <tr key={ri}>
               {r.map((c, i) => (
-                <td key={i} className={`px-4 py-3 ${i ? "num text-right" : "font-medium"}`}>
+                <td key={i} className={`px-4 py-3 ${i ? "num text-right" : `font-medium ${STICKY}`}`}>
                   {c}
                 </td>
               ))}
@@ -199,7 +198,7 @@ function Table({ head, rows, foot }: { head: string[]; rows: string[][]; foot: s
         <tfoot>
           <tr className="border-t border-line-strong font-semibold">
             {foot.map((c, i) => (
-              <td key={i} className={`px-4 py-3 ${i ? "num text-right" : ""}`}>
+              <td key={i} className={`px-4 py-3 ${i ? "num text-right" : STICKY}`}>
                 {c}
               </td>
             ))}

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
 import { PhotoInput } from "@/components/admin/PhotoInput";
-import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, Section, Segmented, Sheet, Skeleton, Switch, useForm } from "@/components/admin/ui";
+import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, SearchBox, Section, Segmented, Sheet, Skeleton, Switch, useForm } from "@/components/admin/ui";
 import { vehicleCategoryName, vehicleCategoryOptions } from "@/lib/admin/catalog";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Vehicle } from "@/lib/admin/types";
@@ -35,7 +35,10 @@ export default function VehiclesPage() {
   const [editing, setEditing] = useState<Vehicle | null>(null);
   // Modo "Exportar PDF": ids escolhidos (null = fora do modo)
   const [picking, setPicking] = useState<string[] | null>(null);
+  const [query, setQuery] = useState("");
   const sorted = [...rows].sort((a, b) => Number(b.active) - Number(a.active) || a.model.localeCompare(b.model));
+  const q = query.trim().toLowerCase();
+  const shown = sorted.filter((v) => !q || `${v.model} ${v.plate} ${v.color} ${vehicleCategoryName(v.categoryId)}`.toLowerCase().includes(q));
 
   return (
     <>
@@ -72,28 +75,35 @@ export default function VehiclesPage() {
       ) : !rows.length ? (
         <EmptyState title="Nenhum veículo cadastrado" />
       ) : (
-        <List>
-          {sorted.map((v) => (
-            <Row
-              key={v.id}
-              onClick={() => (picking ? setPicking(picking.includes(v.id) ? picking.filter((x) => x !== v.id) : [...picking, v.id]) : setEditing(v))}
-              title={v.model}
-              subtitle={[vehicleCategoryName(v.categoryId), v.plate, v.color, v.year].filter(Boolean).join(" · ")}
-              trailing={
-                picking ? (
-                  <PickMark on={picking.includes(v.id)} />
-                ) : (
-                  <span className="flex flex-col items-end gap-1">
-                    {!v.active ? <Badge tone="bad">Inativo</Badge> : v.published ? <Badge tone="good">No site</Badge> : null}
-                    <Badge tone={v.owner === "own" ? "accent" : "neutral"}>
-                      {v.owner === "own" ? "Própria" : partners.find((p) => p.id === v.partnerId)?.name ?? "Parceiro"}
-                    </Badge>
-                  </span>
-                )
-              }
-            />
-          ))}
-        </List>
+        <>
+          <SearchBox value={query} onChange={setQuery} placeholder="Buscar por modelo, placa ou categoria" />
+          {shown.length ? (
+            <List>
+              {shown.map((v) => (
+                <Row
+                  key={v.id}
+                  onClick={() => (picking ? setPicking(picking.includes(v.id) ? picking.filter((x) => x !== v.id) : [...picking, v.id]) : setEditing(v))}
+                  title={v.model}
+                  subtitle={[vehicleCategoryName(v.categoryId), v.plate, v.color, v.year].filter(Boolean).join(" · ")}
+                  trailing={
+                    picking ? (
+                      <PickMark on={picking.includes(v.id)} />
+                    ) : (
+                      <span className="flex flex-col items-end gap-1">
+                        {!v.active ? <Badge tone="bad">Inativo</Badge> : v.published ? <Badge tone="good">No site</Badge> : null}
+                        <Badge tone={v.owner === "own" ? "accent" : "neutral"}>
+                          {v.owner === "own" ? "Própria" : partners.find((p) => p.id === v.partnerId)?.name ?? "Parceiro"}
+                        </Badge>
+                      </span>
+                    )
+                  }
+                />
+              ))}
+            </List>
+          ) : (
+            <p className="mt-6 text-center text-muted">Nenhum veículo encontrado.</p>
+          )}
+        </>
       )}
       {editing && (
         <VehicleSheet
@@ -112,7 +122,7 @@ const exportPdf = (ids: string[]) =>
   window.open(`${process.env.NEXT_PUBLIC_BASE_PATH}/admin/apresentacao?veiculos=${ids.join(",")}`, "_blank", "noopener");
 
 function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { value: string; label: string }[]; onClose: () => void }) {
-  const { value: v, set } = useForm(props.vehicle);
+  const { value: v, set, dirty } = useForm(props.vehicle);
   const [error, setError] = useState("");
 
   const persist = async () => {
@@ -148,6 +158,7 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
     <Sheet
       open
       error={error}
+      dirty={dirty}
       onClose={props.onClose}
       title={props.isNew ? "Novo veículo" : v.model || "Veículo"}
       footer={

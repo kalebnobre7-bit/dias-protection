@@ -132,6 +132,30 @@ async function syncChildren(table: "jobs" | "proposals", row: Job | Proposal) {
   }
 }
 
+// Gravações em andamento: as janelas travam os botões enquanto houver alguma (evita duplicar no toque duplo).
+// A liberação espera um pouco para cobrir o intervalo entre gravações em sequência (cliente → proposta → itens).
+let pending = 0;
+const savingListeners = new Set<(busy: boolean) => void>();
+async function tracked<T>(work: () => Promise<T>): Promise<T> {
+  if (pending++ === 0) savingListeners.forEach((fn) => fn(true));
+  try {
+    return await work();
+  } finally {
+    setTimeout(() => --pending === 0 && savingListeners.forEach((fn) => fn(false)), 150);
+  }
+}
+
+export function useSaving(): boolean {
+  const [busy, setBusy] = useState(pending > 0);
+  useEffect(() => {
+    savingListeners.add(setBusy);
+    return () => {
+      savingListeners.delete(setBusy);
+    };
+  }, []);
+  return busy;
+}
+
 export const repo = {
   async list<T extends TableName>(table: T): Promise<Tables[T][]> {
     const rows = await check(
@@ -141,24 +165,30 @@ export const repo = {
     return (rows as unknown as Row[]).map((r) => parse(table, r));
   },
 
-  async upsert<T extends TableName>(table: T, row: Tables[T]): Promise<Tables[T]> {
-    await check(table, getBrowserClient().from(dbTable(table)).upsert(toRow(table, row)));
-    if (table === "jobs" || table === "proposals") await syncChildren(table, row as Job | Proposal);
-    notify();
-    return row;
+  upsert<T extends TableName>(table: T, row: Tables[T]): Promise<Tables[T]> {
+    return tracked(async () => {
+      await check(table, getBrowserClient().from(dbTable(table)).upsert(toRow(table, row)));
+      if (table === "jobs" || table === "proposals") await syncChildren(table, row as Job | Proposal);
+      notify();
+      return row;
+    });
   },
 
-  async remove(table: TableName, id: string): Promise<void> {
-    await check(table, getBrowserClient().from(dbTable(table)).delete().eq("id", id));
-    notify();
+  remove(table: TableName, id: string): Promise<void> {
+    return tracked(async () => {
+      await check(table, getBrowserClient().from(dbTable(table)).delete().eq("id", id));
+      notify();
+    });
   },
 
   // Troca a lista de custos de um serviço de uma vez (salvar do formulário)
-  async replaceJobCosts(jobId: string, costs: Tables["jobCosts"][]): Promise<void> {
-    const sb = getBrowserClient();
-    await check("jobCosts", sb.from("job_costs").delete().eq("job_id", jobId));
-    if (costs.length) await check("jobCosts", sb.from("job_costs").insert(costs.map((c) => toRow("jobCosts", c))));
-    notify();
+  replaceJobCosts(jobId: string, costs: Tables["jobCosts"][]): Promise<void> {
+    return tracked(async () => {
+      const sb = getBrowserClient();
+      await check("jobCosts", sb.from("job_costs").delete().eq("job_id", jobId));
+      if (costs.length) await check("jobCosts", sb.from("job_costs").insert(costs.map((c) => toRow("jobCosts", c))));
+      notify();
+    });
   },
 };
 

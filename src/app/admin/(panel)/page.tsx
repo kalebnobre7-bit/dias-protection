@@ -5,9 +5,9 @@ import { Plus as IconPlus } from "lucide-react";
 
 import { DateTile, NumberTile, statusTone } from "@/components/admin/job-bits";
 import { MonthStats } from "@/components/admin/MonthStats";
-import { Badge, EmptyState, List, PageHeader, Row, Section, Skeleton } from "@/components/admin/ui";
+import { Badge, buttonClass, EmptyState, List, PageHeader, Row, Section, Skeleton } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
-import { currentMonth, monthlySummary } from "@/lib/admin/finance";
+import { countsAsRevenue, currentMonth, monthlySummary, monthOf } from "@/lib/admin/finance";
 import { brl, formatDate, formatDateTime, formatMonth, jobStatusLabel, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
 import { proposalTotals } from "@/lib/admin/proposals";
 import { useTable } from "@/lib/admin/store";
@@ -34,9 +34,12 @@ export default function AdminHome() {
     .sort((a, b) => a.validUntil.localeCompare(b.validUntil))
     .slice(0, 6);
   const pipeline = proposals.filter((p) => p.status === "sent").reduce((s, p) => s + proposalTotals(p).total, 0);
-  const receivable = jobs
-    .filter((j) => j.status === "done" && j.paymentStatus === "pending")
+  // Mesma regra do card "A receber" (agendados e concluídos não pagos), mais o que ficou pendente de meses anteriores
+  const receivableAll = jobs
+    .filter((j) => countsAsRevenue(j) && j.paymentStatus === "pending" && monthOf(j.startsAt) <= month)
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const receivable = receivableAll.slice(0, 6);
+  const receivableTotal = receivableAll.reduce((s, j) => s + j.price, 0);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
@@ -47,10 +50,7 @@ export default function AdminHome() {
         title={`${greeting}, Gabriel`}
         subtitle={formatMonth(month)}
         action={
-          <Link
-            href="/admin/servicos?novo=1"
-            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-text px-5 text-[0.9375rem] font-medium text-ink transition-[background-color,transform] duration-300 hover:bg-white active:scale-[0.97]"
-          >
+          <Link href="/admin/servicos?novo=1" className={buttonClass("primary")}>
             <IconPlus className="size-4" /> Novo serviço
           </Link>
         }
@@ -72,6 +72,7 @@ export default function AdminHome() {
                   {openProposals.map((p) => (
                     <Row
                       key={p.id}
+                      href={`/admin/propostas?id=${p.id}`}
                       leading={<NumberTile number={p.number} />}
                       title={p.title || "Sem título"}
                       subtitle={`${clientName(p.clientId)} · até ${formatDate(p.validUntil)}`}
@@ -99,6 +100,7 @@ export default function AdminHome() {
                   {upcoming.map((j) => (
                     <Row
                       key={j.id}
+                      href={`/admin/servicos?id=${j.id}`}
                       leading={<DateTile value={j.startsAt} />}
                       title={clientName(j.clientId)}
                       subtitle={`${serviceTypeName(j.serviceTypeId)} · ${formatDateTime(j.startsAt)}`}
@@ -111,21 +113,30 @@ export default function AdminHome() {
               )}
             </Section>
 
-            <Section title="A receber" action={<Link href="/admin/financeiro" className="link-chevron text-[0.875rem]">Financeiro</Link>}>
+            <Section
+              title={receivableTotal ? `A receber · ${brl.format(receivableTotal)}` : "A receber"}
+              action={<Link href="/admin/financeiro" className="link-chevron text-[0.875rem]">Financeiro</Link>}
+            >
               {receivable.length ? (
                 <List>
                   {receivable.map((j) => (
                     <Row
                       key={j.id}
+                      href={`/admin/servicos?id=${j.id}`}
                       leading={<DateTile value={j.startsAt} />}
                       title={clientName(j.clientId)}
                       subtitle={serviceTypeName(j.serviceTypeId)}
-                      trailing={<span className="num font-medium">{brl.format(j.price)}</span>}
+                      trailing={
+                        <span className="flex flex-col items-end gap-1">
+                          <span className="num font-medium">{brl.format(j.price)}</span>
+                          {monthOf(j.startsAt) < month && <Badge tone="bad">Atrasado</Badge>}
+                        </span>
+                      }
                     />
                   ))}
                 </List>
               ) : (
-                <EmptyState title="Tudo recebido" text="Nenhum serviço concluído com pagamento pendente." />
+                <EmptyState title="Tudo recebido" text="Nenhum serviço com pagamento pendente." />
               )}
             </Section>
           </div>

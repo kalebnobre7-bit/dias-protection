@@ -6,6 +6,7 @@ import { FileText as IconDoc, Plus as IconPlus, X as IconClose } from "lucide-re
 
 import {
   Badge,
+  buttonClass,
   Button,
   ChipSelect,
   DeleteButton,
@@ -32,11 +33,20 @@ type Filter = "all" | JobStatus;
 
 const NEW_CLIENT = "__novo";
 
+const localDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+// Serviço novo já começa amanhã às 08:00 (o mais comum); o Gabriel só ajusta
+const tomorrowAt8 = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return `${localDate(d)}T08:00`;
+};
+
 const blank = (): Job => ({
   id: newId(),
   clientId: null,
   serviceTypeId: serviceTypeOptions[0]?.value ?? null,
-  startsAt: "",
+  startsAt: tomorrowAt8(),
   endsAt: "",
   origin: "",
   destination: "",
@@ -57,17 +67,27 @@ export default function JobsPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
-  // Atalho do Início: /admin/servicos?novo=1
+  // Atalhos do Início e do Financeiro: /admin/servicos?novo=1 e ?id=<jobId>
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("novo")) setEditing(blank());
-  }, []);
+    if (loading) return;
+    const params = new URLSearchParams(window.location.search);
+    const job = rows.find((j) => j.id === params.get("id"));
+    if (job) setEditing(job);
+    else if (params.has("novo")) setEditing(blank());
+    // só na carga inicial
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   const clientName = (id: string | null) => clients.find((c) => c.id === id)?.name ?? "Sem cliente";
   const q = query.trim().toLowerCase();
+  // "Todos" deixa os cancelados de fora; eles têm filtro próprio
   const filtered = rows
-    .filter((j) => filter === "all" || j.status === filter)
-    .filter((j) => !q || `${clientName(j.clientId)} ${serviceTypeName(j.serviceTypeId)} ${j.origin} ${j.destination}`.toLowerCase().includes(q))
-    .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
+    .filter((j) => (filter === "all" ? j.status !== "canceled" : j.status === filter))
+    .filter((j) => !q || `${clientName(j.clientId)} ${serviceTypeName(j.serviceTypeId)} ${j.origin} ${j.destination}`.toLowerCase().includes(q));
+  // Próximos do mais perto ao mais longe; anteriores do mais recente ao mais antigo
+  const today = localDate(new Date());
+  const upcoming = filtered.filter((j) => j.startsAt.slice(0, 10) >= today).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const past = filtered.filter((j) => j.startsAt.slice(0, 10) < today).sort((a, b) => b.startsAt.localeCompare(a.startsAt));
 
   return (
     <>
@@ -101,26 +121,37 @@ export default function JobsPage() {
           </div>
           <SearchBox value={query} onChange={setQuery} placeholder="Buscar por cliente, tipo ou local" />
           {filtered.length ? (
-            <List>
-              {filtered.map((j) => (
-                <Row
-                  key={j.id}
-                  onClick={() => setEditing(j)}
-                  leading={<DateTile value={j.startsAt} />}
-                  title={clientName(j.clientId)}
-                  subtitle={[serviceTypeName(j.serviceTypeId), j.destination].filter(Boolean).join(" · ")}
-                  trailing={
-                    <span className="flex flex-col items-end gap-1">
-                      <span className="num font-medium">{brl.format(j.price)}</span>
-                      <span className="flex gap-1">
-                        {j.status !== "canceled" && j.status !== "quote" && j.paymentStatus === "pending" && <Badge tone="warn">A receber</Badge>}
-                        <Badge tone={statusTone(j.status)}>{jobStatusLabel[j.status]}</Badge>
-                      </span>
-                    </span>
-                  }
-                />
-              ))}
-            </List>
+            <div className="space-y-8">
+              {[
+                { title: "Próximos", jobs: upcoming },
+                { title: "Anteriores", jobs: past },
+              ]
+                .filter((g) => g.jobs.length)
+                .map((g) => (
+                  <Section key={g.title} title={`${g.title} · ${g.jobs.length}`}>
+                    <List>
+                      {g.jobs.map((j) => (
+                        <Row
+                          key={j.id}
+                          onClick={() => setEditing(j)}
+                          leading={<DateTile value={j.startsAt} />}
+                          title={clientName(j.clientId)}
+                          subtitle={[serviceTypeName(j.serviceTypeId), j.destination].filter(Boolean).join(" · ")}
+                          trailing={
+                            <span className="flex flex-col items-end gap-1">
+                              <span className="num font-medium">{brl.format(j.price)}</span>
+                              <span className="flex gap-1">
+                                {j.status !== "canceled" && j.status !== "quote" && j.paymentStatus === "pending" && <Badge tone="warn">A receber</Badge>}
+                                <Badge tone={statusTone(j.status)}>{jobStatusLabel[j.status]}</Badge>
+                              </span>
+                            </span>
+                          }
+                        />
+                      ))}
+                    </List>
+                  </Section>
+                ))}
+            </div>
           ) : (
             <p className="mt-6 text-center text-muted">Nenhum serviço neste filtro.</p>
           )}
@@ -132,7 +163,7 @@ export default function JobsPage() {
 }
 
 function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
-  const { value: j, set } = useForm(props.job);
+  const { value: j, set, dirty } = useForm(props.job);
   const { rows: clients } = useTable("clients");
   const { rows: agents } = useTable("agents");
   const { rows: vehicles } = useTable("vehicles");
@@ -148,10 +179,16 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
     if (costs === null && !costsLoading) setCosts(allCosts.filter((c) => c.jobId === props.job.id));
   }, [allCosts, costs, costsLoading, props.job.id]);
   const list = costs ?? [];
+  const costsDirty = costs !== null && JSON.stringify(costs) !== JSON.stringify(allCosts.filter((c) => c.jobId === props.job.id));
   const totalCosts = list.reduce((s, c) => s + (Number.isFinite(c.amount) ? c.amount : 0), 0);
   const profit = j.price - totalCosts;
 
   const updateCost = (id: string, patch: Partial<JobCost>) => setCosts(list.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  // Escolher o agente preenche a descrição vazia ("Diária · Nome")
+  const pickCostAgent = (c: JobCost, agentId: string) => {
+    const name = agents.find((a) => a.id === agentId)?.name;
+    updateCost(c.id, { agentId: agentId || null, ...(name && !c.description.trim() ? { description: `Diária · ${name}` } : {}) });
+  };
   const addCost = () =>
     setCosts([
       ...list,
@@ -197,6 +234,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
     <Sheet
       open
       error={error}
+      dirty={dirty || costsDirty}
       onClose={props.onClose}
       title={props.isNew ? "Novo serviço" : `${serviceTypeName(j.serviceTypeId)} · ${formatDateTime(j.startsAt)}`}
       footer={
@@ -218,7 +256,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       {j.status === "quote" && !props.isNew && (
         <Link
           href={`/admin/propostas?deServico=${j.id}`}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line-strong px-5 text-[0.9375rem] font-medium hover:border-silver"
+          className={buttonClass("secondary")}
         >
           <IconDoc className="size-4" /> Gerar proposta a partir deste serviço
         </Link>
@@ -289,7 +327,10 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
             <Field label="Pagamento">
               <Segmented
                 value={j.paymentStatus}
-                onChange={(v) => set("paymentStatus", v)}
+                onChange={(v) => {
+                  set("paymentStatus", v);
+                  if (v === "paid" && !j.paidAt) set("paidAt", localDate(new Date())); // recebido hoje, por padrão
+                }}
                 options={[
                   { value: "pending", label: "A receber" },
                   { value: "paid", label: "Recebido" },
@@ -354,13 +395,23 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                   </label>
                 </div>
                 {c.category === "agent" && (
-                  <select className="input" value={c.agentId ?? ""} onChange={(e) => updateCost(c.id, { agentId: e.target.value || null })} aria-label="Agente">
+                  <select className="input" value={c.agentId ?? ""} onChange={(e) => pickCostAgent(c, e.target.value)} aria-label="Agente">
                     <option value="">Qual agente? (opcional)</option>
-                    {agents.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.name}
-                      </option>
-                    ))}
+                    {/* Escalados no serviço primeiro */}
+                    {[
+                      { label: "Neste serviço", list: agents.filter((a) => j.agentIds.includes(a.id)) },
+                      { label: "Outros", list: agents.filter((a) => !j.agentIds.includes(a.id)) },
+                    ]
+                      .filter((g) => g.list.length)
+                      .map((g) => (
+                        <optgroup key={g.label} label={g.label}>
+                          {g.list.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
                   </select>
                 )}
                 {c.category === "partner" && (

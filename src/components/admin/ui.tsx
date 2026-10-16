@@ -1,8 +1,18 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Check as IconCheck, Search as IconSearch, X as IconClose } from "lucide-react";
+import {
+  Check as IconCheck,
+  ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevron,
+  LoaderCircle as IconLoader,
+  Search as IconSearch,
+  X as IconClose,
+} from "lucide-react";
+
+import { useSaving } from "@/lib/admin/store";
 
 
 /* ——— Estrutura de página ——— */
@@ -40,6 +50,7 @@ export function List({ children }: { children: React.ReactNode }) {
 
 export function Row(props: {
   onClick?: () => void;
+  href?: string; // abre o item em outra tela (ex.: o serviço a partir do Início)
   leading?: React.ReactNode;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
@@ -55,13 +66,18 @@ export function Row(props: {
       {props.trailing && <span className="shrink-0 text-right">{props.trailing}</span>}
     </>
   );
+  const clickable = "flex min-h-16 w-full items-center gap-4 px-4 py-3 text-left transition-colors duration-200 hover:bg-navy-2 active:bg-navy-2";
   return (
     <li>
-      {props.onClick ? (
+      {props.href ? (
+        <Link href={props.href} className={clickable}>
+          {content}
+        </Link>
+      ) : props.onClick ? (
         <button
           type="button"
           onClick={props.onClick}
-          className="flex min-h-16 w-full items-center gap-4 px-4 py-3 text-left transition-colors duration-200 hover:bg-navy-2 active:bg-navy-2"
+          className={clickable}
         >
           {content}
         </button>
@@ -168,25 +184,47 @@ export function SearchBox(props: { value: string; onChange: (v: string) => void;
   );
 }
 
+// Navegação de mês/ano do Financeiro e dos Relatórios; "Hoje" só aparece fora do período atual
+export function PeriodStepper(props: { label: string; onStep: (delta: -1 | 1) => void; onToday?: () => void; prevLabel: string; nextLabel: string }) {
+  const arrow = "grid size-9 place-items-center rounded-full hover:bg-white/6";
+  return (
+    <div className="flex items-center gap-2">
+      {props.onToday && (
+        <button type="button" onClick={props.onToday} className="min-h-11 rounded-full px-3 text-[0.875rem] font-medium text-accent hover:bg-accent/10">
+          Hoje
+        </button>
+      )}
+      <div className="flex items-center gap-1 rounded-full border border-line p-1">
+        <button type="button" onClick={() => props.onStep(-1)} aria-label={props.prevLabel} className={arrow}>
+          <IconChevronLeft className="size-4" />
+        </button>
+        <span className="min-w-36 text-center text-[0.9375rem] font-medium">{props.label}</span>
+        <button type="button" onClick={() => props.onStep(1)} aria-label={props.nextLabel} className={arrow}>
+          <IconChevron className="size-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ——— Botões ——— */
 
-export function Button(
-  props: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" | "ghost" },
-) {
-  const { variant = "primary", className = "", ...rest } = props;
+type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
+
+// Mesmo visual do Button para links (<Link className={buttonClass("primary")}>)
+export function buttonClass(variant: ButtonVariant = "primary") {
   const styles = {
     primary: "bg-text text-ink hover:bg-white",
     secondary: "border border-line-strong hover:border-silver",
     danger: "text-danger hover:bg-danger/10",
     ghost: "text-accent hover:bg-accent/10",
   }[variant];
-  return (
-    <button
-      type="button"
-      {...rest}
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-[0.9375rem] font-medium transition-[background-color,border-color,transform] duration-300 ease-[var(--ease-snap)] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 ${styles} ${className}`}
-    />
-  );
+  return `inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-[0.9375rem] font-medium transition-[background-color,border-color,transform] duration-300 ease-[var(--ease-snap)] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 ${styles}`;
+}
+
+export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant }) {
+  const { variant = "primary", className = "", ...rest } = props;
+  return <button type="button" {...rest} className={`${buttonClass(variant)} ${className}`} />;
 }
 
 /* ——— Campos ——— */
@@ -222,10 +260,10 @@ export function Switch(props: { checked: boolean; onChange: (v: boolean) => void
   );
 }
 
-// Controle segmentado (filtros, tipo de lançamento)
+// Controle segmentado (filtros, tipo de lançamento). No celular quebra linha em vez de esconder opções
 export function Segmented<T extends string>(props: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[] }) {
   return (
-    <div className="inline-flex max-w-full overflow-x-auto rounded-full bg-white/6 p-1" role="tablist">
+    <div className="inline-flex max-w-full flex-wrap rounded-[1.375rem] bg-white/6 p-1 sm:flex-nowrap sm:overflow-x-auto sm:rounded-full" role="tablist">
       {props.options.map((o) => (
         <button
           key={o.value}
@@ -280,19 +318,29 @@ export function Sheet(props: {
   children: React.ReactNode;
   footer?: React.ReactNode;
   error?: string;
+  // Formulário com alterações não salvas: fechar pelo X, Esc ou fundo pede confirmação
+  dirty?: boolean;
 }) {
-  const { open, onClose } = props;
+  const { open, onClose, dirty } = props;
+  const saving = useSaving();
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    if (!open) return setConfirming(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (dirty) setConfirming((c) => !c);
+      else onClose();
+    };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open, onClose, dirty]);
+
+  const requestClose = () => (dirty ? setConfirming(true) : onClose());
 
   return (
     <AnimatePresence>
@@ -300,7 +348,7 @@ export function Sheet(props: {
         <div className="fixed inset-0 z-50 flex items-center justify-center md:p-6" role="dialog" aria-modal="true" aria-label={props.title}>
           <motion.div
             className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
-            onClick={onClose}
+            onClick={requestClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -313,23 +361,47 @@ export function Sheet(props: {
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ type: "spring", stiffness: 420, damping: 34 }}
           >
-            <div className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-line px-5">
-              <h2 className="truncate text-lg font-semibold tracking-[-0.02em]">{props.title}</h2>
-              <button type="button" onClick={onClose} aria-label="Fechar" className="grid size-11 place-items-center rounded-full hover:bg-white/6">
-                <IconClose className="size-5" />
-              </button>
-            </div>
-            <div className="flex-1 space-y-6 overflow-y-auto px-5 py-6">{props.children}</div>
-            {props.footer && (
-              <div className="shrink-0 border-t border-line px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-                {props.error && (
-                  <p role="alert" className="mb-3 text-[0.875rem] text-danger">
-                    {props.error}
-                  </p>
-                )}
-                <div className="flex items-center gap-3">{props.footer}</div>
+            {confirming ? (
+              <div role="alert" className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line bg-danger/10 px-5 py-2.5">
+                <p className="font-medium">Descartar as alterações?</p>
+                <div className="flex gap-2">
+                  <Button variant="secondary" className="!min-h-10" onClick={() => setConfirming(false)}>
+                    Continuar editando
+                  </Button>
+                  <Button variant="danger" className="!min-h-10 bg-danger/15" onClick={onClose}>
+                    Descartar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-line px-5">
+                <h2 className="truncate text-lg font-semibold tracking-[-0.02em]">{props.title}</h2>
+                <button type="button" onClick={requestClose} aria-label="Fechar" className="grid size-11 place-items-center rounded-full hover:bg-white/6">
+                  <IconClose className="size-5" />
+                </button>
               </div>
             )}
+            {/* Durante uma gravação a janela inteira trava: nada de toque duplo nem edição no meio do salvar */}
+            <fieldset disabled={saving} className="flex min-h-0 min-w-0 flex-1 flex-col">
+              <div className="flex-1 space-y-6 overflow-y-auto px-5 py-6">{props.children}</div>
+              {props.footer && (
+                <div className="shrink-0 border-t border-line px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                  {props.error && (
+                    <p role="alert" className="mb-3 text-[0.875rem] text-danger">
+                      {props.error}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-3">
+                    {props.footer}
+                    {saving && (
+                      <span aria-live="polite" className="ml-auto flex items-center gap-2 text-[0.875rem] text-muted">
+                        <IconLoader className="size-4 animate-spin" /> Salvando…
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </fieldset>
           </motion.div>
         </div>
       )}
@@ -355,6 +427,8 @@ export function DeleteButton({ onConfirm, label = "Excluir" }: { onConfirm: () =
 // Estado de formulário genérico para os painéis de edição
 export function useForm<T>(initial: T) {
   const [value, setValue] = useState(initial);
+  const [start] = useState(initial);
   const set = <K extends keyof T>(key: K, v: T[K]) => setValue((prev) => ({ ...prev, [key]: v }));
-  return { value, set, reset: setValue };
+  const dirty = JSON.stringify(value) !== JSON.stringify(start);
+  return { value, set, reset: setValue, dirty };
 }

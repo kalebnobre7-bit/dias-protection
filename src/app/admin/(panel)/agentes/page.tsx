@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
 import { DocumentInput, PhotoInput } from "@/components/admin/PhotoInput";
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, Section, Sheet, Skeleton, Switch, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, SearchBox, Section, Sheet, Skeleton, Switch, useForm } from "@/components/admin/ui";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { AgentRecord } from "@/lib/admin/types";
 
@@ -37,8 +37,11 @@ export default function AgentsPage() {
   const [editing, setEditing] = useState<AgentRecord | null>(null);
   // Modo "Exportar PDF": ids escolhidos (null = fora do modo)
   const [picking, setPicking] = useState<string[] | null>(null);
+  const [query, setQuery] = useState("");
   // Fixos primeiro, avulsos depois, inativos no fim
   const sorted = [...rows].sort((a, b) => Number(b.active) - Number(a.active) || Number(a.freelance) - Number(b.freelance) || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+  const q = query.trim().toLowerCase();
+  const shown = sorted.filter((a) => !q || `${a.name} ${a.rolePt} ${a.languages.join(" ")}`.toLowerCase().includes(q));
 
   return (
     <>
@@ -75,38 +78,45 @@ export default function AgentsPage() {
       ) : !rows.length ? (
         <EmptyState title="Nenhum agente cadastrado" text="Cadastre a equipe com foto, idiomas e certificações." />
       ) : (
-        <List>
-          {sorted.map((a) => {
-            const count = jobs.filter((j) => j.agentIds.includes(a.id)).length;
-            return (
-              <Row
-                key={a.id}
-                onClick={() => (picking ? setPicking(picking.includes(a.id) ? picking.filter((x) => x !== a.id) : [...picking, a.id]) : setEditing(a))}
-                leading={<Avatar name={a.name} photo={a.photoUrl} />}
-                title={a.name}
-                subtitle={[a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ")}
-                trailing={
-                  picking ? (
-                    <PickMark on={picking.includes(a.id)} />
-                  ) : (
-                    <span className="flex flex-col items-end gap-1">
-                      {!a.active ? (
-                        <Badge tone="bad">Inativo</Badge>
-                      ) : a.freelance ? (
-                        <Badge tone="warn">Avulso</Badge>
-                      ) : a.published ? (
-                        <Badge tone="good">No site</Badge>
+        <>
+          <SearchBox value={query} onChange={setQuery} placeholder="Buscar por nome, função ou idioma" />
+          {shown.length ? (
+            <List>
+              {shown.map((a) => {
+                const count = jobs.filter((j) => j.agentIds.includes(a.id)).length;
+                return (
+                  <Row
+                    key={a.id}
+                    onClick={() => (picking ? setPicking(picking.includes(a.id) ? picking.filter((x) => x !== a.id) : [...picking, a.id]) : setEditing(a))}
+                    leading={<Avatar name={a.name} photo={a.photoUrl} />}
+                    title={a.name}
+                    subtitle={[a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ")}
+                    trailing={
+                      picking ? (
+                        <PickMark on={picking.includes(a.id)} />
                       ) : (
-                        <Badge>Interno</Badge>
-                      )}
-                      <span className="num text-xs text-muted">{count} serviço(s)</span>
-                    </span>
-                  )
-                }
-              />
-            );
-          })}
-        </List>
+                        <span className="flex flex-col items-end gap-1">
+                          {!a.active ? (
+                            <Badge tone="bad">Inativo</Badge>
+                          ) : a.freelance ? (
+                            <Badge tone="warn">Avulso</Badge>
+                          ) : a.published ? (
+                            <Badge tone="good">No site</Badge>
+                          ) : (
+                            <Badge>Interno</Badge>
+                          )}
+                          <span className="num text-xs text-muted">{count} serviço(s)</span>
+                        </span>
+                      )
+                    }
+                  />
+                );
+              })}
+            </List>
+          ) : (
+            <p className="mt-6 text-center text-muted">Nenhum agente encontrado.</p>
+          )}
+        </>
       )}
       {editing && <AgentSheet agent={editing} isNew={!rows.some((r) => r.id === editing.id)} onClose={() => setEditing(null)} />}
     </>
@@ -118,7 +128,7 @@ const exportPdf = (ids: string[]) =>
   window.open(`${process.env.NEXT_PUBLIC_BASE_PATH}/admin/apresentacao?agentes=${ids.join(",")}`, "_blank", "noopener");
 
 function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: boolean; onClose: () => void }) {
-  const { value: a, set } = useForm(agent);
+  const { value: a, set, dirty } = useForm(agent);
   const [error, setError] = useState("");
 
   const persist = async () => {
@@ -154,6 +164,7 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
     <Sheet
       open
       error={error}
+      dirty={dirty}
       onClose={onClose}
       title={isNew ? "Novo agente" : a.name || "Agente"}
       footer={

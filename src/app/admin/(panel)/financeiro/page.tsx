@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft as IconChevronLeft, ChevronRight as IconChevron, Plus as IconPlus, Tags as IconTags } from "lucide-react";
+import { Plus as IconPlus, Tags as IconTags } from "lucide-react";
 
 import { DateTile, MoneyInput } from "@/components/admin/job-bits";
 import { MonthStats } from "@/components/admin/MonthStats";
-import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, Section, Segmented, Sheet, Skeleton, Stat, Switch, useForm } from "@/components/admin/ui";
+import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PeriodStepper, Row, Section, Segmented, Sheet, Skeleton, Stat, Switch, useForm } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { categoryTotals, countsAsRevenue, currentMonth, jobCostTotal, monthlySummary, monthOf, serviceTotals, shiftMonth, type CategoryTotal } from "@/lib/admin/finance";
 import { brl, formatDateTime, formatMonth } from "@/lib/admin/labels";
@@ -55,15 +55,13 @@ export default function FinancePage() {
         title="Financeiro"
         subtitle="Receita dos serviços, custos e lançamentos avulsos do mês."
         action={
-          <div className="flex items-center gap-1 rounded-full border border-line p-1">
-            <button type="button" onClick={() => setMonth(shiftMonth(month, yearly ? -12 : -1))} aria-label={yearly ? "Ano anterior" : "Mês anterior"} className="grid size-9 place-items-center rounded-full hover:bg-white/6">
-              <IconChevronLeft className="size-4" />
-            </button>
-            <span className="min-w-36 text-center text-[0.9375rem] font-medium">{yearly ? month.slice(0, 4) : formatMonth(month)}</span>
-            <button type="button" onClick={() => setMonth(shiftMonth(month, yearly ? 12 : 1))} aria-label={yearly ? "Próximo ano" : "Próximo mês"} className="grid size-9 place-items-center rounded-full hover:bg-white/6">
-              <IconChevron className="size-4" />
-            </button>
-          </div>
+          <PeriodStepper
+            label={yearly ? month.slice(0, 4) : formatMonth(month)}
+            onStep={(d) => setMonth(shiftMonth(month, yearly ? d * 12 : d))}
+            onToday={(yearly ? month.slice(0, 4) !== currentMonth().slice(0, 4) : month !== currentMonth()) ? () => setMonth(currentMonth()) : undefined}
+            prevLabel={yearly ? "Ano anterior" : "Mês anterior"}
+            nextLabel={yearly ? "Próximo ano" : "Próximo mês"}
+          />
         }
       />
 
@@ -116,6 +114,7 @@ export default function FinancePage() {
                   return (
                     <Row
                       key={j.id}
+                      href={`/admin/servicos?id=${j.id}`}
                       leading={<DateTile value={j.startsAt} />}
                       title={clientName(j.clientId)}
                       subtitle={`${serviceTypeName(j.serviceTypeId)} · custos ${brl.format(c)}`}
@@ -255,7 +254,7 @@ function ServiceView({ period, jobs, costs }: { period: string; jobs: Job[]; cos
 }
 
 function TransactionSheet(props: { tx: Transaction; isNew: boolean; categories: FinanceCategory[]; onClose: () => void }) {
-  const { value: t, set } = useForm(props.tx);
+  const { value: t, set, dirty } = useForm(props.tx);
   const [error, setError] = useState("");
   const [newCat, setNewCat] = useState<string | null>(null);
 
@@ -300,6 +299,7 @@ function TransactionSheet(props: { tx: Transaction; isNew: boolean; categories: 
     <Sheet
       open
       error={error}
+      dirty={dirty}
       onClose={props.onClose}
       title={props.isNew ? "Novo lançamento" : t.description || "Lançamento"}
       footer={
