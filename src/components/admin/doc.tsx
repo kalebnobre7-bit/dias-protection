@@ -3,6 +3,7 @@
 import { Emblem, Wordmark } from "@/components/brand/Logo";
 import { RichText } from "@/components/RichText";
 import { vehicleCategoryName } from "@/lib/admin/catalog";
+import { formatDoc, formatPhone } from "@/lib/admin/labels";
 import type { AgentRecord, Vehicle } from "@/lib/admin/types";
 
 // Peças dos documentos A4 do painel (proposta e currículo): folha branca, prontas para imprimir em PDF
@@ -164,13 +165,13 @@ export function AgentCv({ agent: a, withPrivate }: { agent: AgentRecord; withPri
             {a.phone && (
               <div>
                 <dt className="text-[0.8125rem] text-[#141922]/55">Telefone</dt>
-                <dd>{a.phone}</dd>
+                <dd>{formatPhone(a.phone)}</dd>
               </div>
             )}
             {a.documentId && (
               <div>
                 <dt className="text-[0.8125rem] text-[#141922]/55">Documento</dt>
-                <dd>{a.documentId}</dd>
+                <dd>{formatDoc(a.documentId)}</dd>
               </div>
             )}
           </dl>

@@ -12,6 +12,7 @@ import {
   X as IconClose,
 } from "lucide-react";
 
+import { formatDoc, formatPhone } from "@/lib/admin/labels";
 import { useSaving } from "@/lib/admin/store";
 
 
@@ -330,6 +331,43 @@ export function NumberInput(props: {
       />
       {props.suffix && <span className="shrink-0 text-[0.9375rem] text-muted">{props.suffix}</span>}
     </span>
+  );
+}
+
+// Telefone formatado enquanto digita; guarda só os dígitos (com "+" na frente se for estrangeiro)
+export function PhoneInput(props: { value: string; onChange: (v: string) => void; label?: string; placeholder?: string }) {
+  return (
+    <input
+      className="input num"
+      type="tel"
+      inputMode="tel"
+      autoComplete="tel"
+      aria-label={props.label}
+      placeholder={props.placeholder ?? "(11) 99999-9999"}
+      value={formatPhone(props.value)}
+      onChange={(e) => {
+        const text = e.target.value;
+        const digits = text.replace(/\D/g, "").slice(0, 15);
+        props.onChange(text.trim().startsWith("+") && digits ? `+${digits}` : digits);
+      }}
+    />
+  );
+}
+
+// CPF vira 123.456.789-01 ao completar 11 dígitos (e é salvo só com dígitos); RG e outros ficam livres
+export function DocInput(props: { value: string; onChange: (v: string) => void; label?: string }) {
+  return (
+    <input
+      className="input num"
+      aria-label={props.label}
+      placeholder="CPF, RG ou CNV"
+      value={formatDoc(props.value)}
+      onChange={(e) => {
+        const text = e.target.value;
+        const digits = text.replace(/\D/g, "");
+        props.onChange(/^[\d.\-\s]*$/.test(text) && digits.length === 11 ? digits : text);
+      }}
+    />
   );
 }
 

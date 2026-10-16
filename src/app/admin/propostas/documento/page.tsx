@@ -8,7 +8,7 @@ import { AgentCard, AgentCv, DocBrandHeader, DocLabel, DocSheet, DocShell as She
 import { localContent } from "@/data/content";
 import { useSession } from "@/lib/admin/auth";
 import { serviceTypeName } from "@/lib/admin/catalog";
-import { brl, formatDate, formatDateLong, proposalStatusLabel } from "@/lib/admin/labels";
+import { brl, formatDate, formatDateLong, formatPhone, proposalStatusLabel } from "@/lib/admin/labels";
 import { itemTotal, proposalTotals, scopeSummary } from "@/lib/admin/proposals";
 import { useSettings } from "@/lib/admin/settings";
 import { useTable } from "@/lib/admin/store";
@@ -170,7 +170,7 @@ export default function ProposalDocumentPage() {
                   <>
                     <span className="block font-semibold">{client.name}</span>
                     {client.company && <span className="block">{client.company}</span>}
-                    {(client.email || client.phone) && <span className="block text-[#141922]/65">{[client.email, client.phone].filter(Boolean).join(" · ")}</span>}
+                    {(client.email || client.phone) && <span className="block text-[#141922]/65">{[client.email, formatPhone(client.phone)].filter(Boolean).join(" · ")}</span>}
                     {client.representatives.map((r) => (
                       <span key={r.id} className="mt-1 block text-[#141922]/65">
                         <span className="text-[#141922]">{r.name}</span>

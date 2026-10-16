@@ -257,7 +257,8 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
     if (!saved) return;
     set("status", saved.status);
     const phone = onlyDigits(client?.phone ?? "");
-    const target = phone ? (phone.length <= 11 ? `55${phone}` : phone) : "";
+    // número com "+" (estrangeiro) já vem com DDI
+    const target = phone ? (phone.length <= 11 && !client?.phone.startsWith("+") ? `55${phone}` : phone) : "";
     window.open(target ? whatsappUrl(target, text) : `https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");
   };
 

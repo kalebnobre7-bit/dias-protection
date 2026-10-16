@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Plus as IconPlus, X as IconClose } from "lucide-react";
 
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, Skeleton, TextArea, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PhoneInput, Row, SearchBox, Section, Sheet, Skeleton, TextArea, useForm } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { countsAsRevenue } from "@/lib/admin/finance";
-import { brl, clientLanguageLabel, formatDate, formatDateTime, jobStatusLabel, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
+import { brl, clientLanguageLabel, formatDate, formatDateTime, formatPhone, jobStatusLabel, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
 import { proposalTotals } from "@/lib/admin/proposals";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Client, Job, Representative } from "@/lib/admin/types";
@@ -61,7 +61,7 @@ export default function ClientsPage() {
                   onClick={() => setEditing(c)}
                   leading={<Avatar name={c.name} />}
                   title={c.name}
-                  subtitle={[c.company, c.phone || c.email].filter(Boolean).join(" · ") || "Sem contato"}
+                  subtitle={[c.company, formatPhone(c.phone) || c.email].filter(Boolean).join(" · ") || "Sem contato"}
                   trailing={
                     <span className="flex flex-col items-end">
                       <span className="num font-medium">{brl.format(mine.reduce((s, j) => s + j.price, 0))}</span>
@@ -141,7 +141,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Telefone / WhatsApp">
-          <input className="input" type="tel" value={c.phone} onChange={(e) => set("phone", e.target.value)} />
+          <PhoneInput value={c.phone} onChange={(v) => set("phone", v)} label="Telefone" placeholder="(11) 99999-9999 ou +1 …" />
         </Field>
         <Field label="E-mail">
           <input className="input" type="email" value={c.email} onChange={(e) => set("email", e.target.value)} />

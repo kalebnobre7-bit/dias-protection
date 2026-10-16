@@ -29,6 +29,24 @@ const COST_CODES: Record<string, string> = {
 };
 export const costCategoryName = (c: CostCategory) => COST_CODES[c] ?? c;
 
+// Telefone salvo só com dígitos ("+" na frente = estrangeiro) → "(11) 97071-7926" / "+55 (11) 97071-7926"
+export function formatPhone(value: string): string {
+  const d = value.replace(/\D/g, "");
+  const intl = value.trim().startsWith("+") || d.length > 11;
+  if (intl && !d.startsWith("55")) return `+${d}`;
+  const br = intl ? d.slice(2) : d;
+  const ddi = intl ? "+55" : "";
+  if (!br) return ddi;
+  const head = ddi ? `${ddi} ` : "";
+  if (br.length <= 2) return `${head}(${br}`;
+  const rest = br.slice(2);
+  const cut = rest.length > 8 ? 5 : 4;
+  return `${head}(${br.slice(0, 2)}) ${rest.length > cut ? `${rest.slice(0, cut)}-${rest.slice(cut)}` : rest}`;
+}
+
+// CPF salvo só com dígitos → "123.456.789-01"; outros documentos (RG, CNV) ficam como foram digitados
+export const formatDoc = (value: string) => (/^\d{11}$/.test(value) ? value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : value);
+
 export const clientLanguageLabel = { pt: "Português", en: "Inglês", other: "Outro" } as const;
 
 export const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });

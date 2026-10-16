@@ -4,7 +4,7 @@ import { Plus as IconPlus, X as IconClose } from "lucide-react";
 import { useState } from "react";
 
 import { MoneyInput } from "@/components/admin/job-bits";
-import { Button, Field, NumberInput, PageHeader, Section, Skeleton, TextArea } from "@/components/admin/ui";
+import { Button, Field, NumberInput, PageHeader, PhoneInput, Section, Skeleton, TextArea } from "@/components/admin/ui";
 import { onlyDigits } from "@/lib/admin/proposals";
 import { DEFAULT_SETTINGS, useSettings } from "@/lib/admin/settings";
 import { repo, useSaving } from "@/lib/admin/store";
@@ -96,8 +96,8 @@ function SettingsForm({ initial }: { initial: Settings }) {
             <input className="input" value={s.company.legalName} onChange={(e) => setCompany("legalName", e.target.value)} />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="WhatsApp" hint="Com DDI e DDD. Ex.: 55 11 97071-7926">
-              <input className="input num" type="tel" inputMode="tel" value={s.company.whatsapp} onChange={(e) => setCompany("whatsapp", e.target.value)} />
+            <Field label="WhatsApp" hint="Com +55 e DDD.">
+              <PhoneInput value={s.company.whatsapp} onChange={(v) => setCompany("whatsapp", v)} label="WhatsApp" placeholder="+55 (11) 99999-9999" />
             </Field>
             <Field label="E-mail">
               <input className="input" type="email" value={s.company.email} onChange={(e) => setCompany("email", e.target.value)} />

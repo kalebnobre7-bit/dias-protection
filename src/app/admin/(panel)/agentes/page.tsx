@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
 import { DocumentInput, PhotoInput } from "@/components/admin/PhotoInput";
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, NumberInput, PageHeader, PickMark, Row, SearchBox, Section, Sheet, Skeleton, Switch, TextArea, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, DocInput, EmptyState, Field, List, NumberInput, PageHeader, PhoneInput, PickMark, Row, SearchBox, Section, Sheet, Skeleton, Switch, TextArea, useForm } from "@/components/admin/ui";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { AgentRecord } from "@/lib/admin/types";
 
@@ -249,10 +249,10 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Telefone">
-              <input className="input" type="tel" value={a.phone} onChange={(e) => set("phone", e.target.value)} />
+              <PhoneInput value={a.phone} onChange={(v) => set("phone", v)} label="Telefone" />
             </Field>
             <Field label="Documento" hint="CPF ou registro de vigilante">
-              <input className="input" value={a.documentId} onChange={(e) => set("documentId", e.target.value)} />
+              <DocInput value={a.documentId} onChange={(v) => set("documentId", v)} label="Documento" />
             </Field>
           </div>
           {/* div em vez de Field: label com botões dentro dispararia o upload ao clicar no texto */}

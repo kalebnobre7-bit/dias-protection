@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Plus as IconPlus } from "lucide-react";
 
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, Skeleton, TextArea, useForm } from "@/components/admin/ui";
-import { brl, formatDateTime } from "@/lib/admin/labels";
+import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PhoneInput, Row, SearchBox, Section, Sheet, Skeleton, TextArea, useForm } from "@/components/admin/ui";
+import { brl, formatDateTime, formatPhone } from "@/lib/admin/labels";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Partner } from "@/lib/admin/types";
 
@@ -57,7 +57,7 @@ export default function PartnersPage() {
                   onClick={() => setEditing(p)}
                   leading={<Avatar name={p.name} />}
                   title={p.name}
-                  subtitle={[p.kind, p.contact || p.phone].filter(Boolean).join(" · ") || "Sem contato"}
+                  subtitle={[p.kind, p.contact || formatPhone(p.phone)].filter(Boolean).join(" · ") || "Sem contato"}
                   trailing={<span className="num font-medium">{brl.format(total)}</span>}
                 />
               );
@@ -126,7 +126,7 @@ function PartnerSheet(props: { partner: Partner; isNew: boolean; onClose: () => 
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Telefone">
-          <input className="input" type="tel" value={p.phone} onChange={(e) => set("phone", e.target.value)} />
+          <PhoneInput value={p.phone} onChange={(v) => set("phone", v)} label="Telefone" />
         </Field>
         <Field label="E-mail">
           <input className="input" type="email" value={p.email} onChange={(e) => set("email", e.target.value)} />
