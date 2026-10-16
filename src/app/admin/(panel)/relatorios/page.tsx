@@ -162,7 +162,7 @@ function AmountTable({ title, rows }: { title: string; rows: { label: string; am
           foot={["Total", brl.format(rows.reduce((s, r) => s + r.amount, 0))]}
         />
       ) : (
-        <p className="px-1 text-[0.9375rem] text-muted">Nada no período.</p>
+        <p className="px-1 text-sm text-muted">Nada no período.</p>
       )}
     </Section>
   );
@@ -173,8 +173,8 @@ const STICKY = "sticky left-0 bg-[color-mix(in_srgb,var(--color-navy)_60%,var(--
 
 function Table({ head, rows, foot }: { head: string[]; rows: string[][]; foot: string[] }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-line bg-navy/60">
-      <table className="w-full min-w-[34rem] border-collapse text-[0.9375rem]">
+    <div className="overflow-x-auto rounded-xl border border-line bg-navy/60">
+      <table className="w-full min-w-[34rem] border-collapse text-sm">
         <thead>
           <tr className="border-b border-line text-[0.8125rem] text-muted">
             {head.map((h, i) => (

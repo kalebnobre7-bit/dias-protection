@@ -264,13 +264,13 @@
 
 /* Campos do painel admin */
 @utility input {
-  min-height: 2.75rem;
+  min-height: 2.5rem;
   width: 100%;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--color-line);
   background: var(--color-ink);
-  padding: 0.625rem 0.875rem;
-  font-size: 1rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
   color-scheme: dark; /* ícone do calendário e lista do select no tema escuro */
   transition: border-color 0.3s var(--ease-in-out);
 

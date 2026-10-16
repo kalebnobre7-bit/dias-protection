@@ -130,14 +130,14 @@ export function AgentCv({ agent: a, withPrivate }: { agent: AgentRecord; withPri
       {a.bioPt && (
         <section>
           <DocLabel>Perfil</DocLabel>
-          <RichText text={a.bioPt} className="mt-2 text-[0.9375rem] leading-relaxed" />
+          <RichText text={a.bioPt} className="mt-2 text-sm leading-relaxed" />
         </section>
       )}
 
       {career.length > 0 && (
         <section>
           <DocLabel>Experiência profissional</DocLabel>
-          <ul className="mt-2 space-y-1.5 text-[0.9375rem] leading-relaxed">
+          <ul className="mt-2 space-y-1.5 text-sm leading-relaxed">
             {career.map((c, i) => (
               <li key={i} className="border-b border-[#141922]/10 pb-1.5 last:border-0">
                 {c}
@@ -150,7 +150,7 @@ export function AgentCv({ agent: a, withPrivate }: { agent: AgentRecord; withPri
       {a.certifications.length > 0 && (
         <section>
           <DocLabel>Certificações</DocLabel>
-          <ul className="mt-2 grid gap-x-8 gap-y-1.5 text-[0.9375rem] sm:grid-cols-2">
+          <ul className="mt-2 grid gap-x-8 gap-y-1.5 text-sm sm:grid-cols-2">
             {a.certifications.map((c) => (
               <li key={c}>{c}</li>
             ))}
@@ -161,7 +161,7 @@ export function AgentCv({ agent: a, withPrivate }: { agent: AgentRecord; withPri
       {withPrivate && (a.phone || a.documentId) && (
         <section>
           <DocLabel>Contato e documento</DocLabel>
-          <dl className="mt-2 grid gap-x-8 gap-y-1 text-[0.9375rem] sm:grid-cols-2">
+          <dl className="mt-2 grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2">
             {a.phone && (
               <div>
                 <dt className="text-[0.8125rem] text-[#141922]/55">Telefone</dt>

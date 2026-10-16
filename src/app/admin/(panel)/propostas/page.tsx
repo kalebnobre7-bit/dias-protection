@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Check as IconCheck, Copy as IconCopy, FileCheck as IconDocClosed, FileText as IconDoc, Minus as IconMinus, Plus as IconPlus, Send as IconSend, Sparkles as IconMagic, X as IconClose } from "lucide-react";
 
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
@@ -111,7 +111,7 @@ export default function ProposalsPage() {
       ) : (
         <>
           {open.length > 0 && (
-            <p className="mb-5 px-1 text-[0.9375rem] text-muted">
+            <p className="mb-5 px-1 text-sm text-muted">
               <span className="num font-medium text-text">{open.length}</span> enviada(s) aguardando resposta ·{" "}
               <span className="num font-medium text-text">{brl.format(pipeline)}</span> em negociação
             </p>
@@ -307,24 +307,25 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         </>
       }
     >
-      {/* Ações principais ficam no topo: o Gabriel abre a proposta pra enviar, não pra editar */}
-      <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" onClick={() => openDocument(false)}>
+      {/* Ações principais ficam no topo: o Gabriel abre a proposta pra enviar, não pra editar.
+          Barra compacta de texto + ícone, numa linha só no desktop */}
+      <div className="-mx-2 -mt-1 flex flex-wrap gap-0.5 border-b border-line pb-3">
+        <ActionLink onClick={() => openDocument(false)}>
           <IconDoc className="size-4" /> Proposta comercial
-        </Button>
-        <Button variant="secondary" onClick={() => openDocument(true)}>
+        </ActionLink>
+        <ActionLink onClick={() => openDocument(true)}>
           <IconDocClosed className="size-4" /> Serviço fechado
-        </Button>
-        <Button variant="secondary" onClick={sendWhatsApp}>
+        </ActionLink>
+        <ActionLink onClick={sendWhatsApp}>
           <IconSend className="size-4" /> WhatsApp
-        </Button>
-        <Button variant="secondary" onClick={copy}>
+        </ActionLink>
+        <ActionLink onClick={copy}>
           {copied ? <IconCheck className="size-4" /> : <IconCopy className="size-4" />} {copied ? "Copiado" : "Copiar texto"}
-        </Button>
+        </ActionLink>
         {p.status !== "accepted" && (
-          <Button variant="ghost" onClick={accept}>
+          <ActionLink onClick={accept} className="text-accent hover:text-accent sm:ml-auto">
             <IconCheck className="size-4" /> Marcar aceita e agendar
-          </Button>
+          </ActionLink>
         )}
       </div>
 
@@ -412,7 +413,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
             <Field label="Período no documento" hint="Preenchido pelo calendário. Dá pra completar com horário.">
               <input className="input" value={p.period} onChange={(e) => set("period", e.target.value)} placeholder="10 a 15 de outubro, 8h às 20h" />
             </Field>
-            <div className="rounded-2xl border border-line px-4 py-2">
+            <div className="rounded-xl border border-line px-4 py-2">
               <Switch checked={p.guards > 0} onChange={(v) => set("guards", v ? 1 : 0)} label="Com segurança" hint="Agentes de proteção junto com o transporte" />
               {p.guards > 0 && (
                 <div className="flex items-center justify-between gap-4 border-t border-line py-3">
@@ -422,7 +423,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                       type="button"
                       onClick={() => set("guards", Math.max(1, p.guards - 1))}
                       aria-label="Menos um segurança"
-                      className="grid size-9 place-items-center rounded-full border border-line-strong hover:border-silver"
+                      className="grid size-9 place-items-center rounded-md border border-line-strong hover:border-silver"
                     >
                       <IconMinus className="size-4" />
                     </button>
@@ -431,7 +432,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                       type="button"
                       onClick={() => set("guards", Math.min(30, p.guards + 1))}
                       aria-label="Mais um segurança"
-                      className="grid size-9 place-items-center rounded-full border border-line-strong hover:border-silver"
+                      className="grid size-9 place-items-center rounded-md border border-line-strong hover:border-silver"
                     >
                       <IconPlus className="size-4" />
                     </button>
@@ -455,7 +456,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
           title="Itens"
           action={
             <select
-              className="input !min-h-9 !w-auto !py-1 !text-[0.875rem]"
+              className="input !min-h-9 !w-auto min-w-0 !py-1 !text-[0.875rem]"
               value={preset}
               onChange={(e) => addItem(e.target.value)}
               aria-label="Adicionar item do catálogo"
@@ -471,53 +472,57 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
           }
         >
           {scopeItems(p).length > 0 && (
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-line-strong px-4 py-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-line-strong px-4 py-3">
               <span className="text-[0.875rem] text-muted">Escopo: {scopeSummary(p)}</span>
               <Button variant="secondary" className="!min-h-9 !px-3" onClick={() => set("items", mergeScopeItems(p, newId))}>
                 <IconMagic className="size-4" /> {p.items.length ? "Refazer itens do escopo" : "Gerar itens do escopo"}
               </Button>
             </div>
           )}
+          {/* Uma linha por item: descrição · qtd · unidade × unitário = total · remover; detalhe embaixo */}
           {p.items.length ? (
-            <ul className="space-y-3">
+            <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
               {p.items.map((i) => (
-                <li key={i.id} className="space-y-3 rounded-2xl border border-line p-4">
-                  <div className="flex gap-2">
-                    <input className="input" value={i.description} onChange={(e) => updateItem(i.id, { description: e.target.value })} placeholder="Descrição" aria-label="Descrição do item" />
+                <li key={i.id} className="space-y-2 px-3 py-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      className="input !min-h-9 min-w-[8rem] flex-1 basis-[calc(100%-2.75rem)] sm:basis-0"
+                      value={i.description}
+                      onChange={(e) => updateItem(i.id, { description: e.target.value })}
+                      placeholder="Descrição"
+                      aria-label="Descrição do item"
+                    />
                     <button
                       type="button"
                       onClick={() => removeItem(i.id)}
                       aria-label="Remover item"
-                      className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-white/6 hover:text-danger"
+                      className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-white/6 hover:text-danger sm:order-last"
                     >
                       <IconClose className="size-4" />
                     </button>
-                  </div>
-                  <input className="input !min-h-10 !text-[0.875rem]" value={i.detail} onChange={(e) => updateItem(i.id, { detail: e.target.value })} placeholder="Detalhe (ex.: 2 agentes · até 12h)" aria-label="Detalhe do item" />
-                  {/* quantidade · unidade × valor unitário = total; quebra linha no celular */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <NumberInput value={i.qty} onChange={(v) => updateItem(i.id, { qty: v ?? 0 })} fallback={0} digits={3} label="Quantidade" />
-                    <select className="input !w-auto" value={i.unit} onChange={(e) => updateItem(i.id, { unit: e.target.value })} aria-label="Unidade">
+                    <NumberInput value={i.qty} onChange={(v) => updateItem(i.id, { qty: v ?? 0 })} fallback={0} digits={3} label="Quantidade" className="[&>input]:!min-h-9" />
+                    <select className="input !min-h-9 !w-auto" value={i.unit} onChange={(e) => updateItem(i.id, { unit: e.target.value })} aria-label="Unidade">
                       {[...new Set([...units, i.unit])].map((u) => (
                         <option key={u} value={u}>
                           {u}
                         </option>
                       ))}
                     </select>
-                    <span className="text-muted" aria-hidden>
+                    <span className="text-sm text-muted" aria-hidden>
                       ×
                     </span>
-                    <MoneyInput value={i.unitPrice} onChange={(v) => updateItem(i.id, { unitPrice: v })} label="Valor unitário" className="min-w-[8.5rem] flex-1" />
-                    <span className="num ml-auto min-w-24 text-right text-[0.9375rem] font-medium">{brl.format(itemTotal(i))}</span>
+                    <MoneyInput value={i.unitPrice} onChange={(v) => updateItem(i.id, { unitPrice: v })} label="Valor unitário" className="!w-32 [&>input]:!min-h-9" />
+                    <span className="num ml-auto w-24 shrink-0 text-right text-sm font-medium">{brl.format(itemTotal(i))}</span>
                   </div>
+                  <input className="input !min-h-8 !text-[0.8125rem]" value={i.detail} onChange={(e) => updateItem(i.id, { detail: e.target.value })} placeholder="Detalhe (ex.: 2 agentes · até 12h)" aria-label="Detalhe do item" />
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-[0.9375rem] text-muted">Escolha um item do catálogo acima ou crie um em branco. Quantidade × valor unitário.</p>
+            <p className="text-sm text-muted">Escolha um item do catálogo acima ou crie um em branco. Quantidade × valor unitário.</p>
           )}
 
-          <dl className="mt-4 space-y-2 rounded-2xl bg-navy/60 p-4 text-[0.9375rem]">
+          <dl className="mt-4 space-y-2 rounded-xl bg-navy/60 p-4 text-sm">
             <div className="flex justify-between text-muted">
               <dt>Subtotal</dt>
               <dd className="num">{brl.format(totals.subtotal)}</dd>
@@ -528,7 +533,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                 <MoneyInput value={p.discount} onChange={(v) => set("discount", v)} label="Desconto" />
               </dd>
             </div>
-            <div className="flex justify-between border-t border-line pt-2 text-lg font-semibold">
+            <div className="flex justify-between border-t border-line pt-2 text-base font-semibold">
               <dt>Total</dt>
               <dd className="num">{brl.format(totals.total)}</dd>
             </div>
@@ -565,7 +570,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         (p.pricing ? (
           <>
             <PricingCalculator value={p.pricing} onChange={(v) => set("pricing", v)} />
-            <div className="space-y-3 rounded-2xl border border-line p-4 text-[0.9375rem]">
+            <div className="space-y-3 rounded-xl border border-line p-4 text-sm">
               <p className="flex justify-between gap-4">
                 <span className="text-muted">Total da proposta</span>
                 <span className="num font-medium">{brl.format(totals.total)}</span>
@@ -650,7 +655,7 @@ function PickList(props: {
   return (
     <div className="space-y-3">
       <p className="px-1 text-[0.875rem] text-muted">{props.hint}</p>
-      <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-navy/60">
+      <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-navy/60">
         {props.items.map((i) => {
           const on = props.selected.includes(i.id);
           return (
@@ -660,7 +665,7 @@ function PickList(props: {
                 role="checkbox"
                 aria-checked={on}
                 onClick={() => props.onToggle(i.id)}
-                className="flex min-h-16 w-full items-center gap-4 px-4 py-3 text-left transition-colors duration-200 hover:bg-navy-2"
+                className="flex min-h-14 w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors duration-200 hover:bg-navy-2"
               >
                 {i.leading}
                 <span className="min-w-0 flex-1">
@@ -682,5 +687,18 @@ function PickList(props: {
         })}
       </ul>
     </div>
+  );
+}
+
+// Ação compacta da barra do topo da proposta: texto + ícone, sem borda de botão
+function ActionLink(props: { onClick: () => void; className?: string; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={props.onClick}
+      className={`flex min-h-9 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-silver transition-colors hover:bg-white/6 hover:text-text ${props.className ?? ""}`}
+    >
+      {props.children}
+    </button>
   );
 }

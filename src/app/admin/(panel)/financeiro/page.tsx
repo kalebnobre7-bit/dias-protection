@@ -167,7 +167,7 @@ export default function FinancePage() {
                 ))}
               </List>
             ) : (
-              <p className="px-1 text-[0.9375rem] text-muted">Custos fixos (seguro, equipamento, contador) e entradas fora de serviço.</p>
+              <p className="px-1 text-sm text-muted">Custos fixos (seguro, equipamento, contador) e entradas fora de serviço.</p>
             )}
           </Section>
         </>
@@ -184,10 +184,10 @@ function CategoryBars({ title, rows, tone }: { title: string; rows: CategoryTota
   const max = Math.max(...rows.map((r) => r.amount), 1);
   const total = rows.reduce((s, r) => s + r.amount, 0);
   return (
-    <div className="rounded-2xl border border-line bg-navy/60 p-4 sm:p-5">
+    <div className="rounded-xl border border-line bg-navy/60 p-4">
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <p className="text-[0.875rem] text-muted">{title}</p>
-        <p className="num text-[0.9375rem] font-semibold">{brl.format(total)}</p>
+        <p className="num text-sm font-semibold">{brl.format(total)}</p>
       </div>
       {rows.length ? (
         <ul className="space-y-3">
@@ -364,7 +364,7 @@ function TransactionSheet(props: { tx: Transaction; isNew: boolean; categories: 
           </div>
         </Field>
       )}
-      <div className="rounded-2xl border border-line px-4 py-2">
+      <div className="rounded-xl border border-line px-4 py-2">
         <Switch checked={t.paid} onChange={(v) => set("paid", v)} label={t.kind === "income" ? "Recebido" : "Pago"} />
       </div>
     </Sheet>
@@ -427,7 +427,7 @@ function CategoriesSheet(props: { categories: FinanceCategory[]; transactions: T
       </p>
       <div className="space-y-2">
         {sorted.map((c) => (
-          <div key={c.id} className="flex flex-wrap items-center gap-2 rounded-2xl border border-line p-2 sm:flex-nowrap">
+          <div key={c.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-line p-2 sm:flex-nowrap">
             <input
               className="input min-w-0 basis-full sm:basis-auto sm:flex-1"
               defaultValue={c.name}

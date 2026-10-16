@@ -69,11 +69,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-[0.9375rem] transition-colors duration-200 ${
+            className={`flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm transition-colors duration-200 ${
               active ? "bg-white/8 font-medium text-text" : "text-muted hover:bg-white/4 hover:text-text"
             }`}
           >
-            <Icon className={`size-5 ${active ? "text-accent" : ""}`} />
+            <Icon className={`size-[1.125rem] ${active ? "text-accent" : ""}`} />
             {label}
           </Link>
         );
@@ -84,32 +84,33 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           href={`${process.env.NEXT_PUBLIC_BASE_PATH}/pt`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-[0.9375rem] text-muted transition-colors hover:bg-white/4 hover:text-text"
+          className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-muted transition-colors hover:bg-white/4 hover:text-text"
         >
-          <IconExternal className="size-5" /> Ver site
+          <IconExternal className="size-[1.125rem]" /> Ver site
         </a>
         <button
           type="button"
           onClick={logout}
-          className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-[0.9375rem] text-muted transition-colors hover:bg-white/4 hover:text-text"
+          className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-muted transition-colors hover:bg-white/4 hover:text-text"
         >
-          <IconLogout className="size-5" /> Sair
+          <IconLogout className="size-[1.125rem]" /> Sair
         </button>
       </div>
     </nav>
   );
 
   return (
-    <div className="min-h-dvh bg-ink lg:grid lg:grid-cols-[16rem_1fr]">
+    // text-base: o painel usa 1rem (o site público fica com o 1.0625rem do body)
+    <div className="min-h-dvh bg-ink text-base lg:grid lg:grid-cols-[15rem_1fr]">
       <aside className="sticky top-0 hidden h-dvh border-r border-line bg-ink-2 lg:block">{sidebar}</aside>
 
       {/* Celular: barra superior + gaveta */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-ink/80 px-2 backdrop-blur-[16px] backdrop-saturate-[180%] lg:hidden">
-        <button type="button" onClick={() => setOpen(true)} aria-label="Abrir menu" className="grid size-11 place-items-center rounded-full">
+        <button type="button" onClick={() => setOpen(true)} aria-label="Abrir menu" className="grid size-10 place-items-center rounded-md">
           <IconMenu className="size-5" />
         </button>
-        <span className="font-semibold tracking-[-0.02em]">{nav.find((n) => (n.href === "/admin" ? pathname === "/admin" : pathname.startsWith(n.href)))?.label}</span>
-        <span className="size-11" />
+        <span className="text-sm font-semibold tracking-[-0.02em]">{nav.find((n) => (n.href === "/admin" ? pathname === "/admin" : pathname.startsWith(n.href)))?.label}</span>
+        <span className="size-10" />
       </header>
       <AnimatePresence>
         {open && (
@@ -134,10 +135,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         )}
       </AnimatePresence>
 
-      <main className="mx-auto w-full min-w-0 max-w-5xl px-4 pb-16 pt-6 md:px-8 md:pt-10">{children}</main>
+      <main className="mx-auto w-full min-w-0 max-w-5xl px-4 pb-16 pt-5 md:px-8 md:pt-8">{children}</main>
 
       {failure && (
-        <div role="alert" className="fixed inset-x-4 bottom-4 z-[60] mx-auto flex max-w-md items-start gap-3 rounded-2xl border border-line bg-ink-2 p-4 text-[0.9375rem] shadow-lg">
+        <div role="alert" className="fixed inset-x-4 bottom-4 z-[60] mx-auto flex max-w-md items-start gap-3 rounded-xl border border-line bg-ink-2 p-4 text-sm shadow-lg">
           <p className="flex-1 text-danger">{failure}</p>
           <button type="button" onClick={() => setFailure("")} className="text-muted hover:text-text">
             Fechar

@@ -20,55 +20,51 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
     set("costs", [...p.costs, { id: crypto.randomUUID(), category: "Outros", description: "", qty: 1, unitCost: 0 }]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <Section
         title="Custos"
         action={
-          <button type="button" onClick={addCost} className="flex items-center gap-1 text-[0.875rem] font-medium text-accent">
+          <button type="button" onClick={addCost} className="flex items-center gap-1 text-sm font-medium text-accent">
             <IconPlus className="size-4" /> Custo
           </button>
         }
       >
-        <ul className="space-y-3">
+        {/* Uma linha por custo: descrição · categoria · qtd × unitário = total · remover. No celular a descrição fica em cima */}
+        <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
           {p.costs.map((c) => (
-            <li key={c.id} className="space-y-3 rounded-2xl border border-line p-4">
-              <div className="flex gap-2">
-                <input
-                  className="input"
-                  value={c.description}
-                  onChange={(e) => updateCost(c.id, { description: e.target.value })}
-                  placeholder="Descrição"
-                  aria-label="Descrição do custo"
-                />
-                <button
-                  type="button"
-                  onClick={() => set("costs", p.costs.filter((x) => x.id !== c.id))}
-                  aria-label="Remover custo"
-                  className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-white/6 hover:text-danger"
-                >
-                  <IconClose className="size-4" />
-                </button>
-              </div>
-              {/* categoria · quantidade × custo unitário = total; quebra linha no celular */}
-              <div className="flex flex-wrap items-center gap-2">
-                <select
-                  className="input !w-auto"
-                  value={c.category}
-                  onChange={(e) => updateCost(c.id, { category: e.target.value })}
-                  aria-label="Categoria"
-                >
-                  {[...new Set([...PRICING_CATEGORIES, c.category])].map((cat) => (
-                    <option key={cat}>{cat}</option>
-                  ))}
-                </select>
-                <NumberInput value={c.qty} onChange={(v) => updateCost(c.id, { qty: v ?? 0 })} fallback={0} digits={3} suffix="×" label="Quantidade" />
-                <MoneyInput value={c.unitCost} onChange={(v) => updateCost(c.id, { unitCost: v })} label="Custo unitário" className="min-w-[8.5rem] flex-1" />
-                <span className="num ml-auto min-w-24 text-right text-[0.9375rem] font-medium">{brl.format(c.qty * c.unitCost)}</span>
-              </div>
+            <li key={c.id} className="flex flex-wrap items-center gap-2 px-3 py-2">
+              <input
+                className="input !min-h-9 min-w-[8rem] flex-1 basis-[calc(100%-2.75rem)] sm:basis-0"
+                value={c.description}
+                onChange={(e) => updateCost(c.id, { description: e.target.value })}
+                placeholder="Descrição"
+                aria-label="Descrição do custo"
+              />
+              <button
+                type="button"
+                onClick={() => set("costs", p.costs.filter((x) => x.id !== c.id))}
+                aria-label="Remover custo"
+                className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-white/6 hover:text-danger sm:order-last"
+              >
+                <IconClose className="size-4" />
+              </button>
+              <select
+                className="input !min-h-9 !w-auto"
+                value={c.category}
+                onChange={(e) => updateCost(c.id, { category: e.target.value })}
+                aria-label="Categoria"
+              >
+                {[...new Set([...PRICING_CATEGORIES, c.category])].map((cat) => (
+                  <option key={cat}>{cat}</option>
+                ))}
+              </select>
+              <NumberInput value={c.qty} onChange={(v) => updateCost(c.id, { qty: v ?? 0 })} fallback={0} digits={3} suffix="×" label="Quantidade" className="[&>input]:!min-h-9" />
+              <MoneyInput value={c.unitCost} onChange={(v) => updateCost(c.id, { unitCost: v })} label="Custo unitário" className="!w-32 [&>input]:!min-h-9" />
+              <span className="num ml-auto w-24 shrink-0 text-right text-sm font-medium">{brl.format(c.qty * c.unitCost)}</span>
             </li>
           ))}
         </ul>
-        <p className="mt-3 flex justify-between px-1 text-[0.9375rem] font-semibold">
+        <p className="mt-3 flex justify-between px-1 text-sm font-semibold">
           <span>Custo total</span>
           <span className="num">{brl.format(r.cost)}</span>
         </p>
@@ -82,13 +78,13 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
         </div>
       </Section>
 
-      <dl className="space-y-2 rounded-2xl bg-navy/60 p-4 text-[0.9375rem]">
-        <div className="flex items-baseline justify-between gap-4 text-lg font-semibold">
+      <dl className="space-y-2 rounded-xl bg-navy/60 p-4 text-sm">
+        <div className="flex items-baseline justify-between gap-4 text-base font-semibold">
           <dt>Preço final a cobrar</dt>
           <dd className="num">{r.price === null ? "Rever percentuais" : brl.format(r.price)}</dd>
         </div>
         {r.price === null ? (
-          <p className="text-[0.875rem] text-danger">Margem, impostos e taxas somados precisam ficar abaixo de 100%.</p>
+          <p className="text-sm text-danger">Margem, impostos e taxas somados precisam ficar abaixo de 100%.</p>
         ) : (
           <>
             <ResultRow label="Impostos estimados" value={brl.format(r.taxes)} />

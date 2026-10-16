@@ -81,7 +81,7 @@ function SettingsForm({ initial }: { initial: Settings }) {
   };
 
   return (
-    <div className="space-y-10 pb-4">
+    <div className="space-y-8 pb-4">
       <Section title="Empresa nos documentos">
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -150,39 +150,44 @@ function SettingsForm({ initial }: { initial: Settings }) {
           </Button>
         }
       >
-        <p className="mb-3 px-1 text-[0.875rem] text-muted">Aparecem em “+ Adicionar item…” na proposta. Valor zerado = definir na hora.</p>
-        <ul className="space-y-3">
+        <p className="mb-3 px-1 text-sm text-muted">Aparecem em “+ Adicionar item…” na proposta. Valor zerado = definir na hora.</p>
+        {/* Uma linha por item: descrição · unidade · valor · remover; detalhe embaixo */}
+        <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
           {s.proposal.presets.map((x, n) => (
-            <li key={n} className="space-y-3 rounded-2xl border border-line p-4">
-              <div className="flex gap-2">
-                <input className="input" value={x.description} onChange={(e) => updatePreset(n, { description: e.target.value })} placeholder="Descrição" aria-label="Descrição do item" />
+            <li key={n} className="space-y-2 px-3 py-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  className="input !min-h-9 min-w-[8rem] flex-1 basis-[calc(100%-2.75rem)] sm:basis-0"
+                  value={x.description}
+                  onChange={(e) => updatePreset(n, { description: e.target.value })}
+                  placeholder="Descrição"
+                  aria-label="Descrição do item"
+                />
                 <button
                   type="button"
                   onClick={() => setProposal("presets", s.proposal.presets.filter((_, i) => i !== n))}
                   aria-label="Remover item do catálogo"
-                  className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-white/6 hover:text-danger"
+                  className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-white/6 hover:text-danger sm:order-last"
                 >
                   <IconClose className="size-4" />
                 </button>
-              </div>
-              <input className="input !min-h-10 !text-[0.875rem]" value={x.detail} onChange={(e) => updatePreset(n, { detail: e.target.value })} placeholder="Detalhe (ex.: Diária de até 12h)" aria-label="Detalhe do item" />
-              <div className="flex flex-wrap items-center gap-2">
-                <select className="input !w-auto" value={x.unit} onChange={(e) => updatePreset(n, { unit: e.target.value })} aria-label="Unidade">
+                <select className="input !min-h-9 !w-auto" value={x.unit} onChange={(e) => updatePreset(n, { unit: e.target.value })} aria-label="Unidade">
                   {[...new Set([...unitList, x.unit])].map((u) => (
                     <option key={u} value={u}>
                       {u}
                     </option>
                   ))}
                 </select>
-                <MoneyInput value={x.unitPrice} onChange={(v) => updatePreset(n, { unitPrice: v })} label="Valor padrão" className="min-w-[8.5rem] flex-1" />
+                <MoneyInput value={x.unitPrice} onChange={(v) => updatePreset(n, { unitPrice: v })} label="Valor padrão" className="!w-32 [&>input]:!min-h-9" />
               </div>
+              <input className="input !min-h-8 !text-[0.8125rem]" value={x.detail} onChange={(e) => updatePreset(n, { detail: e.target.value })} placeholder="Detalhe (ex.: Diária de até 12h)" aria-label="Detalhe do item" />
             </li>
           ))}
         </ul>
         <button
           type="button"
           onClick={() => setProposal("presets", DEFAULT_SETTINGS.proposal.presets)}
-          className="mt-3 px-1 text-[0.875rem] text-muted underline-offset-4 hover:text-silver hover:underline"
+          className="mt-3 px-1 text-sm text-muted underline-offset-4 hover:text-silver hover:underline"
         >
           Restaurar catálogo padrão
         </button>
@@ -196,14 +201,14 @@ function SettingsForm({ initial }: { initial: Settings }) {
           </Button>
         }
       >
-        <p className="mb-3 px-1 text-[0.875rem] text-muted">
+        <p className="mb-3 px-1 text-sm text-muted">
           {FIXED_COSTS.join(" e ")} são fixas (escolhem quem recebe). Renomear leva junto os custos já lançados; remover não apaga nenhum custo.
         </p>
         <ul className="space-y-2">
           {cats.map((c, n) => (
-            <li key={n} className="flex gap-2">
+            <li key={n} className="flex items-center gap-2">
               <input
-                className="input"
+                className="input !min-h-9"
                 value={c.name}
                 onChange={(e) => editCats(cats.map((x, i) => (i === n ? { ...x, name: e.target.value } : x)))}
                 placeholder="Ex.: Hospedagem"
@@ -213,7 +218,7 @@ function SettingsForm({ initial }: { initial: Settings }) {
                 type="button"
                 onClick={() => editCats(cats.filter((_, i) => i !== n))}
                 aria-label="Remover categoria"
-                className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-white/6 hover:text-danger"
+                className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-white/6 hover:text-danger"
               >
                 <IconClose className="size-4" />
               </button>
@@ -223,11 +228,11 @@ function SettingsForm({ initial }: { initial: Settings }) {
       </Section>
 
       {/* Barra de salvar sempre à mão, mesmo no fim da página */}
-      <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-end gap-3 rounded-2xl border border-line bg-ink-2/95 p-3 backdrop-blur">
+      <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-end gap-3 rounded-xl border border-line bg-ink-2/95 p-2.5 backdrop-blur">
         {error ? (
-          <span className="mr-auto text-[0.875rem] text-danger">{error}</span>
+          <span className="mr-auto px-1 text-sm text-danger">{error}</span>
         ) : (
-          <span className="mr-auto text-[0.875rem] text-muted">{saved ? "Salvo." : dirty ? "Alterações não salvas." : "Tudo salvo."}</span>
+          <span className="mr-auto px-1 text-sm text-muted">{saved ? "Salvo." : dirty ? "Alterações não salvas." : "Tudo salvo."}</span>
         )}
         <Button disabled={!dirty || saving} onClick={save}>
           {saving ? "Salvando…" : "Salvar"}

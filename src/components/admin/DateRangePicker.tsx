@@ -31,7 +31,7 @@ export function DateRangePicker({ start, end, onChange }: { start: string; end: 
   const next = { y: view.y + Math.floor((view.m + 1) / 12), m: (view.m + 1) % 12 };
 
   return (
-    <div className="rounded-2xl border border-line p-4" onMouseLeave={() => setHover("")}>
+    <div className="rounded-xl border border-line p-4" onMouseLeave={() => setHover("")}>
       <div className="grid gap-6 md:grid-cols-2">
         <Month y={view.y} m={view.m} start={start} end={rangeEnd} onPick={pick} onHover={setHover} onPrev={() => shift(-1)} onNext={() => shift(1)} nextClass="md:invisible" />
         <div className="hidden md:block">
@@ -41,7 +41,7 @@ export function DateRangePicker({ start, end, onChange }: { start: string; end: 
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3 text-[0.8125rem] text-muted">
         <span>{!start ? "Toque no primeiro dia" : !end ? "Toque no último dia (ou deixe um dia só)" : "Período marcado"}</span>
         {start && (
-          <button type="button" onClick={() => onChange("", "")} className="min-h-9 rounded-full px-3 font-medium text-text underline-offset-4 hover:underline">
+          <button type="button" onClick={() => onChange("", "")} className="min-h-9 rounded-md px-3 text-sm font-medium text-text underline-offset-4 hover:underline">
             Limpar
           </button>
         )}
@@ -67,7 +67,7 @@ function Month(props: {
   const total = new Date(y, m + 1, 0).getDate();
   const today = todayIso();
   const title = new Date(y, m, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-  const nav = "grid size-9 place-items-center rounded-full text-muted hover:bg-white/6 hover:text-text";
+  const nav = "grid size-9 place-items-center rounded-md text-muted hover:bg-white/6 hover:text-text";
 
   return (
     <div>
@@ -75,7 +75,7 @@ function Month(props: {
         <button type="button" onClick={props.onPrev} aria-label="Mês anterior" className={`${nav} ${props.prevClass ?? ""}`}>
           <IconPrev className="size-4" />
         </button>
-        <p className="text-[0.9375rem] font-semibold first-letter:uppercase">{title}</p>
+        <p className="text-sm font-semibold first-letter:uppercase">{title}</p>
         <button type="button" onClick={props.onNext} aria-label="Próximo mês" className={`${nav} ${props.nextClass ?? ""}`}>
           <IconNext className="size-4" />
         </button>

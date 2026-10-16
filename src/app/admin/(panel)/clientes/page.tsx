@@ -168,14 +168,14 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
         {c.representatives.length ? (
           <ul className="space-y-3">
             {c.representatives.map((r) => (
-              <li key={r.id} className="space-y-2 rounded-2xl border border-line p-3">
+              <li key={r.id} className="space-y-2 rounded-xl border border-line p-3">
                 <div className="flex gap-2">
                   <input className="input" value={r.name} onChange={(e) => updateRep(r.id, { name: e.target.value })} placeholder="Nome" aria-label="Nome do representante" />
                   <button
                     type="button"
                     onClick={() => set("representatives", c.representatives.filter((x) => x.id !== r.id))}
                     aria-label="Remover representante"
-                    className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-white/6 hover:text-danger"
+                    className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-white/6 hover:text-danger"
                   >
                     <IconClose className="size-4" />
                   </button>
@@ -188,7 +188,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
             ))}
           </ul>
         ) : (
-          <p className="px-1 text-[0.9375rem] text-muted">Quem fala pela empresa: assistente, segurança corporativa, compras…</p>
+          <p className="px-1 text-sm text-muted">Quem fala pela empresa: assistente, segurança corporativa, compras…</p>
         )}
       </Section>
 
@@ -207,7 +207,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
                 subtitle={`Válida até ${formatDate(p.validUntil)}`}
                 trailing={
                   <span className="flex flex-col items-end gap-1">
-                    <span className="num text-[0.9375rem] font-medium">{brl.format(proposalTotals(p).total)}</span>
+                    <span className="num text-sm font-medium">{brl.format(proposalTotals(p).total)}</span>
                     <Badge tone={proposalStatusTone(p.status)}>{proposalStatusLabel[p.status]}</Badge>
                   </span>
                 }
@@ -229,7 +229,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
                   subtitle={[formatDateTime(j.startsAt), j.destination].filter(Boolean).join(" · ")}
                   trailing={
                     <span className="flex flex-col items-end gap-1">
-                      <span className="num text-[0.9375rem] font-medium">{brl.format(j.price)}</span>
+                      <span className="num text-sm font-medium">{brl.format(j.price)}</span>
                       <Badge tone={j.status === "done" ? "good" : j.status === "canceled" ? "bad" : "neutral"}>{jobStatusLabel[j.status]}</Badge>
                     </span>
                   }
@@ -237,7 +237,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
               ))}
             </List>
           ) : (
-            <p className="text-[0.9375rem] text-muted">Nenhum serviço registrado para este cliente.</p>
+            <p className="text-sm text-muted">Nenhum serviço registrado para este cliente.</p>
           )}
         </Section>
       )}

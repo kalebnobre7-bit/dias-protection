@@ -165,7 +165,7 @@ function PartnerSheet(props: { partner: Partner; isNew: boolean; onClose: () => 
                 ))}
               </List>
             ) : (
-              <p className="text-[0.9375rem] text-muted">Nenhum custo de serviço ligado a este parceiro.</p>
+              <p className="text-sm text-muted">Nenhum custo de serviço ligado a este parceiro.</p>
             )}
           </Section>
         </>

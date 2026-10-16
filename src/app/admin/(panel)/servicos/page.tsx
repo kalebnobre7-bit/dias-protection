@@ -310,7 +310,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       </div>
 
       <Section title="Equipe e veículos">
-        <div className="space-y-5 rounded-2xl border border-line p-4">
+        <div className="space-y-5 rounded-xl border border-line p-4">
           <Field label="Agentes">
             <ChipSelect options={agentOptions} value={j.agentIds} onChange={(v) => set("agentIds", v)} empty="Cadastre agentes na aba Agentes." />
           </Field>
@@ -322,7 +322,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       </Section>
 
       <Section title="Valor">
-        <div className="space-y-4 rounded-2xl border border-line p-4">
+        <div className="space-y-4 rounded-xl border border-line p-4">
           <Field label="Valor cobrado">
             <MoneyInput value={j.price} onChange={(v) => set("price", v)} />
           </Field>
@@ -357,13 +357,14 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
           </Button>
         }
       >
+        {/* Uma linha por custo: descrição · categoria · valor · pago · remover; agente/parceiro numa segunda linha */}
         {list.length ? (
-          <ul className="space-y-3">
+          <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
             {list.map((c) => (
-              <li key={c.id} className="space-y-3 rounded-2xl border border-line p-4">
-                <div className="flex gap-2">
+              <li key={c.id} className="space-y-2 px-3 py-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <input
-                    className="input"
+                    className="input !min-h-9 min-w-[8rem] flex-1 basis-[calc(100%-2.75rem)] sm:basis-0"
                     value={c.description}
                     onChange={(e) => updateCost(c.id, { description: e.target.value })}
                     placeholder="Descrição (ex.: diária do agente)"
@@ -373,14 +374,12 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                     type="button"
                     onClick={() => setCosts(list.filter((x) => x.id !== c.id))}
                     aria-label="Remover custo"
-                    className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-white/6 hover:text-danger"
+                    className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-white/6 hover:text-danger sm:order-last"
                   >
                     <IconClose className="size-4" />
                   </button>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
                   <select
-                    className="input"
+                    className="input !min-h-9 !w-auto"
                     value={c.category}
                     onChange={(e) => updateCost(c.id, { category: e.target.value })}
                     aria-label="Categoria"
@@ -392,14 +391,14 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                       </option>
                     ))}
                   </select>
-                  <MoneyInput value={c.amount} onChange={(v) => updateCost(c.id, { amount: v })} label="Valor do custo" />
-                  <label className="flex min-h-11 items-center gap-2 text-[0.9375rem]">
+                  <MoneyInput value={c.amount} onChange={(v) => updateCost(c.id, { amount: v })} label="Valor do custo" className="!w-32 [&>input]:!min-h-9" />
+                  <label className="flex min-h-9 items-center gap-2 text-sm">
                     <input type="checkbox" className="size-4 accent-[#34c759]" checked={c.paid} onChange={(e) => updateCost(c.id, { paid: e.target.checked })} />
                     Pago
                   </label>
                 </div>
                 {c.category === "agent" && (
-                  <select className="input" value={c.agentId ?? ""} onChange={(e) => pickCostAgent(c, e.target.value)} aria-label="Agente">
+                  <select className="input !min-h-9" value={c.agentId ?? ""} onChange={(e) => pickCostAgent(c, e.target.value)} aria-label="Agente">
                     <option value="">Qual agente? (opcional)</option>
                     {/* Escalados no serviço primeiro */}
                     {[
@@ -419,7 +418,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                   </select>
                 )}
                 {c.category === "partner" && (
-                  <select className="input" value={c.partnerId ?? ""} onChange={(e) => updateCost(c.id, { partnerId: e.target.value || null })} aria-label="Parceiro">
+                  <select className="input !min-h-9" value={c.partnerId ?? ""} onChange={(e) => updateCost(c.id, { partnerId: e.target.value || null })} aria-label="Parceiro">
                     <option value="">Qual parceiro? (opcional)</option>
                     {partners.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -432,19 +431,19 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
             ))}
           </ul>
         ) : (
-          <p className="text-[0.9375rem] text-muted">Diárias, parceiros, combustível, pedágio… Tudo que sai do valor cobrado.</p>
+          <p className="text-sm text-muted">Diárias, parceiros, combustível, pedágio… Tudo que sai do valor cobrado.</p>
         )}
       </Section>
 
-      <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-line bg-line text-center">
+      <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-line bg-line text-center">
         {[
           ["Cobrado", brl.format(j.price), ""],
           ["Custos", brl.format(totalCosts), ""],
           ["Lucro", brl.format(profit), profit < 0 ? "text-danger" : "text-[#8fd6a5]"],
         ].map(([label, value, tone]) => (
-          <div key={label} className="bg-navy/60 px-2 py-4">
+          <div key={label} className="bg-navy/60 px-2 py-3">
             <dt className="text-xs text-muted">{label}</dt>
-            <dd className={`num mt-1 font-semibold ${tone}`}>{value}</dd>
+            <dd className={`num mt-0.5 text-sm font-semibold ${tone}`}>{value}</dd>
           </div>
         ))}
       </dl>

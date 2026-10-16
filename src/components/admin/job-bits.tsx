@@ -9,12 +9,12 @@ export const statusTone = (s: JobStatus) =>
 
 // Dia e mês em destaque, como no app Calendário
 export function DateTile({ value }: { value: string }) {
-  if (!value) return <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-navy-2 text-xs text-muted">·</span>;
+  if (!value) return <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-navy-2 text-xs text-muted">·</span>;
   const d = new Date(value);
   return (
-    <span className="flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-navy-2 leading-none">
-      <span className="text-[0.625rem] font-semibold uppercase text-danger">{d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span>
-      <span className="num mt-0.5 text-lg font-semibold">{d.getDate()}</span>
+    <span className="flex size-10 shrink-0 flex-col items-center justify-center rounded-lg bg-navy-2 leading-none">
+      <span className="text-[0.5625rem] font-semibold uppercase text-danger">{d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span>
+      <span className="num mt-0.5 text-base font-semibold">{d.getDate()}</span>
     </span>
   );
 }
@@ -22,9 +22,9 @@ export function DateTile({ value }: { value: string }) {
 // Número da proposta no mesmo formato do DateTile: ano em cima, sequência embaixo ("2026-003")
 export function NumberTile({ number }: { number: string }) {
   return (
-    <span className="flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-navy-2 leading-none">
-      <span className="num text-[0.625rem] font-semibold text-muted">{number.slice(0, 4)}</span>
-      <span className="num mt-0.5 text-lg font-semibold">{number.slice(5)}</span>
+    <span className="flex size-10 shrink-0 flex-col items-center justify-center rounded-lg bg-navy-2 leading-none">
+      <span className="num text-[0.5625rem] font-semibold text-muted">{number.slice(0, 4)}</span>
+      <span className="num mt-0.5 text-base font-semibold">{number.slice(5)}</span>
     </span>
   );
 }
@@ -55,9 +55,9 @@ export function MoneyInput({ value, onChange, label, className = "" }: { value: 
   }, [value]);
   return (
     <span className={`relative block w-full max-w-[13rem] ${className}`}>
-      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[0.875rem] text-muted">R$</span>
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[0.8125rem] text-muted">R$</span>
       <input
-        className="input num !pl-10 text-right"
+        className="input num !pl-9 text-right"
         inputMode="decimal"
         aria-label={label}
         value={text}

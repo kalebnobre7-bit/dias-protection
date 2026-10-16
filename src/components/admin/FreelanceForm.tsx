@@ -72,7 +72,7 @@ export function FreelanceForm({ onAdded }: { onAdded: (id: string) => void }) {
     );
 
   return (
-    <div className="space-y-4 rounded-2xl border border-line-strong p-4">
+    <div className="space-y-4 rounded-xl border border-line-strong p-4">
       <p className="text-[0.875rem] text-muted">Freelancer só para este trabalho. Fica salvo em Agentes como avulso e nunca vai para o site.</p>
       <PhotoInput name={name} folder="agents" value={photo} onChange={setPhoto} />
       <div className="grid gap-4 sm:grid-cols-2">
