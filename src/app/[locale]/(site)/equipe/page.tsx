@@ -110,7 +110,7 @@ export default async function TeamPage({ params }: LocaleParams) {
 
       {/* Critérios de seleção */}
       <section className="bg-ink-2">
-        <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-28">
           <Reveal>
             <SectionHeading label={t.criteriaLabel} title={t.lead} />
           </Reveal>

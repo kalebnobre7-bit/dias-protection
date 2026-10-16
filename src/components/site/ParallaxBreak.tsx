@@ -32,7 +32,7 @@ export function ParallaxBreak({ image, children }: Props) {
         <Image src={image} alt="" fill sizes="100vw" className="object-cover" />
       </motion.div>
       <div aria-hidden className="absolute inset-0 -z-10 bg-ink/65" />
-      <div className="mx-auto w-full max-w-7xl px-4 py-20 md:px-8">{children}</div>
+      <div className="mx-auto w-full max-w-7xl px-4 py-16 md:px-8 md:py-20">{children}</div>
     </section>
   );
 }

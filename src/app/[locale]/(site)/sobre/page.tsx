@@ -32,12 +32,12 @@ export default async function AboutPage({ params }: LocaleParams) {
           aria-hidden
           className="absolute inset-0 -z-10 bg-[radial-gradient(90%_70%_at_85%_10%,var(--color-navy-2)_0%,var(--color-ink)_65%)]"
         />
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 pb-16 pt-32 md:grid-cols-[1.2fr_0.8fr] md:items-end md:gap-16 md:px-8 md:pb-24 md:pt-48">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 pb-16 pt-24 text-center md:grid-cols-[1.2fr_0.8fr] md:items-end md:gap-16 md:px-8 md:pb-24 md:pt-48 md:text-left">
           <HeroIn>
             <p className="label">{t.label}</p>
-            <h1 className="t-display mt-4 max-w-[18ch]">{t.title}</h1>
+            <h1 className="t-display mx-auto mt-4 max-w-[18ch] md:mx-0">{t.title}</h1>
             {company.founderBio[locale].split("\n\n").map((p, i) => (
-              <p key={i} className={`max-w-[60ch] text-text/80 ${i ? "mt-4" : "t-lead mt-8 !text-text/80"}`}>
+              <p key={i} className={`mx-auto max-w-[60ch] text-text/80 md:mx-0 ${i ? "mt-4" : "t-lead mt-8 !text-text/80"}`}>
                 {p}
               </p>
             ))}
@@ -63,11 +63,11 @@ export default async function AboutPage({ params }: LocaleParams) {
       <section className="border-y border-line bg-ink-2">
         <Stagger as="dl" className="mx-auto grid max-w-7xl gap-px bg-line sm:grid-cols-2">
           {founder.stats.map((s) => (
-            <StaggerItem key={s.label.pt} className="bg-ink-2 px-4 py-10 md:px-8 md:py-14">
+            <StaggerItem key={s.label.pt} className="bg-ink-2 px-4 py-10 text-center md:px-8 md:py-14 md:text-left">
               <dt className="sr-only">{s.label[locale]}</dt>
               <dd>
                 <span className="t-stat block">{s.value}</span>
-                <span className="mt-3 block max-w-[44ch] text-[0.9375rem] leading-snug text-muted">{s.label[locale]}</span>
+                <span className="mx-auto mt-3 block max-w-[44ch] text-[0.9375rem] leading-snug text-muted md:mx-0">{s.label[locale]}</span>
               </dd>
             </StaggerItem>
           ))}
@@ -75,7 +75,7 @@ export default async function AboutPage({ params }: LocaleParams) {
       </section>
 
       {/* Trajetória */}
-      <section className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-28">
         <Reveal>
           <SectionHeading label={t.storyLabel} title={t.storyTitle} />
         </Reveal>
@@ -103,7 +103,7 @@ export default async function AboutPage({ params }: LocaleParams) {
 
       {/* Certificações, reconhecimentos, formação */}
       <section className="bg-ink-2">
-        <div className="mx-auto grid max-w-7xl gap-14 px-4 py-20 md:grid-cols-2 md:gap-20 md:px-8 md:py-28">
+        <div className="mx-auto grid max-w-7xl gap-14 px-4 py-16 md:grid-cols-2 md:gap-20 md:px-8 md:py-28">
           <Reveal>
             <p className="label">{t.certificationsLabel}</p>
             <ul className="mt-6 border-t border-line">
@@ -146,7 +146,7 @@ export default async function AboutPage({ params }: LocaleParams) {
 
       {/* Só aparece com autorização do Gabriel */}
       {founder.showNotableClients && (
-        <section className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
+        <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-28">
           <p className="label">{t.clientsLabel}</p>
           <p className="mt-2 text-sm text-muted">{t.clientsNote}</p>
           <ul className="mt-8 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">

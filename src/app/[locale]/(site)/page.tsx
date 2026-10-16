@@ -30,7 +30,8 @@ export default async function Home({ params }: LocaleParams) {
   return (
     <>
       {/* Hero: imagem em tela cheia, um CTA principal */}
-      <section className="relative isolate flex min-h-[min(100dvh,60rem)] items-end overflow-hidden">
+      {/* Celular: hero mais curta e texto no centro; desktop: tela cheia com texto embaixo */}
+      <section className="relative isolate flex min-h-[85svh] items-center overflow-hidden md:min-h-[min(100dvh,60rem)] md:items-end">
         <Image
           src="/images/hero-suv.jpg"
           alt=""
@@ -42,15 +43,15 @@ export default async function Home({ params }: LocaleParams) {
         <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/60 to-ink/10" />
         <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/80 to-transparent" />
 
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-32 md:px-8 md:pb-28">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-24 text-center md:px-8 md:pb-28 md:pt-32 md:text-left">
           <HeroIn>
             <p className="label !text-silver">{t.eyebrow}</p>
-            <h1 className="t-hero mt-5 max-w-[13ch]">{t.title}</h1>
+            <h1 className="t-hero mx-auto mt-5 max-w-[13ch] md:mx-0">{t.title}</h1>
           </HeroIn>
           <HeroIn delay={0.1}>
-            <p className="t-lead mt-7 max-w-[48ch] !text-text/80">{t.lead}</p>
+            <p className="t-lead mx-auto mt-7 max-w-[48ch] !text-text/80 md:mx-0">{t.lead}</p>
           </HeroIn>
-          <HeroIn delay={0.2} className="mt-10 flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-8">
+          <HeroIn delay={0.2} className="mt-10 flex flex-col items-center gap-5 sm:flex-row sm:justify-center sm:gap-8 md:justify-start">
             <Link href={`/${locale}/solicitar`} className="btn btn-primary">
               {dict.common.requestCta}
             </Link>
@@ -70,11 +71,11 @@ export default async function Home({ params }: LocaleParams) {
       <section className="border-y border-line bg-ink-2">
         <Stagger as="dl" className="mx-auto grid max-w-7xl gap-px bg-line sm:grid-cols-2">
           {founder.stats.map((s) => (
-            <StaggerItem key={s.label.pt} className="bg-ink-2 px-4 py-8 md:px-8 md:py-10">
+            <StaggerItem key={s.label.pt} className="bg-ink-2 px-4 py-8 text-center md:px-8 md:py-10 md:text-left">
               <dt className="sr-only">{s.label[locale]}</dt>
               <dd>
                 <span className="t-stat block">{s.value}</span>
-                <span className="mt-3 block max-w-[44ch] text-[0.9375rem] leading-snug text-muted">{s.label[locale]}</span>
+                <span className="mx-auto mt-3 block max-w-[44ch] text-[0.9375rem] leading-snug text-muted md:mx-0">{s.label[locale]}</span>
               </dd>
             </StaggerItem>
           ))}
@@ -82,10 +83,10 @@ export default async function Home({ params }: LocaleParams) {
       </section>
 
       {/* Intro */}
-      <section className="mx-auto grid max-w-7xl gap-12 px-4 py-20 md:grid-cols-[1.1fr_1fr] md:items-center md:gap-20 md:px-8 md:py-28">
+      <section className="mx-auto grid max-w-7xl gap-12 px-4 py-16 md:grid-cols-[1.1fr_1fr] md:items-center md:gap-20 md:px-8 md:py-28">
         <Reveal>
           <SectionHeading label={t.introLabel} title={t.introTitle} />
-          <p className="max-w-[58ch] text-text/85">{company.about[locale]}</p>
+          <p className="mx-auto max-w-[58ch] text-center text-text/85 md:mx-0 md:text-left">{company.about[locale]}</p>
           <Stagger as="ol" className="mt-12 border-t border-line">
             {t.pillars.map((p, i) => (
               <StaggerItem as="li" key={p.title} className="grid grid-cols-[2.5rem_1fr] gap-2 border-b border-line py-5">
@@ -107,7 +108,7 @@ export default async function Home({ params }: LocaleParams) {
 
       {/* Serviços: bento com uma célula dominante */}
       <section className="bg-ink-2">
-        <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-28">
           <Reveal>
             <SectionHeading label={t.servicesLabel} title={t.servicesTitle} />
           </Reveal>
@@ -140,13 +141,13 @@ export default async function Home({ params }: LocaleParams) {
       {/* Quebra visual */}
       <ParallaxBreak image="/images/convoy.jpg">
         <Reveal>
-          <p className="t-display max-w-[12ch]">{company.tagline}.</p>
+          <p className="t-display mx-auto max-w-[12ch] text-center md:mx-0 md:text-left">{company.tagline}.</p>
         </Reveal>
       </ParallaxBreak>
 
       {/* Como funciona: linha do tempo vertical */}
-      <section className="mx-auto grid max-w-7xl gap-12 px-4 py-20 md:grid-cols-[0.9fr_1.1fr] md:gap-20 md:px-8 md:py-28">
-        <Reveal className="md:sticky md:top-28 md:self-start">
+      <section className="mx-auto grid max-w-7xl gap-12 px-4 py-16 md:grid-cols-[0.9fr_1.1fr] md:gap-20 md:px-8 md:py-28">
+        <Reveal className="text-center md:sticky md:top-28 md:self-start md:text-left">
           <SectionHeading label={t.howLabel} title={t.howTitle} />
           <Link href={`/${locale}/solicitar`} className="btn btn-primary">
             {dict.common.requestCta}
@@ -172,7 +173,7 @@ export default async function Home({ params }: LocaleParams) {
 
       {/* Fundador */}
       <section className="bg-ink-2">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 md:grid-cols-[0.9fr_1.1fr] md:items-center md:gap-20 md:px-8 md:py-28">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 md:grid-cols-[0.9fr_1.1fr] md:items-center md:gap-20 md:px-8 md:py-28">
           <Reveal>
             <div className="tile relative aspect-[4/3] md:aspect-square">
               <Image
@@ -184,19 +185,19 @@ export default async function Home({ params }: LocaleParams) {
               />
             </div>
           </Reveal>
-          <Reveal delay={0.1}>
+          <Reveal delay={0.1} className="text-center md:text-left">
             <p className="label">{t.founderLabel}</p>
             <h2 className="t-h2 mt-3">{company.founderName}</h2>
             <p className="mt-2 font-medium text-silver">{company.founderRole[locale]}</p>
             {company.founderBio[locale].split("\n\n").map((p, i) => (
-              <p key={i} className={`max-w-[56ch] text-text/85 ${i ? "mt-4" : "mt-7"}`}>
+              <p key={i} className={`mx-auto max-w-[56ch] text-text/85 md:mx-0 ${i ? "mt-4" : "mt-7"}`}>
                 {p}
               </p>
             ))}
 
-            <ul className="mt-9 grid gap-3 sm:grid-cols-2">
+            <ul className="mx-auto mt-9 grid w-fit gap-3 sm:grid-cols-2 md:mx-0 md:w-auto">
               {t.credentials.map((c) => (
-                <li key={c} className="flex gap-3 text-[0.9375rem]">
+                <li key={c} className="flex gap-3 text-left text-[0.9375rem]">
                   <Check aria-hidden className="mt-1 size-4 shrink-0 text-accent" />
                   {c}
                 </li>
@@ -212,7 +213,7 @@ export default async function Home({ params }: LocaleParams) {
 
       {/* Experiência */}
       <section className="border-t border-line">
-        <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-24">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
           <p className="label text-center">{t.experienceLabel}</p>
           <CompanyLogos
             items={founder.experienceWith}

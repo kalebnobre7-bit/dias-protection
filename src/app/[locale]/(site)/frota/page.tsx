@@ -107,17 +107,17 @@ export default async function FleetPage({ params }: LocaleParams) {
 
       {/* Motorista bilíngue: destaque com imagem */}
       <section className="bg-ink-2">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 md:grid-cols-2 md:items-center md:gap-20 md:px-8 md:py-28">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 md:grid-cols-2 md:items-center md:gap-20 md:px-8 md:py-28">
           <Reveal>
             <div className="tile relative aspect-[16/10]">
               <Image src="/images/driver.jpg" alt="" fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
             </div>
           </Reveal>
-          <Reveal delay={0.1}>
+          <Reveal delay={0.1} className="text-center md:text-left">
             {transport && (
               <>
                 <h2 className="t-h2">{transport.name[locale]}</h2>
-                <p className="mt-5 max-w-[52ch] text-muted">{transport.description[locale]}</p>
+                <p className="mx-auto mt-5 max-w-[52ch] text-muted md:mx-0">{transport.description[locale]}</p>
                 <Link href={`/${locale}/servicos/${transport.id}`} className="link-chevron mt-8 min-h-11">
                   {dict.common.learnMore}
                 </Link>

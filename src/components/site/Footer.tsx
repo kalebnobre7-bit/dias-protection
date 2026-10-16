@@ -75,13 +75,13 @@ export function Footer({ dict, company, services, locale }: Props) {
         </div>
       )}
       <div className="mx-auto max-w-7xl px-4 pb-10 pt-16 md:px-8 md:pt-20">
-        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="grid gap-12 text-center md:grid-cols-[1.4fr_1fr_1fr_1fr] md:text-left">
           <div>
-            <div className="flex items-center gap-3 text-text">
+            <div className="flex items-center justify-center gap-3 text-text md:justify-start">
               <Emblem className="h-16" />
               <Wordmark className="h-16" />
             </div>
-            <p className="mt-6 max-w-[36ch] text-[0.9375rem] leading-relaxed text-muted">{dict.footer.pitch}</p>
+            <p className="mx-auto mt-6 max-w-[36ch] text-[0.9375rem] leading-relaxed text-muted md:mx-0">{dict.footer.pitch}</p>
             <p className="mt-4 text-[0.9375rem] font-medium text-silver">{company.tagline}</p>
           </div>
 
@@ -118,7 +118,7 @@ export function Footer({ dict, company, services, locale }: Props) {
           </FooterList>
         </div>
 
-        <p className="num mt-16 border-t border-line pt-6 text-xs text-muted">
+        <p className="num mt-16 border-t border-line pt-6 text-center text-xs text-muted md:text-left">
           © {new Date().getFullYear()} {company.brandName} · {dict.footer.rights}
         </p>
       </div>

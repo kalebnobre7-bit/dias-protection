@@ -3,10 +3,11 @@ type Props = { label: string; title: string; lead?: string; align?: "left" | "ce
 export function SectionHeading({ label, title, lead, align = "left" }: Props) {
   const center = align === "center";
   return (
-    <header className={`mb-12 md:mb-16 ${center ? "mx-auto text-center" : ""}`}>
+    // Celular: sempre centralizado; desktop segue `align`
+    <header className={`mb-12 text-center md:mb-16 ${center ? "mx-auto" : "md:text-left"}`}>
       <p className="label">{label}</p>
-      <h2 className={`t-h2 mt-3 max-w-[20ch] ${center ? "mx-auto" : ""}`}>{title}</h2>
-      {lead && <p className={`t-lead mt-5 max-w-[52ch] ${center ? "mx-auto" : ""}`}>{lead}</p>}
+      <h2 className={`t-h2 mx-auto mt-3 max-w-[20ch] ${center ? "" : "md:mx-0"}`}>{title}</h2>
+      {lead && <p className={`t-lead mx-auto mt-5 max-w-[52ch] ${center ? "" : "md:mx-0"}`}>{lead}</p>}
     </header>
   );
 }

@@ -72,7 +72,7 @@ export default async function ServicePage({ params }: Props) {
       <section className="relative isolate overflow-hidden">
         <Image src={service.image} alt="" fill priority sizes="100vw" className="-z-20 object-cover" />
         <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/75 to-ink/30" />
-        <div className="mx-auto max-w-7xl px-4 pb-14 pt-36 md:px-8 md:pb-20 md:pt-56">
+        <div className="mx-auto max-w-7xl px-4 pb-14 pt-28 text-center md:px-8 md:pb-20 md:pt-56 md:text-left">
           <HeroIn>
             <nav aria-label={locale === "pt" ? "Navegação" : "Breadcrumb"} className="text-[0.9375rem]">
               <Link href={`/${locale}/servicos`} className="text-muted transition-colors duration-300 hover:text-text">
@@ -80,8 +80,8 @@ export default async function ServicePage({ params }: Props) {
               </Link>
               <span aria-hidden className="mx-2 text-muted">›</span>
             </nav>
-            <h1 className="t-display mt-3 max-w-[16ch]">{service.name[locale]}</h1>
-            <p className="t-lead mt-6 max-w-[48ch] !text-text/80">{service.summary[locale]}</p>
+            <h1 className="t-display mx-auto mt-3 max-w-[16ch] md:mx-0">{service.name[locale]}</h1>
+            <p className="t-lead mx-auto mt-6 max-w-[48ch] !text-text/80 md:mx-0">{service.summary[locale]}</p>
             <Link href={requestHref} className="btn btn-primary mt-10">
               {dict.common.requestThis}
             </Link>
@@ -90,8 +90,8 @@ export default async function ServicePage({ params }: Props) {
       </section>
 
       {/* Descrição + o que inclui */}
-      <section className="mx-auto grid max-w-7xl gap-14 px-4 py-20 md:grid-cols-[1.2fr_1fr] md:gap-20 md:px-8 md:py-32">
-        <Reveal>
+      <section className="mx-auto grid max-w-7xl gap-14 px-4 py-16 md:grid-cols-[1.2fr_1fr] md:gap-20 md:px-8 md:py-32">
+        <Reveal className="text-center md:text-left">
           <p className="text-[clamp(1.25rem,2vw,1.625rem)] leading-[1.45] tracking-[-0.015em]">{service.description[locale]}</p>
           <div className="mt-12 border-t border-line pt-8">
             <p className="label">{dict.common.idealFor}</p>
