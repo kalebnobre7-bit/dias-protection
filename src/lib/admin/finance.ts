@@ -1,4 +1,4 @@
-import { costCategoryLabel } from "./labels";
+import { costCategoryName } from "./labels";
 import type { Job, JobCost, Transaction } from "./types";
 
 // Mesmo cálculo da view monthly_summary: orçamentos e cancelados não entram na receita
@@ -56,7 +56,7 @@ export function categoryTotals(month: string, jobs: Job[], costs: JobCost[], tra
   const monthTx = transactions.filter((t) => monthOf(t.date) === month);
   const txPairs = (kind: Transaction["kind"]) => monthTx.filter((t) => t.kind === kind).map((t): [string, number] => [t.category.trim() || "Sem categoria", t.amount]);
   return {
-    expense: groupSum([...costs.filter((c) => ids.has(c.jobId)).map((c): [string, number] => [costCategoryLabel[c.category], c.amount]), ...txPairs("expense")]),
+    expense: groupSum([...costs.filter((c) => ids.has(c.jobId)).map((c): [string, number] => [costCategoryName(c.category), c.amount]), ...txPairs("expense")]),
     income: groupSum([["Serviços", monthJobs.reduce((s, j) => s + j.price, 0)], ...txPairs("income")]),
   };
 }

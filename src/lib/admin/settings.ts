@@ -26,6 +26,9 @@ export const DEFAULT_SETTINGS: Settings = {
     units: UNITS,
     presets: ITEM_PRESETS,
   },
+  costs: {
+    categories: ["Combustível", "Pedágio", "Alimentação", "Outros"],
+  },
   createdAt: "",
 };
 
@@ -36,6 +39,7 @@ const merge = (row: Settings | undefined): Settings =>
         ...row,
         company: { ...DEFAULT_SETTINGS.company, ...(row.company || {}) },
         proposal: { ...DEFAULT_SETTINGS.proposal, ...(row.proposal || {}) },
+        costs: { ...DEFAULT_SETTINGS.costs, ...(row.costs || {}) },
       }
     : DEFAULT_SETTINGS;
 

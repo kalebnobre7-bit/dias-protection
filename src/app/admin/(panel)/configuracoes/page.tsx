@@ -15,23 +15,32 @@ export default function SettingsPage() {
   const { settings, loading } = useSettings();
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="Configurações" subtitle="Dados da empresa nos documentos e padrões das propostas novas." />
+      <PageHeader title="Configurações" subtitle="Dados da empresa nos documentos, padrões das propostas e categorias de custo." />
       {loading ? <Skeleton rows={6} /> : <SettingsForm initial={settings} />}
     </div>
   );
 }
 
 const unitsText = (units: string[]) => units.join(", ");
+// Categoria de custo em edição: `from` é o nome salvo, para levar os custos já lançados junto ao renomear
+type Cat = { name: string; from: string | null };
+const toCats = (names: string[]): Cat[] => names.map((name) => ({ name, from: name }));
+const FIXED_COSTS = ["Agente", "Parceiro"];
 const parseUnits = (text: string) => [...new Set(text.split(",").map((u) => u.trim()).filter(Boolean))];
 
 function SettingsForm({ initial }: { initial: Settings }) {
-  const [base, setBase] = useState({ settings: initial, units: unitsText(initial.proposal.units) });
+  const [base, setBase] = useState({ settings: initial, units: unitsText(initial.proposal.units), cats: toCats(initial.costs.categories) });
   const [s, setS] = useState(initial);
   const [units, setUnits] = useState(base.units);
+  const [cats, setCats] = useState(base.cats);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const saving = useSaving();
-  const dirty = JSON.stringify(s) !== JSON.stringify(base.settings) || units !== base.units;
+  const dirty = JSON.stringify(s) !== JSON.stringify(base.settings) || units !== base.units || JSON.stringify(cats) !== JSON.stringify(base.cats);
+  const editCats = (next: Cat[]) => {
+    setCats(next);
+    setSaved(false);
+  };
 
   const setCompany = <K extends keyof Settings["company"]>(k: K, v: Settings["company"][K]) => {
     setS((prev) => ({ ...prev, company: { ...prev.company, [k]: v } }));
@@ -46,18 +55,25 @@ function SettingsForm({ initial }: { initial: Settings }) {
     setProposal("presets", s.proposal.presets.map((x, i) => (i === n ? { ...x, ...patch } : x)));
 
   const save = async () => {
+    const named = cats.map((c) => ({ ...c, name: c.name.trim() })).filter((c) => c.name);
+    const names = named.map((c) => c.name.toLowerCase());
+    const clash = named.find((c, i) => names.indexOf(c.name.toLowerCase()) !== i || FIXED_COSTS.some((f) => f.toLowerCase() === c.name.toLowerCase()));
+    if (clash) return setError(`Categoria de custo repetida: ${clash.name}.`);
     const next: Settings = {
       ...s,
       company: { ...s.company, whatsapp: onlyDigits(s.company.whatsapp), instagram: s.company.instagram.trim().replace(/^@/, "") },
       proposal: { ...s.proposal, units: unitList, presets: s.proposal.presets.filter((x) => x.description.trim()) },
+      costs: { categories: named.map((c) => c.name) },
       createdAt: s.createdAt || new Date().toISOString(),
     };
     try {
       setError("");
       await repo.upsert("settings", next);
+      for (const c of named) if (c.from && c.from !== c.name) await repo.renameCostCategory(c.from, c.name);
       setS(next);
       setUnits(unitsText(next.proposal.units));
-      setBase({ settings: next, units: unitsText(next.proposal.units) });
+      setCats(toCats(next.costs.categories));
+      setBase({ settings: next, units: unitsText(next.proposal.units), cats: toCats(next.costs.categories) });
       setSaved(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível salvar.");
@@ -170,6 +186,40 @@ function SettingsForm({ initial }: { initial: Settings }) {
         >
           Restaurar catálogo padrão
         </button>
+      </Section>
+
+      <Section
+        title="Categorias de custo dos serviços"
+        action={
+          <Button variant="secondary" className="!min-h-9 !px-3" onClick={() => editCats([...cats, { name: "", from: null }])}>
+            <IconPlus className="size-4" /> Categoria
+          </Button>
+        }
+      >
+        <p className="mb-3 px-1 text-[0.875rem] text-muted">
+          {FIXED_COSTS.join(" e ")} são fixas (escolhem quem recebe). Renomear leva junto os custos já lançados; remover não apaga nenhum custo.
+        </p>
+        <ul className="space-y-2">
+          {cats.map((c, n) => (
+            <li key={n} className="flex gap-2">
+              <input
+                className="input"
+                value={c.name}
+                onChange={(e) => editCats(cats.map((x, i) => (i === n ? { ...x, name: e.target.value } : x)))}
+                placeholder="Ex.: Hospedagem"
+                aria-label="Nome da categoria"
+              />
+              <button
+                type="button"
+                onClick={() => editCats(cats.filter((_, i) => i !== n))}
+                aria-label="Remover categoria"
+                className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-white/6 hover:text-danger"
+              >
+                <IconClose className="size-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
       </Section>
 
       {/* Barra de salvar sempre à mão, mesmo no fim da página */}

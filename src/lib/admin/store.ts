@@ -181,6 +181,14 @@ export const repo = {
     });
   },
 
+  // Categoria de custo renomeada em Configurações: leva junto os custos já lançados
+  renameCostCategory(from: string, to: string): Promise<void> {
+    return tracked(async () => {
+      await check("jobCosts", getBrowserClient().from("job_costs").update({ category: to }).eq("category", from));
+      notify();
+    });
+  },
+
   // Troca a lista de custos de um serviço de uma vez (salvar do formulário)
   replaceJobCosts(jobId: string, costs: Tables["jobCosts"][]): Promise<void> {
     return tracked(async () => {

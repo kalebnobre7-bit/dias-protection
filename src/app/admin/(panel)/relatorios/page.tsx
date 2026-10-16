@@ -5,7 +5,7 @@ import { useState } from "react";
 import { EmptyState, PageHeader, PeriodStepper, Section, Segmented, Skeleton } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { countsAsRevenue, currentMonth, jobCostTotal, monthlySummary, shiftMonth } from "@/lib/admin/finance";
-import { brl, costCategoryLabel, formatMonth } from "@/lib/admin/labels";
+import { brl, costCategoryName, formatMonth } from "@/lib/admin/labels";
 import { useTable } from "@/lib/admin/store";
 import type { Job, JobCost } from "@/lib/admin/types";
 
@@ -112,7 +112,7 @@ export default function ReportsPage() {
           <AmountTable
             title="Saídas"
             rows={[
-              ...sumBy(periodCosts, (c) => `${costCategoryLabel[c.category]} (custo de serviço)`, (c) => c.amount),
+              ...sumBy(periodCosts, (c) => `${costCategoryName(c.category)} (custo de serviço)`, (c) => c.amount),
               ...sumBy(periodTx.filter((t) => t.kind === "expense"), (t) => t.category || "Sem categoria", (t) => t.amount),
             ].sort((a, b) => b.amount - a.amount)}
           />

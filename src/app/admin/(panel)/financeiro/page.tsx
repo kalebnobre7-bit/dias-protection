@@ -423,7 +423,7 @@ function CategoriesSheet(props: { categories: FinanceCategory[]; transactions: T
       }
     >
       <p className="text-[0.875rem] text-muted">
-        Usadas nos lançamentos avulsos. Os custos dentro de cada serviço (agente, combustível, pedágio…) continuam fixos. Excluir uma categoria não apaga os lançamentos.
+        Usadas nos lançamentos avulsos. As categorias dos custos de cada serviço ficam em Configurações. Excluir uma categoria não apaga os lançamentos.
       </p>
       <div className="space-y-2">
         {sorted.map((c) => (

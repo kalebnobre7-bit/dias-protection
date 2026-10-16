@@ -26,9 +26,10 @@ import {
 import { FreelanceForm } from "@/components/admin/FreelanceForm";
 import { DateTile, MoneyInput, statusTone } from "@/components/admin/job-bits";
 import { serviceTypeName, serviceTypeOptions } from "@/lib/admin/catalog";
-import { brl, costCategoryLabel, formatDateTime, jobStatusLabel } from "@/lib/admin/labels";
+import { brl, costCategoryName, formatDateTime, jobStatusLabel } from "@/lib/admin/labels";
+import { useSettings } from "@/lib/admin/settings";
 import { newId, repo, useTable } from "@/lib/admin/store";
-import type { CostCategory, Job, JobCost, JobStatus } from "@/lib/admin/types";
+import type { Job, JobCost, JobStatus } from "@/lib/admin/types";
 
 type Filter = "all" | JobStatus;
 
@@ -169,6 +170,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   const { rows: agents } = useTable("agents");
   const { rows: vehicles } = useTable("vehicles");
   const { rows: partners } = useTable("partners");
+  const costCategories = useSettings().settings.costs.categories;
   const { rows: allCosts, loading: costsLoading } = useTable("jobCosts");
   const [costs, setCosts] = useState<JobCost[] | null>(null);
   const [newClient, setNewClient] = useState("");
@@ -209,7 +211,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       await repo.upsert("jobs", { ...j, clientId, paidAt: j.paymentStatus === "paid" ? j.paidAt || j.startsAt.slice(0, 10) : "" });
       await repo.replaceJobCosts(
         j.id,
-        list.filter((c) => c.description.trim() || c.amount > 0).map((c) => ({ ...c, description: c.description.trim() || costCategoryLabel[c.category] })),
+        list.filter((c) => c.description.trim() || c.amount > 0).map((c) => ({ ...c, description: c.description.trim() || costCategoryName(c.category) })),
       );
       props.onClose();
     } catch (e) {
@@ -380,12 +382,13 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                   <select
                     className="input"
                     value={c.category}
-                    onChange={(e) => updateCost(c.id, { category: e.target.value as CostCategory })}
+                    onChange={(e) => updateCost(c.id, { category: e.target.value })}
                     aria-label="Categoria"
                   >
-                    {(Object.keys(costCategoryLabel) as CostCategory[]).map((k) => (
+                    {/* fixos + os de Configurações + o atual, se saiu da lista */}
+                    {[...new Set(["agent", "partner", ...costCategories, c.category])].map((k) => (
                       <option key={k} value={k}>
-                        {costCategoryLabel[k]}
+                        {costCategoryName(k)}
                       </option>
                     ))}
                   </select>

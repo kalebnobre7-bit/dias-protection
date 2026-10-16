@@ -18,7 +18,8 @@ export const proposalStatusLabel: Record<ProposalStatus, string> = {
 export const proposalStatusTone = (s: ProposalStatus) =>
   (({ draft: "neutral", sent: "accent", accepted: "good", declined: "bad", expired: "warn" }) as const)[s];
 
-export const costCategoryLabel: Record<CostCategory, string> = {
+// Códigos fixos e os antigos (antes da 0010); qualquer outro valor já é o nome da categoria
+const COST_CODES: Record<string, string> = {
   agent: "Agente",
   partner: "Parceiro",
   fuel: "Combustível",
@@ -26,6 +27,7 @@ export const costCategoryLabel: Record<CostCategory, string> = {
   food: "Alimentação",
   other: "Outros",
 };
+export const costCategoryName = (c: CostCategory) => COST_CODES[c] ?? c;
 
 export const clientLanguageLabel = { pt: "Português", en: "Inglês", other: "Outro" } as const;
 

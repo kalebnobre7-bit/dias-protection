@@ -92,7 +92,8 @@ export type Job = {
   createdAt: string;
 };
 
-export type CostCategory = "agent" | "partner" | "fuel" | "toll" | "food" | "other";
+// "agent" e "partner" são fixos (abrem a escolha do agente/parceiro); o resto é o nome da categoria (Configurações)
+export type CostCategory = string;
 
 export type JobCost = {
   id: string;
@@ -210,6 +211,9 @@ export type Settings = {
     terms: string;
     units: string[];
     presets: ItemPreset[];
+  };
+  costs: {
+    categories: string[]; // além de Agente e Parceiro, que são fixos
   };
   createdAt: string;
 };
