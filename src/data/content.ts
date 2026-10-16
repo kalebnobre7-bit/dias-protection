@@ -157,6 +157,7 @@ export const localContent: SiteContent = {
       { name: "SCS" }, // o logo oficial é só o símbolo, ilegível sem o nome
       { name: "Royal American Group", logo: "/images/logos/royal-american.png", scale: 1.7 },
       { name: "Crisol Group" },
+      { name: "Prosegur" },
     ],
     notableClients: [
       { name: "Mario Isola", context: "Pirelli · Fórmula 1" },

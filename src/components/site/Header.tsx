@@ -117,7 +117,8 @@ export function Header({ locale, dict }: Props) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.65, 0, 0.35, 1] }}
-            className="fixed inset-x-0 bottom-0 top-16 flex flex-col bg-ink px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 lg:hidden"
+            // `absolute` e não `fixed`: o backdrop-filter do header vira o bloco de referência de filhos fixed, e o painel ficava sem altura (texto vazava sobre a página, sem fundo)
+            className="absolute inset-x-0 top-full flex h-[calc(100dvh-4rem)] flex-col bg-ink px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 lg:hidden"
           >
             <ul className="border-t border-line">
               {[{ href: `/${locale}`, label: dict.nav.home }, ...links].map((l, i) => (
