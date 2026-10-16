@@ -99,7 +99,7 @@ export default function ProposalDocumentPage() {
           <span className="text-[0.875rem] text-muted">
             {p.number} · {proposalStatusLabel[p.status]}
           </span>
-          <div className="inline-flex rounded-full bg-white/6 p-1" role="tablist" aria-label="Tipo de documento">
+          <div className="inline-flex gap-x-1" role="tablist" aria-label="Tipo de documento">
             {([
               [false, "Proposta comercial"],
               [true, "Serviço fechado"],
@@ -116,8 +116,8 @@ export default function ProposalDocumentPage() {
                   else url.searchParams.delete("modo");
                   window.history.replaceState(null, "", url);
                 }}
-                className={`min-h-9 rounded-full px-4 text-[0.875rem] font-medium transition-colors duration-200 ${
-                  closed === value ? "bg-navy-2 text-text shadow" : "text-muted hover:text-text"
+                className={`min-h-9 border-b-2 px-3 text-[0.875rem] font-medium transition-colors duration-200 ${
+                  closed === value ? "border-text text-text" : "border-transparent text-muted hover:text-text"
                 }`}
               >
                 {label}

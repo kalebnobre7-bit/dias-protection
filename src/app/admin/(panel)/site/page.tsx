@@ -21,19 +21,17 @@ export default function SitePage() {
         subtitle="Quem aparece em Equipe e quais veículos aparecem em Frota. Marcou, o site atualiza em até 1 minuto."
       />
 
-      <div className="rounded-xl border border-line bg-navy/60 px-4 py-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-muted">
-            No ar: <span className="num text-text">{onSite.agents}</span> agente(s) e <span className="num text-text">{onSite.vehicles}</span> veículo(s)
-          </p>
-          <div className="flex gap-2">
-            <a href={site("/equipe")} target="_blank" rel="noopener noreferrer" className="link-chevron text-[0.875rem]">
-              Ver Equipe
-            </a>
-            <a href={site("/frota")} target="_blank" rel="noopener noreferrer" className="link-chevron text-[0.875rem]">
-              Ver Frota
-            </a>
-          </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+        <p className="text-sm text-muted">
+          No ar: <span className="num text-text">{onSite.agents}</span> agente(s) e <span className="num text-text">{onSite.vehicles}</span> veículo(s)
+        </p>
+        <div className="flex gap-2">
+          <a href={site("/equipe")} target="_blank" rel="noopener noreferrer" className="link-chevron text-[0.875rem]">
+            Ver Equipe
+          </a>
+          <a href={site("/frota")} target="_blank" rel="noopener noreferrer" className="link-chevron text-[0.875rem]">
+            Ver Frota
+          </a>
         </div>
       </div>
 

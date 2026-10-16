@@ -29,6 +29,8 @@ import {
   Switch,
   TextArea,
   useForm,
+  cell,
+  cellChild,
 } from "@/components/admin/ui";
 import { serviceTypeOptions, vehicleCategoryName } from "@/lib/admin/catalog";
 import { brl, formatDate, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
@@ -426,7 +428,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
             <Field label="Período no documento" hint="Preenchido pelo calendário. Dá pra completar com horário.">
               <input className="input" value={p.period} onChange={(e) => set("period", e.target.value)} placeholder="10 a 15 de outubro, 8h às 20h" />
             </Field>
-            <div className="rounded-xl border border-line px-4 py-2">
+            <div className="px-1">
               <Switch checked={p.guards > 0} onChange={(v) => set("guards", v ? 1 : 0)} label="Com segurança" hint="Agentes de proteção junto com o transporte" />
               {p.guards > 0 && (
                 <div className="flex items-center justify-between gap-4 border-t border-line py-3">
@@ -485,7 +487,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
           }
         >
           {scopeItems(p).length > 0 && (
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-line-strong px-4 py-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
               <span className="text-[0.875rem] text-muted">Escopo: {scopeSummary(p)}</span>
               <Button variant="secondary" className="!min-h-9 !px-3" onClick={() => set("items", mergeScopeItems(p, newId))}>
                 <IconMagic className="size-4" /> {p.items.length ? "Refazer itens do escopo" : "Gerar itens do escopo"}
@@ -494,12 +496,12 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
           )}
           {/* Uma linha por item: descrição · qtd · unidade × unitário = total · remover; detalhe embaixo */}
           {p.items.length ? (
-            <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
+            <ul className="divide-y divide-line border-y border-line">
               {p.items.map((i) => (
-                <li key={i.id} className="space-y-2 px-3 py-2">
-                  <div className="flex flex-wrap items-center gap-2">
+                <li key={i.id} className="space-y-1 py-1.5">
+                  <div className="flex flex-wrap items-center gap-1">
                     <input
-                      className="input !min-h-9 min-w-[8rem] flex-1 basis-[calc(100%-2.75rem)] sm:basis-0"
+                      className={`input ${cell} !min-h-9 min-w-[8rem] flex-1 basis-[calc(100%-2.75rem)] sm:basis-0`}
                       value={i.description}
                       onChange={(e) => updateItem(i.id, { description: e.target.value })}
                       placeholder="Descrição"
@@ -513,8 +515,8 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                     >
                       <IconClose className="size-4" />
                     </button>
-                    <NumberInput value={i.qty} onChange={(v) => updateItem(i.id, { qty: v ?? 0 })} fallback={0} digits={3} label="Quantidade" className="[&>input]:!min-h-9" />
-                    <Select className="!min-h-9 !w-auto" value={i.unit} onChange={(e) => updateItem(i.id, { unit: e.target.value })} aria-label="Unidade">
+                    <NumberInput value={i.qty} onChange={(v) => updateItem(i.id, { qty: v ?? 0 })} fallback={0} digits={3} label="Quantidade" className={`${cellChild} [&>input]:!min-h-9`} />
+                    <Select className={`${cell} !min-h-9 !w-auto`} value={i.unit} onChange={(e) => updateItem(i.id, { unit: e.target.value })} aria-label="Unidade">
                       {[...new Set([...units, i.unit])].map((u) => (
                         <option key={u} value={u}>
                           {u}
@@ -525,10 +527,10 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                     <span className="hidden text-sm text-muted sm:inline" aria-hidden>
                       ×
                     </span>
-                    <MoneyInput value={i.unitPrice} onChange={(v) => updateItem(i.id, { unitPrice: v })} label="Valor unitário" className="!w-32 [&>input]:!min-h-9" />
+                    <MoneyInput value={i.unitPrice} onChange={(v) => updateItem(i.id, { unitPrice: v })} label="Valor unitário" className={`${cellChild} !w-32 [&>input]:!min-h-9`} />
                     <span className="num ml-auto w-24 shrink-0 text-right text-sm font-medium">{brl.format(itemTotal(i))}</span>
                   </div>
-                  <input className="input !min-h-8 !text-[0.8125rem]" value={i.detail} onChange={(e) => updateItem(i.id, { detail: e.target.value })} placeholder="Detalhe (ex.: 2 agentes · até 12h)" aria-label="Detalhe do item" />
+                  <input className={`input ${cell} !min-h-8 !text-[0.8125rem]`} value={i.detail} onChange={(e) => updateItem(i.id, { detail: e.target.value })} placeholder="Detalhe (ex.: 2 agentes · até 12h)" aria-label="Detalhe do item" />
                 </li>
               ))}
             </ul>
@@ -536,7 +538,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
             <p className="text-sm text-muted">Escolha um item do catálogo acima ou crie um em branco. Quantidade × valor unitário.</p>
           )}
 
-          <dl className="mt-4 space-y-2 rounded-xl bg-navy/60 p-4 text-sm">
+          <dl className="mt-4 space-y-2 border-t border-line px-1 pt-3 text-sm">
             <div className="flex justify-between text-muted">
               <dt>Subtotal</dt>
               <dd className="num">{brl.format(totals.subtotal)}</dd>
@@ -584,7 +586,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         (p.pricing ? (
           <>
             <PricingCalculator value={p.pricing} onChange={(v) => set("pricing", v)} />
-            <div className="space-y-3 rounded-xl border border-line p-4 text-sm">
+            <div className="space-y-3 border-t border-line px-1 pt-4 text-sm">
               <p className="flex justify-between gap-4">
                 <span className="text-muted">Total da proposta</span>
                 <span className="num font-medium">{brl.format(totals.total)}</span>
@@ -669,7 +671,7 @@ function PickList(props: {
   return (
     <div className="space-y-3">
       <p className="px-1 text-[0.875rem] text-muted">{props.hint}</p>
-      <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-navy/60">
+      <ul className="divide-y divide-line border-y border-line">
         {props.items.map((i) => {
           const on = props.selected.includes(i.id);
           return (

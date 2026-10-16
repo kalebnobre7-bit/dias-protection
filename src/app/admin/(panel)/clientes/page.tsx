@@ -166,9 +166,9 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
         }
       >
         {c.representatives.length ? (
-          <ul className="space-y-3">
+          <ul className="divide-y divide-line">
             {c.representatives.map((r) => (
-              <li key={r.id} className="space-y-2 rounded-xl border border-line p-3">
+              <li key={r.id} className="space-y-2 py-3 first:pt-0">
                 <div className="flex gap-2">
                   <input className="input" value={r.name} onChange={(e) => updateRep(r.id, { name: e.target.value })} placeholder="Nome" aria-label="Nome do representante" />
                   <button

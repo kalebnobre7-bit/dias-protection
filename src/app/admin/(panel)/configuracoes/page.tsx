@@ -4,7 +4,7 @@ import { Plus as IconPlus, X as IconClose } from "lucide-react";
 import { useState } from "react";
 
 import { MoneyInput } from "@/components/admin/job-bits";
-import { Button, Field, NumberInput, PageHeader, PhoneInput, Section, Select, Skeleton, TextArea } from "@/components/admin/ui";
+import { cell, cellChild, Button, Field, NumberInput, PageHeader, PhoneInput, Section, Select, Skeleton, TextArea } from "@/components/admin/ui";
 import { onlyDigits } from "@/lib/admin/proposals";
 import { DEFAULT_SETTINGS, useSettings } from "@/lib/admin/settings";
 import { repo, useSaving } from "@/lib/admin/store";
@@ -152,12 +152,12 @@ function SettingsForm({ initial }: { initial: Settings }) {
       >
         <p className="mb-3 px-1 text-sm text-muted">Aparecem em “+ Adicionar item…” na proposta. Valor zerado = definir na hora.</p>
         {/* Uma linha por item: descrição · unidade · valor · remover; detalhe embaixo */}
-        <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
+        <ul className="divide-y divide-line border-y border-line">
           {s.proposal.presets.map((x, n) => (
-            <li key={n} className="space-y-2 px-3 py-2">
-              <div className="flex flex-wrap items-center gap-2">
+            <li key={n} className="space-y-1 py-1.5">
+              <div className="flex flex-wrap items-center gap-1">
                 <input
-                  className="input !min-h-9 min-w-[8rem] flex-1 basis-[calc(100%-2.75rem)] sm:basis-0"
+                  className={`input ${cell} !min-h-9 min-w-[8rem] flex-1 basis-[calc(100%-2.75rem)] sm:basis-0`}
                   value={x.description}
                   onChange={(e) => updatePreset(n, { description: e.target.value })}
                   placeholder="Descrição"
@@ -171,16 +171,16 @@ function SettingsForm({ initial }: { initial: Settings }) {
                 >
                   <IconClose className="size-4" />
                 </button>
-                <Select className="!min-h-9 !w-auto" value={x.unit} onChange={(e) => updatePreset(n, { unit: e.target.value })} aria-label="Unidade">
+                <Select className={`${cell} !min-h-9 !w-auto`} value={x.unit} onChange={(e) => updatePreset(n, { unit: e.target.value })} aria-label="Unidade">
                   {[...new Set([...unitList, x.unit])].map((u) => (
                     <option key={u} value={u}>
                       {u}
                     </option>
                   ))}
                 </Select>
-                <MoneyInput value={x.unitPrice} onChange={(v) => updatePreset(n, { unitPrice: v })} label="Valor padrão" className="!w-32 [&>input]:!min-h-9" />
+                <MoneyInput value={x.unitPrice} onChange={(v) => updatePreset(n, { unitPrice: v })} label="Valor padrão" className={`${cellChild} !w-32 [&>input]:!min-h-9`} />
               </div>
-              <input className="input !min-h-8 !text-[0.8125rem]" value={x.detail} onChange={(e) => updatePreset(n, { detail: e.target.value })} placeholder="Detalhe (ex.: Diária de até 12h)" aria-label="Detalhe do item" />
+              <input className={`input ${cell} !min-h-8 !text-[0.8125rem]`} value={x.detail} onChange={(e) => updatePreset(n, { detail: e.target.value })} placeholder="Detalhe (ex.: Diária de até 12h)" aria-label="Detalhe do item" />
             </li>
           ))}
         </ul>

@@ -224,7 +224,7 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
       </Field>
 
       <Section title="Visibilidade">
-        <div className="rounded-xl border border-line px-4 py-2">
+        <div className="px-1">
           <Switch checked={a.active} onChange={(v) => set("active", v)} label="Ativo" hint="Inativos não aparecem na escala de serviços" />
           <div className="border-t border-line" />
           <Switch

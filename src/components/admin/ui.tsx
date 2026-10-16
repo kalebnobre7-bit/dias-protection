@@ -45,9 +45,9 @@ export function Section(props: { title?: string; action?: React.ReactNode; child
   );
 }
 
-// Lista agrupada no estilo Ajustes do iOS
+// Lista sem moldura: só linhas finas separando os itens
 export function List({ children }: { children: React.ReactNode }) {
-  return <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-navy/60">{children}</ul>;
+  return <ul className="divide-y divide-line border-y border-line">{children}</ul>;
 }
 
 export function Row(props: {
@@ -68,7 +68,7 @@ export function Row(props: {
       {props.trailing && <span className="shrink-0 text-right">{props.trailing}</span>}
     </>
   );
-  const clickable = "flex min-h-14 w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors duration-200 hover:bg-navy-2 active:bg-navy-2";
+  const clickable = "flex min-h-14 w-full items-center gap-3 px-2 py-2.5 text-left transition-colors duration-200 hover:bg-navy-2 active:bg-navy-2";
   return (
     <li>
       {props.href ? (
@@ -84,7 +84,7 @@ export function Row(props: {
           {content}
         </button>
       ) : (
-        <div className="flex min-h-14 items-center gap-3 px-3.5 py-2.5">{content}</div>
+        <div className="flex min-h-14 items-center gap-3 px-2 py-2.5">{content}</div>
       )}
     </li>
   );
@@ -106,7 +106,7 @@ export function PickMark({ on }: { on: boolean }) {
 
 export function EmptyState(props: { title: string; text?: string; action?: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-line-strong px-5 py-7 text-center">
+    <div className="border-y border-line px-5 py-7 text-center">
       <p className="font-semibold">{props.title}</p>
       {props.text && <p className="mx-auto mt-1 max-w-[40ch] text-sm text-muted">{props.text}</p>}
       {props.action && <div className="mt-4">{props.action}</div>}
@@ -114,10 +114,21 @@ export function EmptyState(props: { title: string; text?: string; action?: React
   );
 }
 
+// Campo em célula de linha composta (custos, itens, catálogo): sem caixa própria, a linha fina da lista é a moldura.
+// `cellChild` é a mesma coisa para MoneyInput/NumberInput, cuja className cai no span de fora
+export const cell = "!rounded-md !border-transparent !bg-transparent hover:!bg-white/4 focus:!bg-white/6";
+export const cellChild = "[&>input]:!rounded-md [&>input]:!border-transparent [&>input]:!bg-transparent [&>input]:hover:!bg-white/4 [&>input]:focus:!bg-white/6";
+
+// Faixa de KPIs: 2 ou 4 Stats lado a lado, separados por linhas, sem cartão
+export const statStrip = {
+  2: "grid grid-cols-2 border-y border-line [&>*]:border-line [&>*:nth-child(2)]:border-l",
+  4: "grid grid-cols-2 border-y border-line lg:grid-cols-4 [&>*]:border-line [&>*:nth-child(even)]:border-l [&>*:nth-child(n+3)]:border-t lg:[&>*:nth-child(n+2)]:border-l lg:[&>*:nth-child(n+3)]:border-t-0",
+} as const;
+
 export function Stat(props: { label: string; value: string; tone?: "default" | "good" | "bad" | "muted" }) {
   const tone = { default: "text-text", good: "text-[#8fd6a5]", bad: "text-danger", muted: "text-silver" }[props.tone ?? "default"];
   return (
-    <div className="@container min-w-0 rounded-xl border border-line bg-navy/60 px-3.5 py-3 text-center">
+    <div className="@container min-w-0 px-3 py-3 text-center">
       <p className="text-[0.8125rem] text-muted">{props.label}</p>
       {/* Fonte acompanha a largura do card (cqi), não da tela: valor cabe com a barra lateral aberta */}
       <p className={`num mt-1 truncate text-[clamp(0.9375rem,11cqi,1.375rem)] font-semibold tracking-[-0.02em] ${tone}`}>{props.value}</p>
@@ -130,15 +141,15 @@ export function Skeleton(props: { rows?: number; stats?: number }) {
   return (
     <div aria-busy="true" aria-label="Carregando" className="animate-pulse space-y-6">
       {!!props.stats && (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className={statStrip[props.stats === 2 ? 2 : 4]}>
           {Array.from({ length: props.stats }, (_, i) => (
-            <div key={i} className="h-[4.75rem] rounded-xl border border-line bg-navy/60" />
+            <div key={i} className="h-[4.75rem]" />
           ))}
         </div>
       )}
-      <div className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-navy/60">
+      <div className="divide-y divide-line border-y border-line">
         {Array.from({ length: props.rows ?? 4 }, (_, i) => (
-          <div key={i} className="flex items-center gap-3 px-3.5 py-3.5">
+          <div key={i} className="flex items-center gap-3 px-2 py-3.5">
             <div className="h-9 w-9 shrink-0 rounded-full bg-white/6" />
             <div className="flex-1 space-y-2">
               <div className="h-3 w-2/5 rounded bg-white/8" />
@@ -443,7 +454,7 @@ export function Switch(props: { checked: boolean; onChange: (v: boolean) => void
 // Controle segmentado (filtros, tipo de lançamento). No celular quebra linha em vez de esconder opções
 export function Segmented<T extends string>(props: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[] }) {
   return (
-    <div className="inline-flex max-w-full flex-wrap rounded-lg bg-white/6 p-0.5 sm:flex-nowrap sm:overflow-x-auto" role="tablist">
+    <div className="inline-flex max-w-full flex-wrap gap-x-1 sm:flex-nowrap sm:overflow-x-auto" role="tablist">
       {props.options.map((o) => (
         <button
           key={o.value}
@@ -451,8 +462,8 @@ export function Segmented<T extends string>(props: { value: T; onChange: (v: T) 
           role="tab"
           aria-selected={props.value === o.value}
           onClick={() => props.onChange(o.value)}
-          className={`min-h-8 shrink-0 rounded-md px-3 text-[0.8125rem] font-medium transition-colors duration-200 ${
-            props.value === o.value ? "bg-navy-2 text-text shadow" : "text-muted hover:text-text"
+          className={`min-h-9 shrink-0 border-b-2 px-2.5 text-[0.8125rem] font-medium transition-colors duration-200 ${
+            props.value === o.value ? "border-text text-text" : "border-transparent text-muted hover:text-text"
           }`}
         >
           {o.label}

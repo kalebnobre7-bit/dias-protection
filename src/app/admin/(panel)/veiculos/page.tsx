@@ -227,7 +227,7 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
             <Field label="Lugares">
               <NumberInput value={v.capacity} onChange={(c) => set("capacity", c)} digits={2} min={1} max={99} suffix="lugares" label="Lugares" />
             </Field>
-            <div className="rounded-xl border border-line px-4 py-1">
+            <div className="px-1">
               <Switch checked={v.armored} onChange={(x) => set("armored", x)} label="Blindado" />
             </div>
           </div>
@@ -239,7 +239,7 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
           </Field>
         </div>
       </Section>
-      <div className="rounded-xl border border-line px-4 py-2">
+      <div className="px-1">
         <Switch checked={v.active} onChange={(x) => set("active", x)} label="Ativo" hint="Inativos não aparecem ao montar um serviço" />
         <div className="border-t border-line" />
         <Switch checked={v.published} onChange={(x) => set("published", x)} label="Mostrar no site" hint="Foto, modelo, ano, lugares e descrição. A placa nunca aparece. Depois, publique na aba Site." />

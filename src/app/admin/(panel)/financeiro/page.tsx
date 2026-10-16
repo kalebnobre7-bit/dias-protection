@@ -5,7 +5,7 @@ import { Plus as IconPlus, Tags as IconTags } from "lucide-react";
 
 import { DateTile, MoneyInput } from "@/components/admin/job-bits";
 import { MonthStats } from "@/components/admin/MonthStats";
-import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PeriodStepper, Row, Section, Select, Segmented, Sheet, Skeleton, Stat, Switch, useForm } from "@/components/admin/ui";
+import { cell, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PeriodStepper, Row, Section, Select, Segmented, Sheet, Skeleton, Stat, statStrip, Switch, useForm } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { categoryTotals, countsAsRevenue, currentMonth, jobCostTotal, monthlySummary, monthOf, serviceTotals, shiftMonth, type CategoryTotal } from "@/lib/admin/finance";
 import { brl, formatDateTime, formatMonth } from "@/lib/admin/labels";
@@ -184,7 +184,7 @@ function CategoryBars({ title, rows, tone }: { title: string; rows: CategoryTota
   const max = Math.max(...rows.map((r) => r.amount), 1);
   const total = rows.reduce((s, r) => s + r.amount, 0);
   return (
-    <div className="rounded-xl border border-line bg-navy/60 p-4">
+    <div className="px-1">
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <p className="text-[0.875rem] text-muted">{title}</p>
         <p className="num text-sm font-semibold">{brl.format(total)}</p>
@@ -220,7 +220,7 @@ function ServiceView({ period, jobs, costs }: { period: string; jobs: Job[]; cos
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3">
+      <div className={statStrip[2]}>
         <Stat label="Receita" value={brl.format(sum.revenue)} />
         <Stat label="Margem" value={brl.format(sum.margin)} tone={sum.margin < 0 ? "bad" : "good"} />
       </div>
@@ -364,7 +364,7 @@ function TransactionSheet(props: { tx: Transaction; isNew: boolean; categories: 
           </div>
         </Field>
       )}
-      <div className="rounded-xl border border-line px-4 py-2">
+      <div className="px-1">
         <Switch checked={t.paid} onChange={(v) => set("paid", v)} label={t.kind === "income" ? "Recebido" : "Pago"} />
       </div>
     </Sheet>
@@ -425,17 +425,17 @@ function CategoriesSheet(props: { categories: FinanceCategory[]; transactions: T
       <p className="text-[0.875rem] text-muted">
         Usadas nos lançamentos avulsos. As categorias dos custos de cada serviço ficam em Configurações. Excluir uma categoria não apaga os lançamentos.
       </p>
-      <div className="space-y-2">
+      <div className="divide-y divide-line">
         {sorted.map((c) => (
-          <div key={c.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-line p-2 sm:flex-nowrap">
+          <div key={c.id} className="flex flex-wrap items-center gap-1 py-1.5 sm:flex-nowrap">
             <input
-              className="input min-w-0 basis-full sm:basis-auto sm:flex-1"
+              className={`input ${cell} min-w-0 basis-full sm:basis-auto sm:flex-1`}
               defaultValue={c.name}
               aria-label="Nome da categoria"
               onBlur={(e) => rename(c, e.currentTarget)}
               onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
             />
-            <Select className="!w-auto" value={c.kind} aria-label="Tipo" onChange={(e) => run(() => repo.upsert("financeCategories", { ...c, kind: e.target.value as FinanceCategory["kind"] }).then(() => undefined))}>
+            <Select className={`${cell} !w-auto`} value={c.kind} aria-label="Tipo" onChange={(e) => run(() => repo.upsert("financeCategories", { ...c, kind: e.target.value as FinanceCategory["kind"] }).then(() => undefined))}>
               {Object.entries(KIND_LABEL).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}

@@ -3,7 +3,7 @@
 import { Plus as IconPlus, X as IconClose } from "lucide-react";
 
 import { MoneyInput } from "@/components/admin/job-bits";
-import { Field, NumberInput, Section, Select } from "@/components/admin/ui";
+import { cell, cellChild, Field, NumberInput, Section, Select } from "@/components/admin/ui";
 import { brl } from "@/lib/admin/labels";
 import { PRICING_CATEGORIES, pricingResult } from "@/lib/admin/pricing";
 import type { Pricing, PricingCost } from "@/lib/admin/types";
@@ -30,11 +30,11 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
         }
       >
         {/* Uma linha por custo: descrição · categoria · qtd × unitário = total · remover. No celular a descrição fica em cima */}
-        <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
+        <ul className="divide-y divide-line border-y border-line">
           {p.costs.map((c) => (
-            <li key={c.id} className="flex flex-wrap items-center gap-2 px-3 py-2">
+            <li key={c.id} className="flex flex-wrap items-center gap-1 py-1.5">
               <input
-                className="input !min-h-9 min-w-[8rem] flex-1 basis-[calc(100%-2.75rem)] sm:basis-0"
+                className={`input ${cell} !min-h-9 min-w-[8rem] flex-1 basis-[calc(100%-2.75rem)] sm:basis-0`}
                 value={c.description}
                 onChange={(e) => updateCost(c.id, { description: e.target.value })}
                 placeholder="Descrição"
@@ -49,7 +49,7 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
                 <IconClose className="size-4" />
               </button>
               <Select
-                className="!min-h-9 !w-auto"
+                className={`${cell} !min-h-9 !w-auto`}
                 value={c.category}
                 onChange={(e) => updateCost(c.id, { category: e.target.value })}
                 aria-label="Categoria"
@@ -58,8 +58,8 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
                   <option key={cat}>{cat}</option>
                 ))}
               </Select>
-              <NumberInput value={c.qty} onChange={(v) => updateCost(c.id, { qty: v ?? 0 })} fallback={0} digits={3} suffix="×" label="Quantidade" className="[&>input]:!min-h-9" />
-              <MoneyInput value={c.unitCost} onChange={(v) => updateCost(c.id, { unitCost: v })} label="Custo unitário" className="!w-32 [&>input]:!min-h-9" />
+              <NumberInput value={c.qty} onChange={(v) => updateCost(c.id, { qty: v ?? 0 })} fallback={0} digits={3} suffix="×" label="Quantidade" className={`${cellChild} [&>input]:!min-h-9`} />
+              <MoneyInput value={c.unitCost} onChange={(v) => updateCost(c.id, { unitCost: v })} label="Custo unitário" className={`${cellChild} !w-32 [&>input]:!min-h-9`} />
               <span className="num ml-auto w-24 shrink-0 text-right text-sm font-medium">{brl.format(c.qty * c.unitCost)}</span>
             </li>
           ))}
@@ -78,7 +78,7 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
         </div>
       </Section>
 
-      <dl className="space-y-2 rounded-xl bg-navy/60 p-4 text-sm">
+      <dl className="space-y-2 border-t border-line px-1 pt-3 text-sm">
         <div className="flex items-baseline justify-between gap-4 text-base font-semibold">
           <dt>Preço final a cobrar</dt>
           <dd className="num">{r.price === null ? "Rever percentuais" : brl.format(r.price)}</dd>

@@ -31,7 +31,7 @@ export function DateRangePicker({ start, end, onChange }: { start: string; end: 
   const next = { y: view.y + Math.floor((view.m + 1) / 12), m: (view.m + 1) % 12 };
 
   return (
-    <div className="rounded-xl border border-line p-4" onMouseLeave={() => setHover("")}>
+    <div className="px-1" onMouseLeave={() => setHover("")}>
       <div className="grid gap-6 md:grid-cols-2">
         <Month y={view.y} m={view.m} start={start} end={rangeEnd} onPick={pick} onHover={setHover} onPrev={() => shift(-1)} onNext={() => shift(1)} nextClass="md:invisible" />
         <div className="hidden md:block">
