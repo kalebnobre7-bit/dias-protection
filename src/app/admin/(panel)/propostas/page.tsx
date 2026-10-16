@@ -508,7 +508,8 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                         </option>
                       ))}
                     </select>
-                    <span className="text-sm text-muted" aria-hidden>
+                    {/* No celular a linha quebra antes do valor, então o × ficaria solto */}
+                    <span className="hidden text-sm text-muted sm:inline" aria-hidden>
                       ×
                     </span>
                     <MoneyInput value={i.unitPrice} onChange={(v) => updateItem(i.id, { unitPrice: v })} label="Valor unitário" className="!w-32 [&>input]:!min-h-9" />
