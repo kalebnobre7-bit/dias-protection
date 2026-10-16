@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Check as IconCheck, Copy as IconCopy, FileCheck as IconDocClosed, FileText as IconDoc, Minus as IconMinus, Plus as IconPlus, Send as IconSend, Sparkles as IconMagic, X as IconClose } from "lucide-react";
+import { Check as IconCheck, Copy as IconCopy, CopyPlus as IconDuplicate, FileCheck as IconDocClosed, FileText as IconDoc, Minus as IconMinus, Plus as IconPlus, Send as IconSend, Sparkles as IconMagic, X as IconClose } from "lucide-react";
 
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { FreelanceForm } from "@/components/admin/FreelanceForm";
@@ -22,6 +22,7 @@ import {
   Row,
   SearchBox,
   Section,
+  Select,
   Segmented,
   Sheet,
   Skeleton,
@@ -34,6 +35,7 @@ import { brl, formatDate, proposalStatusLabel, proposalStatusTone } from "@/lib/
 import { blankPricing, pricingResult } from "@/lib/admin/pricing";
 import {
   blankProposal,
+  duplicateProposal,
   itemTotal,
   jobFromProposal,
   mergeScopeItems,
@@ -154,12 +156,20 @@ export default function ProposalsPage() {
         </>
       )}
 
-      {editing && <ProposalSheet proposal={editing} isNew={!rows.some((r) => r.id === editing.id)} onClose={() => setEditing(null)} />}
+      {editing && (
+        <ProposalSheet
+          key={editing.id}
+          proposal={editing}
+          isNew={!rows.some((r) => r.id === editing.id)}
+          onClose={() => setEditing(null)}
+          onDuplicate={(p) => setEditing(duplicateProposal(p, newId(), rows, settings.proposal))}
+        />
+      )}
     </>
   );
 }
 
-function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () => void }) {
+function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () => void; onDuplicate: (p: Proposal) => void }) {
   const { value: p, set, dirty } = useForm(props.proposal);
   const { rows: clients } = useTable("clients");
   const [clientChoice, setClientChoice] = useState(props.proposal.clientId ?? "");
@@ -322,6 +332,9 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         <ActionLink onClick={copy}>
           {copied ? <IconCheck className="size-4" /> : <IconCopy className="size-4" />} {copied ? "Copiado" : "Copiar texto"}
         </ActionLink>
+        <ActionLink onClick={() => props.onDuplicate(p)}>
+          <IconDuplicate className="size-4" /> Duplicar
+        </ActionLink>
         {p.status !== "accepted" && (
           <ActionLink onClick={accept} className="text-accent hover:text-accent sm:ml-auto">
             <IconCheck className="size-4" /> Marcar aceita e agendar
@@ -358,7 +371,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         </Field>
 
         <Field label="Cliente">
-          <select className="input" value={clientChoice} onChange={(e) => setClientChoice(e.target.value)}>
+          <Select value={clientChoice} onChange={(e) => setClientChoice(e.target.value)}>
             <option value="">Sem cliente</option>
             {[...clients]
               .sort((a, b) => a.name.localeCompare(b.name))
@@ -369,7 +382,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                 </option>
               ))}
             <option value={NEW_CLIENT}>+ Novo cliente…</option>
-          </select>
+          </Select>
         </Field>
         {clientChoice === NEW_CLIENT && (
           <Field label="Nome do novo cliente">
@@ -455,8 +468,8 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         <Section
           title="Itens"
           action={
-            <select
-              className="input !min-h-9 !w-auto min-w-0 !py-1 !text-[0.875rem]"
+            <Select
+              className="!min-h-9 !w-auto min-w-0 !py-1 !text-[0.875rem]"
               value={preset}
               onChange={(e) => addItem(e.target.value)}
               aria-label="Adicionar item do catálogo"
@@ -468,7 +481,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                 </option>
               ))}
               <option value="__blank">Item em branco</option>
-            </select>
+            </Select>
           }
         >
           {scopeItems(p).length > 0 && (
@@ -501,13 +514,13 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                       <IconClose className="size-4" />
                     </button>
                     <NumberInput value={i.qty} onChange={(v) => updateItem(i.id, { qty: v ?? 0 })} fallback={0} digits={3} label="Quantidade" className="[&>input]:!min-h-9" />
-                    <select className="input !min-h-9 !w-auto" value={i.unit} onChange={(e) => updateItem(i.id, { unit: e.target.value })} aria-label="Unidade">
+                    <Select className="!min-h-9 !w-auto" value={i.unit} onChange={(e) => updateItem(i.id, { unit: e.target.value })} aria-label="Unidade">
                       {[...new Set([...units, i.unit])].map((u) => (
                         <option key={u} value={u}>
                           {u}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                     {/* No celular a linha quebra antes do valor, então o × ficaria solto */}
                     <span className="hidden text-sm text-muted sm:inline" aria-hidden>
                       ×

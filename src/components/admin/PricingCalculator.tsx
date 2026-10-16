@@ -3,7 +3,7 @@
 import { Plus as IconPlus, X as IconClose } from "lucide-react";
 
 import { MoneyInput } from "@/components/admin/job-bits";
-import { Field, NumberInput, Section } from "@/components/admin/ui";
+import { Field, NumberInput, Section, Select } from "@/components/admin/ui";
 import { brl } from "@/lib/admin/labels";
 import { PRICING_CATEGORIES, pricingResult } from "@/lib/admin/pricing";
 import type { Pricing, PricingCost } from "@/lib/admin/types";
@@ -48,8 +48,8 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
               >
                 <IconClose className="size-4" />
               </button>
-              <select
-                className="input !min-h-9 !w-auto"
+              <Select
+                className="!min-h-9 !w-auto"
                 value={c.category}
                 onChange={(e) => updateCost(c.id, { category: e.target.value })}
                 aria-label="Categoria"
@@ -57,7 +57,7 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
                 {[...new Set([...PRICING_CATEGORIES, c.category])].map((cat) => (
                   <option key={cat}>{cat}</option>
                 ))}
-              </select>
+              </Select>
               <NumberInput value={c.qty} onChange={(v) => updateCost(c.id, { qty: v ?? 0 })} fallback={0} digits={3} suffix="×" label="Quantidade" className="[&>input]:!min-h-9" />
               <MoneyInput value={c.unitCost} onChange={(v) => updateCost(c.id, { unitCost: v })} label="Custo unitário" className="!w-32 [&>input]:!min-h-9" />
               <span className="num ml-auto w-24 shrink-0 text-right text-sm font-medium">{brl.format(c.qty * c.unitCost)}</span>

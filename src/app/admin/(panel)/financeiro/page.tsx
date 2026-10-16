@@ -5,7 +5,7 @@ import { Plus as IconPlus, Tags as IconTags } from "lucide-react";
 
 import { DateTile, MoneyInput } from "@/components/admin/job-bits";
 import { MonthStats } from "@/components/admin/MonthStats";
-import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PeriodStepper, Row, Section, Segmented, Sheet, Skeleton, Stat, Switch, useForm } from "@/components/admin/ui";
+import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PeriodStepper, Row, Section, Select, Segmented, Sheet, Skeleton, Stat, Switch, useForm } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { categoryTotals, countsAsRevenue, currentMonth, jobCostTotal, monthlySummary, monthOf, serviceTotals, shiftMonth, type CategoryTotal } from "@/lib/admin/finance";
 import { brl, formatDateTime, formatMonth } from "@/lib/admin/labels";
@@ -334,7 +334,7 @@ function TransactionSheet(props: { tx: Transaction; isNew: boolean; categories: 
       </div>
       {newCat === null ? (
         <Field label="Categoria" hint="As categorias se editam em Financeiro → Categorias">
-          <select className="input" value={t.category} onChange={(e) => (e.target.value === "__new" ? setNewCat("") : set("category", e.target.value))}>
+          <Select value={t.category} onChange={(e) => (e.target.value === "__new" ? setNewCat("") : set("category", e.target.value))}>
             <option value="">Sem categoria</option>
             {options.map((name) => (
               <option key={name} value={name}>
@@ -342,7 +342,7 @@ function TransactionSheet(props: { tx: Transaction; isNew: boolean; categories: 
               </option>
             ))}
             <option value="__new">+ Nova categoria…</option>
-          </select>
+          </Select>
         </Field>
       ) : (
         <Field label="Nova categoria">
@@ -435,13 +435,13 @@ function CategoriesSheet(props: { categories: FinanceCategory[]; transactions: T
               onBlur={(e) => rename(c, e.currentTarget)}
               onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
             />
-            <select className="input !w-auto" value={c.kind} aria-label="Tipo" onChange={(e) => run(() => repo.upsert("financeCategories", { ...c, kind: e.target.value as FinanceCategory["kind"] }).then(() => undefined))}>
+            <Select className="!w-auto" value={c.kind} aria-label="Tipo" onChange={(e) => run(() => repo.upsert("financeCategories", { ...c, kind: e.target.value as FinanceCategory["kind"] }).then(() => undefined))}>
               {Object.entries(KIND_LABEL).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
               ))}
-            </select>
+            </Select>
             <span className="num ml-auto shrink-0 text-xs text-muted sm:w-20 sm:text-right">{usage(c.name)} lanç.</span>
             <DeleteButton label="Excluir" onConfirm={() => run(() => repo.remove("financeCategories", c.id))} />
           </div>
@@ -450,13 +450,13 @@ function CategoriesSheet(props: { categories: FinanceCategory[]; transactions: T
       <Field label="Nova categoria">
         <div className="flex flex-wrap gap-2 sm:flex-nowrap">
           <input className="input min-w-0 basis-full sm:basis-auto sm:flex-1" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} onKeyDown={(e) => e.key === "Enter" && add()} placeholder="Ex.: aluguel" />
-          <select className="input !w-auto" value={draft.kind} aria-label="Tipo da nova categoria" onChange={(e) => setDraft({ ...draft, kind: e.target.value as FinanceCategory["kind"] })}>
+          <Select className="!w-auto" value={draft.kind} aria-label="Tipo da nova categoria" onChange={(e) => setDraft({ ...draft, kind: e.target.value as FinanceCategory["kind"] })}>
             {Object.entries(KIND_LABEL).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
             ))}
-          </select>
+          </Select>
           <Button variant="secondary" disabled={!draft.name.trim()} onClick={add}>
             <IconPlus className="size-4" /> Adicionar
           </Button>

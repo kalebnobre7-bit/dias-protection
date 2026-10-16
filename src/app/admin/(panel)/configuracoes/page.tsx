@@ -4,7 +4,7 @@ import { Plus as IconPlus, X as IconClose } from "lucide-react";
 import { useState } from "react";
 
 import { MoneyInput } from "@/components/admin/job-bits";
-import { Button, Field, NumberInput, PageHeader, PhoneInput, Section, Skeleton, TextArea } from "@/components/admin/ui";
+import { Button, Field, NumberInput, PageHeader, PhoneInput, Section, Select, Skeleton, TextArea } from "@/components/admin/ui";
 import { onlyDigits } from "@/lib/admin/proposals";
 import { DEFAULT_SETTINGS, useSettings } from "@/lib/admin/settings";
 import { repo, useSaving } from "@/lib/admin/store";
@@ -171,13 +171,13 @@ function SettingsForm({ initial }: { initial: Settings }) {
                 >
                   <IconClose className="size-4" />
                 </button>
-                <select className="input !min-h-9 !w-auto" value={x.unit} onChange={(e) => updatePreset(n, { unit: e.target.value })} aria-label="Unidade">
+                <Select className="!min-h-9 !w-auto" value={x.unit} onChange={(e) => updatePreset(n, { unit: e.target.value })} aria-label="Unidade">
                   {[...new Set([...unitList, x.unit])].map((u) => (
                     <option key={u} value={u}>
                       {u}
                     </option>
                   ))}
-                </select>
+                </Select>
                 <MoneyInput value={x.unitPrice} onChange={(v) => updatePreset(n, { unitPrice: v })} label="Valor padrão" className="!w-32 [&>input]:!min-h-9" />
               </div>
               <input className="input !min-h-8 !text-[0.8125rem]" value={x.detail} onChange={(e) => updatePreset(n, { detail: e.target.value })} placeholder="Detalhe (ex.: Diária de até 12h)" aria-label="Detalhe do item" />

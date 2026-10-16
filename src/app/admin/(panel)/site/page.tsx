@@ -21,7 +21,7 @@ export default function SitePage() {
         subtitle="Quem aparece em Equipe e quais veículos aparecem em Frota. Marcou, o site atualiza em até 1 minuto."
       />
 
-      <div className="rounded-xl border border-line bg-navy/60 p-5">
+      <div className="rounded-xl border border-line bg-navy/60 px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-muted">
             No ar: <span className="num text-text">{onSite.agents}</span> agente(s) e <span className="num text-text">{onSite.vehicles}</span> veículo(s)

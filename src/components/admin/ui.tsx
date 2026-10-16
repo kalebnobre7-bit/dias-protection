@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Check as IconCheck,
+  ChevronDown as IconChevronDown,
   ChevronLeft as IconChevronLeft,
   ChevronRight as IconChevron,
   LoaderCircle as IconLoader,
@@ -105,7 +106,7 @@ export function PickMark({ on }: { on: boolean }) {
 
 export function EmptyState(props: { title: string; text?: string; action?: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-line-strong px-6 py-10 text-center">
+    <div className="rounded-xl border border-dashed border-line-strong px-5 py-7 text-center">
       <p className="font-semibold">{props.title}</p>
       {props.text && <p className="mx-auto mt-1 max-w-[40ch] text-sm text-muted">{props.text}</p>}
       {props.action && <div className="mt-4">{props.action}</div>}
@@ -116,7 +117,7 @@ export function EmptyState(props: { title: string; text?: string; action?: React
 export function Stat(props: { label: string; value: string; tone?: "default" | "good" | "bad" | "muted" }) {
   const tone = { default: "text-text", good: "text-[#8fd6a5]", bad: "text-danger", muted: "text-silver" }[props.tone ?? "default"];
   return (
-    <div className="@container min-w-0 rounded-xl border border-line bg-navy/60 px-3.5 py-3">
+    <div className="@container min-w-0 rounded-xl border border-line bg-navy/60 px-3.5 py-3 text-center">
       <p className="text-[0.8125rem] text-muted">{props.label}</p>
       {/* Fonte acompanha a largura do card (cqi), não da tela: valor cabe com a barra lateral aberta */}
       <p className={`num mt-1 truncate text-[clamp(0.9375rem,11cqi,1.375rem)] font-semibold tracking-[-0.02em] ${tone}`}>{props.value}</p>
@@ -175,12 +176,58 @@ export function Avatar({ name, photo }: { name: string; photo?: string | null })
   );
 }
 
+// Limpa com o × ou com Esc; o botão nativo do type=search fica escondido para não duplicar
 export function SearchBox(props: { value: string; onChange: (v: string) => void; placeholder: string }) {
   return (
-    <label className="relative mb-4 block">
+    <div className="relative mb-4">
       <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
-      <span className="sr-only">Buscar</span>
-      <input className="input !pl-10" type="search" value={props.value} onChange={(e) => props.onChange(e.target.value)} placeholder={props.placeholder} />
+      <input
+        className="input !pl-10 !pr-10 [&::-webkit-search-cancel-button]:hidden"
+        type="search"
+        aria-label="Buscar"
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape" && props.value) {
+            e.preventDefault();
+            props.onChange("");
+          }
+        }}
+        placeholder={props.placeholder}
+      />
+      {props.value && (
+        <button
+          type="button"
+          onClick={() => props.onChange("")}
+          aria-label="Limpar busca"
+          className="absolute right-1.5 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-md text-muted hover:bg-white/6 hover:text-text"
+        >
+          <IconClose className="size-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Select nativo com a seta da biblioteca: mesma altura do input e igual no Chrome, Safari e iPhone
+export function Select({ className = "", ...rest }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <span className="relative block min-w-0">
+      <select className={`input max-w-full appearance-none !pr-9 ${className}`} {...rest} />
+      <IconChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
+    </span>
+  );
+}
+
+// Caixa de marcar na linguagem do Switch: quadrada, escura, verde quando marcada
+export function Checkbox(props: { checked: boolean; onChange: (v: boolean) => void; label: React.ReactNode; className?: string }) {
+  return (
+    <label className={`flex min-h-9 cursor-pointer items-center gap-2 text-sm ${props.className ?? ""}`}>
+      <input type="checkbox" className="peer sr-only" checked={props.checked} onChange={(e) => props.onChange(e.target.checked)} />
+      <span className="grid size-[1.125rem] shrink-0 place-items-center rounded-[0.25rem] border border-line-strong bg-ink transition-colors peer-checked:border-[#34c759] peer-checked:bg-[#34c759] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100">
+        <IconCheck className="size-3 text-ink" strokeWidth={3} />
+      </span>
+      {props.label}
     </label>
   );
 }

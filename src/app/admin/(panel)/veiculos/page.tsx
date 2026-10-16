@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
 import { PhotoInput } from "@/components/admin/PhotoInput";
-import { Badge, Button, DeleteButton, EmptyState, Field, List, NumberInput, PageHeader, PickMark, Row, SearchBox, Section, Segmented, Sheet, Skeleton, Switch, TextArea, useForm } from "@/components/admin/ui";
+import { Badge, Button, DeleteButton, EmptyState, Field, List, NumberInput, PageHeader, PickMark, Row, SearchBox, Section, Select, Segmented, Sheet, Skeleton, Switch, TextArea, useForm } from "@/components/admin/ui";
 import { vehicleCategoryName, vehicleCategoryOptions } from "@/lib/admin/catalog";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Vehicle } from "@/lib/admin/types";
@@ -180,13 +180,13 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
         <input className="input" value={v.model} onChange={(e) => set("model", e.target.value)} autoFocus={props.isNew} placeholder="Ex.: Toyota SW4" />
       </Field>
       <Field label="Categoria no site">
-        <select className="input" value={v.categoryId ?? ""} onChange={(e) => set("categoryId", e.target.value || null)}>
+        <Select value={v.categoryId ?? ""} onChange={(e) => set("categoryId", e.target.value || null)}>
           {vehicleCategoryOptions.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>
           ))}
-        </select>
+        </Select>
       </Field>
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Placa">
@@ -211,14 +211,14 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
       </Field>
       {v.owner === "partner" && (
         <Field label="Parceiro" hint={props.partners.length ? undefined : "Cadastre o parceiro na aba Parceiros."}>
-          <select className="input" value={v.partnerId ?? ""} onChange={(e) => set("partnerId", e.target.value || null)}>
+          <Select value={v.partnerId ?? ""} onChange={(e) => set("partnerId", e.target.value || null)}>
             <option value="">Selecione</option>
             {props.partners.map((p) => (
               <option key={p.value} value={p.value}>
                 {p.label}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
       )}
       <Section title="Página Frota do site">

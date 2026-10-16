@@ -9,6 +9,7 @@ import {
   Button,
   buttonClass,
   ChipSelect,
+  Checkbox,
   DeleteButton,
   EmptyState,
   Field,
@@ -17,6 +18,7 @@ import {
   Row,
   SearchBox,
   Section,
+  Select,
   Segmented,
   Sheet,
   Skeleton,
@@ -266,7 +268,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       )}
 
       <Field label="Cliente">
-        <select className="input" value={clientChoice} onChange={(e) => setClientChoice(e.target.value)}>
+        <Select value={clientChoice} onChange={(e) => setClientChoice(e.target.value)}>
           <option value="">Sem cliente</option>
           {[...clients]
             .sort((a, b) => a.name.localeCompare(b.name))
@@ -276,7 +278,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
               </option>
             ))}
           <option value={NEW_CLIENT}>+ Novo cliente…</option>
-        </select>
+        </Select>
       </Field>
       {clientChoice === NEW_CLIENT && (
         <Field label="Nome do novo cliente" hint="Os demais dados podem ser completados na aba Clientes.">
@@ -285,13 +287,13 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       )}
 
       <Field label="Tipo de serviço">
-        <select className="input" value={j.serviceTypeId ?? ""} onChange={(e) => set("serviceTypeId", e.target.value || null)}>
+        <Select value={j.serviceTypeId ?? ""} onChange={(e) => set("serviceTypeId", e.target.value || null)}>
           {serviceTypeOptions.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>
           ))}
-        </select>
+        </Select>
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -378,8 +380,8 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                   >
                     <IconClose className="size-4" />
                   </button>
-                  <select
-                    className="input !min-h-9 !w-auto"
+                  <Select
+                    className="!min-h-9 !w-auto"
                     value={c.category}
                     onChange={(e) => updateCost(c.id, { category: e.target.value })}
                     aria-label="Categoria"
@@ -390,15 +392,12 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                         {costCategoryName(k)}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   <MoneyInput value={c.amount} onChange={(v) => updateCost(c.id, { amount: v })} label="Valor do custo" className="!w-32 [&>input]:!min-h-9" />
-                  <label className="flex min-h-9 items-center gap-2 text-sm">
-                    <input type="checkbox" className="size-4 accent-[#34c759]" checked={c.paid} onChange={(e) => updateCost(c.id, { paid: e.target.checked })} />
-                    Pago
-                  </label>
+                  <Checkbox checked={c.paid} onChange={(v) => updateCost(c.id, { paid: v })} label="Pago" />
                 </div>
                 {c.category === "agent" && (
-                  <select className="input !min-h-9" value={c.agentId ?? ""} onChange={(e) => pickCostAgent(c, e.target.value)} aria-label="Agente">
+                  <Select className="!min-h-9" value={c.agentId ?? ""} onChange={(e) => pickCostAgent(c, e.target.value)} aria-label="Agente">
                     <option value="">Qual agente? (opcional)</option>
                     {/* Escalados no serviço primeiro */}
                     {[
@@ -415,17 +414,17 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                           ))}
                         </optgroup>
                       ))}
-                  </select>
+                  </Select>
                 )}
                 {c.category === "partner" && (
-                  <select className="input !min-h-9" value={c.partnerId ?? ""} onChange={(e) => updateCost(c.id, { partnerId: e.target.value || null })} aria-label="Parceiro">
+                  <Select className="!min-h-9" value={c.partnerId ?? ""} onChange={(e) => updateCost(c.id, { partnerId: e.target.value || null })} aria-label="Parceiro">
                     <option value="">Qual parceiro? (opcional)</option>
                     {partners.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 )}
               </li>
             ))}

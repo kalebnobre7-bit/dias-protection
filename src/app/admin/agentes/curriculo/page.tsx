@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AgentCv, DocBrandHeader, DocSheet, DocShell } from "@/components/admin/doc";
+import { Checkbox } from "@/components/admin/ui";
 import { localContent } from "@/data/content";
 import { useSession } from "@/lib/admin/auth";
 import { formatDateLong } from "@/lib/admin/labels";
@@ -54,10 +55,7 @@ export default function AgentCvPage() {
           <Link href="/admin/agentes" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line-strong px-4 text-[0.9375rem] hover:border-silver">
             <IconBack className="size-4" /> Agentes
           </Link>
-          <label className="flex min-h-11 cursor-pointer items-center gap-2 text-[0.9375rem]">
-            <input type="checkbox" checked={withPrivate} onChange={(e) => setWithPrivate(e.target.checked)} className="size-4 accent-[#34c759]" />
-            Incluir contato e CNH
-          </label>
+          <Checkbox checked={withPrivate} onChange={setWithPrivate} label="Incluir contato e CNH" className="!min-h-11 !text-[0.9375rem]" />
           <button
             type="button"
             onClick={() => window.print()}

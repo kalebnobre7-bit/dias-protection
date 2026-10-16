@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus as IconPlus, X as IconClose } from "lucide-react";
 
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PhoneInput, Row, SearchBox, Section, Sheet, Skeleton, TextArea, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PhoneInput, Row, SearchBox, Section, Select, Sheet, Skeleton, TextArea, useForm } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { countsAsRevenue } from "@/lib/admin/finance";
 import { brl, clientLanguageLabel, formatDate, formatDateTime, formatPhone, jobStatusLabel, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
@@ -148,14 +148,14 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
         </Field>
       </div>
       <Field label="Idioma de atendimento">
-        <select className="input" value={c.language ?? ""} onChange={(e) => set("language", (e.target.value || null) as Client["language"])}>
+        <Select value={c.language ?? ""} onChange={(e) => set("language", (e.target.value || null) as Client["language"])}>
           <option value="">Não informado</option>
           {Object.entries(clientLanguageLabel).map(([v, l]) => (
             <option key={v} value={v}>
               {l}
             </option>
           ))}
-        </select>
+        </Select>
       </Field>
       <Section
         title="Representantes da empresa"

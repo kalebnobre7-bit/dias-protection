@@ -153,6 +153,12 @@ export function blankProposal(id: string, existing: Proposal[], defaults: Settin
   };
 }
 
+// Cópia como rascunho novo: número, datas e vínculo com serviço recomeçam; o resto vem igual
+export function duplicateProposal(source: Proposal, id: string, existing: Proposal[], defaults: Settings["proposal"]): Proposal {
+  const base = blankProposal(id, existing, defaults);
+  return { ...source, id, number: base.number, status: "draft", issuedAt: base.issuedAt, validUntil: base.validUntil, jobId: null, createdAt: base.createdAt };
+}
+
 // Serviço em orçamento → proposta pré-preenchida
 export function proposalFromJob(job: Job, id: string, existing: Proposal[], defaults: Settings["proposal"]): Proposal {
   const base = blankProposal(id, existing, defaults);
