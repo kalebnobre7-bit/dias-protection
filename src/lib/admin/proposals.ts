@@ -111,10 +111,10 @@ export function proposalTotals(p: Proposal): { subtotal: number; discount: numbe
   return { subtotal, discount, total: subtotal - discount };
 }
 
-// "2026-003": sequencial dentro do ano
+// "2026-003": sequencial dentro do ano. Maior número + 1 (contar repetiria número quando uma proposta é excluída)
 export function nextProposalNumber(existing: Proposal[], date = new Date()): string {
   const year = String(date.getFullYear());
-  const n = existing.filter((p) => p.number.startsWith(`${year}-`)).length + 1;
+  const n = Math.max(0, ...existing.filter((p) => p.number.startsWith(`${year}-`)).map((p) => Number(p.number.slice(5)) || 0)) + 1;
   return `${year}-${String(n).padStart(3, "0")}`;
 }
 

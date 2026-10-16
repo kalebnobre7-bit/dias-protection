@@ -6,7 +6,7 @@ import { Check as IconCheck, Copy as IconCopy, FileCheck as IconDocClosed, FileT
 
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { FreelanceForm } from "@/components/admin/FreelanceForm";
-import { MoneyInput } from "@/components/admin/job-bits";
+import { MoneyInput, NumberTile } from "@/components/admin/job-bits";
 import { PricingCalculator } from "@/components/admin/PricingCalculator";
 import {
   Avatar,
@@ -23,6 +23,7 @@ import {
   Section,
   Segmented,
   Sheet,
+  Skeleton,
   Switch,
   useForm,
 } from "@/components/admin/ui";
@@ -88,13 +89,15 @@ export default function ProposalsPage() {
         title="Propostas"
         subtitle="Orçamentos com numeração, itens e documento pronto para enviar."
         action={
-          <Button onClick={() => setEditing(blankProposal(newId(), rows))}>
+          <Button disabled={loading} onClick={() => setEditing(blankProposal(newId(), rows))}>
             <IconPlus className="size-4" /> Nova proposta
           </Button>
         }
       />
 
-      {!loading && !rows.length ? (
+      {loading ? (
+        <Skeleton />
+      ) : !rows.length ? (
         <EmptyState
           title="Nenhuma proposta ainda"
           text="Monte a primeira com itens, validade e condições. Ela vira um documento institucional em PDF."
@@ -128,9 +131,9 @@ export default function ProposalsPage() {
                 <Row
                   key={p.id}
                   onClick={() => setEditing(p)}
-                  leading={<span className="num grid h-12 w-16 shrink-0 place-items-center rounded-xl bg-navy-2 text-xs font-semibold text-silver">{p.number}</span>}
+                  leading={<NumberTile number={p.number} />}
                   title={p.title || "Sem título"}
-                  subtitle={`${clientName(p.clientId)} · válida até ${formatDate(p.validUntil)}`}
+                  subtitle={`${clientName(p.clientId)} · até ${formatDate(p.validUntil)}`}
                   trailing={
                     <span className="flex flex-col items-end gap-1">
                       <span className="num font-medium">{brl.format(proposalTotals(p).total)}</span>
@@ -200,29 +203,38 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
       setError("Informe o nome do novo cliente.");
       return null;
     }
-    let clientId = clientChoice || null;
-    if (clientChoice === NEW_CLIENT) {
-      clientId = newId();
-      await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
-      setClientChoice(clientId);
+    try {
+      let clientId = clientChoice || null;
+      if (clientChoice === NEW_CLIENT) {
+        clientId = newId();
+        await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
+        setClientChoice(clientId);
+      }
+      const saved: Proposal = {
+        ...p,
+        ...extra,
+        clientId,
+        title: p.title.trim(),
+        items: p.items.filter((i) => i.description.trim()).map((i) => ({ ...i, description: i.description.trim() })),
+      };
+      await repo.upsert("proposals", saved);
+      return saved;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+      return null;
     }
-    const saved: Proposal = {
-      ...p,
-      ...extra,
-      clientId,
-      title: p.title.trim(),
-      items: p.items.filter((i) => i.description.trim()).map((i) => ({ ...i, description: i.description.trim() })),
-    };
-    await repo.upsert("proposals", saved);
-    return saved;
   }
 
   const save = async () => {
     if (await persist()) props.onClose();
   };
   const remove = async () => {
-    await repo.remove("proposals", p.id);
-    props.onClose();
+    try {
+      await repo.remove("proposals", p.id);
+      props.onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível excluir.");
+    }
   };
 
   // Salva e abre o documento em outra aba (comercial ou serviço fechado)
@@ -256,15 +268,19 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
   const accept = async () => {
     const saved = await persist({ status: "accepted" });
     if (!saved) return;
-    if (!saved.jobId) {
-      const job = jobFromProposal(saved, newId());
-      await repo.upsert("jobs", job);
-      await repo.upsert("proposals", { ...saved, jobId: job.id });
-    } else {
-      const job = (await repo.list("jobs")).find((j) => j.id === saved.jobId);
-      if (job && job.status === "quote") await repo.upsert("jobs", { ...job, status: "scheduled", price: totals.total });
+    try {
+      if (!saved.jobId) {
+        const job = jobFromProposal(saved, newId());
+        await repo.upsert("jobs", job);
+        await repo.upsert("proposals", { ...saved, jobId: job.id });
+      } else {
+        const job = (await repo.list("jobs")).find((j) => j.id === saved.jobId);
+        if (job && job.status === "quote") await repo.upsert("jobs", { ...job, status: "scheduled", price: totals.total });
+      }
+      props.onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível criar o serviço.");
     }
-    props.onClose();
   };
 
   return (

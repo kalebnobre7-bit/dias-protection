@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
 import { PhotoInput } from "@/components/admin/PhotoInput";
-import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, Section, Segmented, Sheet, Switch, useForm } from "@/components/admin/ui";
+import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, Section, Segmented, Sheet, Skeleton, Switch, useForm } from "@/components/admin/ui";
 import { vehicleCategoryName, vehicleCategoryOptions } from "@/lib/admin/catalog";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Vehicle } from "@/lib/admin/types";
@@ -67,7 +67,9 @@ export default function VehiclesPage() {
         }
       />
       {picking && <p className="-mt-4 mb-4 px-1 text-[0.875rem] text-muted">Toque nos veículos que vão no PDF. Sai com foto e descrição, sem a placa.</p>}
-      {!loading && !rows.length ? (
+      {loading ? (
+        <Skeleton />
+      ) : !rows.length ? (
         <EmptyState title="Nenhum veículo cadastrado" />
       ) : (
         <List>

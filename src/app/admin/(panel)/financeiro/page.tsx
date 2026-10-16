@@ -5,7 +5,7 @@ import { ChevronLeft as IconChevronLeft, ChevronRight as IconChevron, Plus as Ic
 
 import { DateTile, MoneyInput } from "@/components/admin/job-bits";
 import { MonthStats } from "@/components/admin/MonthStats";
-import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, Section, Segmented, Sheet, Stat, Switch, useForm } from "@/components/admin/ui";
+import { Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, Section, Segmented, Sheet, Skeleton, Stat, Switch, useForm } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { categoryTotals, countsAsRevenue, currentMonth, jobCostTotal, monthlySummary, monthOf, serviceTotals, shiftMonth, type CategoryTotal } from "@/lib/admin/finance";
 import { brl, formatDateTime, formatMonth } from "@/lib/admin/labels";
@@ -18,10 +18,11 @@ type Range = "month" | "year";
 const KIND_LABEL: Record<FinanceCategory["kind"], string> = { expense: "Saída", income: "Entrada", both: "Ambos" };
 
 export default function FinancePage() {
-  const { rows: jobs } = useTable("jobs");
-  const { rows: costs } = useTable("jobCosts");
+  const { rows: jobs, loading: jobsLoading } = useTable("jobs");
+  const { rows: costs, loading: costsLoading } = useTable("jobCosts");
   const { rows: clients } = useTable("clients");
-  const { rows: transactions } = useTable("transactions");
+  const { rows: transactions, loading: txLoading } = useTable("transactions");
+  const loading = jobsLoading || costsLoading || txLoading;
   const { rows: categories } = useTable("financeCategories");
   const [month, setMonth] = useState(currentMonth);
   const [view, setView] = useState<View>("month");
@@ -87,7 +88,9 @@ export default function FinancePage() {
         )}
       </div>
 
-      {view === "service" ? (
+      {loading ? (
+        <Skeleton stats={view === "service" ? 2 : 4} rows={4} />
+      ) : view === "service" ? (
         <ServiceView period={yearly ? month.slice(0, 4) : month} jobs={jobs} costs={costs} />
       ) : (
         <>
@@ -277,12 +280,20 @@ function TransactionSheet(props: { tx: Transaction; isNew: boolean; categories: 
     if (!t.description.trim()) return setError("Informe a descrição.");
     if (!(t.amount > 0)) return setError("Informe o valor.");
     if (!t.date) return setError("Informe a data.");
-    await repo.upsert("transactions", { ...t, description: t.description.trim() });
-    props.onClose();
+    try {
+      await repo.upsert("transactions", { ...t, description: t.description.trim() });
+      props.onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+    }
   };
   const remove = async () => {
-    await repo.remove("transactions", t.id);
-    props.onClose();
+    try {
+      await repo.remove("transactions", t.id);
+      props.onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível excluir.");
+    }
   };
 
   return (

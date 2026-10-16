@@ -19,6 +19,16 @@ export function DateTile({ value }: { value: string }) {
   );
 }
 
+// Número da proposta no mesmo formato do DateTile: ano em cima, sequência embaixo ("2026-003")
+export function NumberTile({ number }: { number: string }) {
+  return (
+    <span className="flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-navy-2 leading-none">
+      <span className="num text-[0.625rem] font-semibold text-muted">{number.slice(0, 4)}</span>
+      <span className="num mt-0.5 text-lg font-semibold">{number.slice(5)}</span>
+    </span>
+  );
+}
+
 // Campo de dinheiro: aceita "1.500,50" ou "1500.5"
 export function MoneyInput({ value, onChange, label }: { value: number; onChange: (v: number) => void; label?: string }) {
   const [text, setText] = useState(value ? String(value).replace(".", ",") : "");

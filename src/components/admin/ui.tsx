@@ -50,7 +50,7 @@ export function Row(props: {
       {props.leading}
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">{props.title}</span>
-        {props.subtitle && <span className="mt-0.5 block truncate text-[0.875rem] text-muted">{props.subtitle}</span>}
+        {props.subtitle && <span className="mt-0.5 line-clamp-2 text-[0.875rem] text-muted">{props.subtitle}</span>}
       </span>
       {props.trailing && <span className="shrink-0 text-right">{props.trailing}</span>}
     </>
@@ -99,9 +99,36 @@ export function EmptyState(props: { title: string; text?: string; action?: React
 export function Stat(props: { label: string; value: string; tone?: "default" | "good" | "bad" | "muted" }) {
   const tone = { default: "text-text", good: "text-[#8fd6a5]", bad: "text-danger", muted: "text-silver" }[props.tone ?? "default"];
   return (
-    <div className="min-w-0 rounded-2xl border border-line bg-navy/60 p-4 sm:p-5">
+    <div className="@container min-w-0 rounded-2xl border border-line bg-navy/60 p-4 sm:p-5">
       <p className="text-[0.875rem] text-muted">{props.label}</p>
-      <p className={`num mt-2 truncate text-[clamp(1.0625rem,4.4vw,1.625rem)] font-semibold tracking-[-0.02em] ${tone}`}>{props.value}</p>
+      {/* Fonte acompanha a largura do card (cqi), não da tela: valor cabe com a barra lateral aberta */}
+      <p className={`num mt-2 truncate text-[clamp(0.9375rem,12cqi,1.625rem)] font-semibold tracking-[-0.02em] ${tone}`}>{props.value}</p>
+    </div>
+  );
+}
+
+// Placeholder enquanto as tabelas carregam: evita "vazio" e R$ 0,00 falsos
+export function Skeleton(props: { rows?: number; stats?: number }) {
+  return (
+    <div aria-busy="true" aria-label="Carregando" className="animate-pulse space-y-6">
+      {!!props.stats && (
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {Array.from({ length: props.stats }, (_, i) => (
+            <div key={i} className="h-[5.75rem] rounded-2xl border border-line bg-navy/60 sm:h-[6.5rem]" />
+          ))}
+        </div>
+      )}
+      <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-navy/60">
+        {Array.from({ length: props.rows ?? 4 }, (_, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-4">
+            <div className="h-9 w-9 shrink-0 rounded-full bg-white/6" />
+            <div className="flex-1 space-y-2">
+              <div className="h-3 w-2/5 rounded bg-white/8" />
+              <div className="h-3 w-3/5 rounded bg-white/5" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

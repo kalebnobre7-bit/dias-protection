@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus as IconPlus } from "lucide-react";
 
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, Skeleton, useForm } from "@/components/admin/ui";
 import { brl, formatDateTime } from "@/lib/admin/labels";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { Partner } from "@/lib/admin/types";
@@ -41,7 +41,9 @@ export default function PartnersPage() {
           </Button>
         }
       />
-      {!loading && !rows.length ? (
+      {loading ? (
+        <Skeleton />
+      ) : !rows.length ? (
         <EmptyState title="Nenhum parceiro cadastrado" />
       ) : (
         <>
@@ -81,12 +83,20 @@ function PartnerSheet(props: { partner: Partner; isNew: boolean; onClose: () => 
 
   const save = async () => {
     if (!p.name.trim()) return setError("Informe o nome.");
-    await repo.upsert("partners", { ...p, name: p.name.trim() });
-    props.onClose();
+    try {
+      await repo.upsert("partners", { ...p, name: p.name.trim() });
+      props.onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+    }
   };
   const remove = async () => {
-    await repo.remove("partners", p.id);
-    props.onClose();
+    try {
+      await repo.remove("partners", p.id);
+      props.onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível excluir.");
+    }
   };
 
   return (

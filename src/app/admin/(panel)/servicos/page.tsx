@@ -18,6 +18,7 @@ import {
   Section,
   Segmented,
   Sheet,
+  Skeleton,
   useForm,
 } from "@/components/admin/ui";
 import { FreelanceForm } from "@/components/admin/FreelanceForm";
@@ -79,7 +80,9 @@ export default function JobsPage() {
           </Button>
         }
       />
-      {!loading && !rows.length ? (
+      {loading ? (
+        <Skeleton />
+      ) : !rows.length ? (
         <EmptyState title="Nenhum serviço registrado" text="Registre cada pedido confirmado pelo WhatsApp para montar o histórico e o financeiro." />
       ) : (
         <>
@@ -158,21 +161,30 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   const save = async () => {
     if (!j.startsAt) return setError("Informe a data e o horário de início.");
     if (clientChoice === NEW_CLIENT && !newClient.trim()) return setError("Informe o nome do novo cliente.");
-    let clientId = clientChoice || null;
-    if (clientChoice === NEW_CLIENT) {
-      clientId = newId();
-      await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
+    try {
+      let clientId = clientChoice || null;
+      if (clientChoice === NEW_CLIENT) {
+        clientId = newId();
+        await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
+        setClientChoice(clientId); // se o resto falhar, salvar de novo não duplica o cliente
+      }
+      await repo.upsert("jobs", { ...j, clientId, paidAt: j.paymentStatus === "paid" ? j.paidAt || j.startsAt.slice(0, 10) : "" });
+      await repo.replaceJobCosts(
+        j.id,
+        list.filter((c) => c.description.trim() || c.amount > 0).map((c) => ({ ...c, description: c.description.trim() || costCategoryLabel[c.category] })),
+      );
+      props.onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
     }
-    await repo.upsert("jobs", { ...j, clientId, paidAt: j.paymentStatus === "paid" ? j.paidAt || j.startsAt.slice(0, 10) : "" });
-    await repo.replaceJobCosts(
-      j.id,
-      list.filter((c) => c.description.trim() || c.amount > 0).map((c) => ({ ...c, description: c.description.trim() || costCategoryLabel[c.category] })),
-    );
-    props.onClose();
   };
   const remove = async () => {
-    await repo.remove("jobs", j.id);
-    props.onClose();
+    try {
+      await repo.remove("jobs", j.id);
+      props.onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível excluir.");
+    }
   };
 
   // Mostra os ativos + os já escalados (mesmo que tenham ficado inativos)

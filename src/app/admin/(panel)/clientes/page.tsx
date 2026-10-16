@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus as IconPlus, X as IconClose } from "lucide-react";
 
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, Row, SearchBox, Section, Sheet, Skeleton, useForm } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { countsAsRevenue } from "@/lib/admin/finance";
 import { brl, clientLanguageLabel, formatDate, formatDateTime, jobStatusLabel, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
@@ -45,7 +45,9 @@ export default function ClientsPage() {
           </Button>
         }
       />
-      {!loading && !rows.length ? (
+      {loading ? (
+        <Skeleton />
+      ) : !rows.length ? (
         <EmptyState title="Nenhum cliente ainda" text="Os clientes também podem ser criados ao registrar um serviço." />
       ) : (
         <>
@@ -99,12 +101,20 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
   const save = async () => {
     if (!c.name.trim()) return setError("Informe o nome.");
     const representatives = c.representatives.filter((r) => r.name.trim()).map((r) => ({ ...r, name: r.name.trim() }));
-    await repo.upsert("clients", { ...c, name: c.name.trim(), representatives });
-    props.onClose();
+    try {
+      await repo.upsert("clients", { ...c, name: c.name.trim(), representatives });
+      props.onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+    }
   };
   const remove = async () => {
-    await repo.remove("clients", c.id);
-    props.onClose();
+    try {
+      await repo.remove("clients", c.id);
+      props.onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível excluir.");
+    }
   };
 
   return (

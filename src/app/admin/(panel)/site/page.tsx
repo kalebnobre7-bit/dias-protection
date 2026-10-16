@@ -1,14 +1,14 @@
 "use client";
 
-import { Avatar, EmptyState, List, PageHeader, Row, Section, Switch } from "@/components/admin/ui";
+import { Avatar, EmptyState, List, PageHeader, Row, Section, Skeleton, Switch } from "@/components/admin/ui";
 import { vehicleCategoryName } from "@/lib/admin/catalog";
 import { repo, useTable } from "@/lib/admin/store";
 
 const site = (path: string) => `${process.env.NEXT_PUBLIC_BASE_PATH}/pt${path}`;
 
 export default function SitePage() {
-  const { rows: agents } = useTable("agents");
-  const { rows: vehicles } = useTable("vehicles");
+  const { rows: agents, loading: agentsLoading } = useTable("agents");
+  const { rows: vehicles, loading: vehiclesLoading } = useTable("vehicles");
 
   const activeAgents = [...agents].filter((a) => a.active && !a.freelance).sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
   const activeVehicles = [...vehicles].filter((v) => v.active).sort((a, b) => a.model.localeCompare(b.model));
@@ -39,7 +39,9 @@ export default function SitePage() {
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2 [&>*]:min-w-0">
         <Section title={`Equipe · ${onSite.agents} no site`}>
-          {activeAgents.length ? (
+          {agentsLoading ? (
+            <Skeleton rows={3} />
+          ) : activeAgents.length ? (
             <List>
               {activeAgents.map((a) => (
                 <Row
@@ -60,7 +62,9 @@ export default function SitePage() {
         </Section>
 
         <Section title={`Frota · ${onSite.vehicles} no site`}>
-          {activeVehicles.length ? (
+          {vehiclesLoading ? (
+            <Skeleton rows={3} />
+          ) : activeVehicles.length ? (
             <List>
               {activeVehicles.map((v) => (
                 <Row

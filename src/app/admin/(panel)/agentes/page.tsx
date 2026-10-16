@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
 import { DocumentInput, PhotoInput } from "@/components/admin/PhotoInput";
-import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, Section, Sheet, Switch, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PickMark, Row, Section, Sheet, Skeleton, Switch, useForm } from "@/components/admin/ui";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { AgentRecord } from "@/lib/admin/types";
 
@@ -70,7 +70,9 @@ export default function AgentsPage() {
         }
       />
       {picking && <p className="-mt-4 mb-4 px-1 text-[0.875rem] text-muted">Toque nos agentes que vão no PDF. Sai um currículo por página, sem contato nem documentos.</p>}
-      {!loading && !rows.length ? (
+      {loading ? (
+        <Skeleton />
+      ) : !rows.length ? (
         <EmptyState title="Nenhum agente cadastrado" text="Cadastre a equipe com foto, idiomas e certificações." />
       ) : (
         <List>

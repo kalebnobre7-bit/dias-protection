@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronLeft as IconChevronLeft, ChevronRight as IconChevron } from "lucide-react";
 
-import { EmptyState, PageHeader, Section, Segmented } from "@/components/admin/ui";
+import { EmptyState, PageHeader, Section, Segmented, Skeleton } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { countsAsRevenue, currentMonth, jobCostTotal, monthlySummary, shiftMonth } from "@/lib/admin/finance";
 import { brl, costCategoryLabel, formatMonth } from "@/lib/admin/labels";
@@ -35,10 +35,11 @@ function sumBy<T>(items: T[], keyOf: (i: T) => string, amountOf: (i: T) => numbe
 }
 
 export default function ReportsPage() {
-  const { rows: jobs } = useTable("jobs");
-  const { rows: costs } = useTable("jobCosts");
+  const { rows: jobs, loading: jobsLoading } = useTable("jobs");
+  const { rows: costs, loading: costsLoading } = useTable("jobCosts");
   const { rows: clients } = useTable("clients");
-  const { rows: transactions } = useTable("transactions");
+  const { rows: transactions, loading: txLoading } = useTable("transactions");
+  const loading = jobsLoading || costsLoading || txLoading;
   const [view, setView] = useState<View>("service");
   const [scope, setScope] = useState<Scope>("month");
   const [month, setMonth] = useState(currentMonth);
@@ -98,10 +99,11 @@ export default function ReportsPage() {
         )}
       </div>
 
-      {view === "service" && <JobsTable lines={groupJobs(periodJobs, periodCosts, (j) => j.serviceTypeId ?? "", (k) => serviceTypeName(k || null))} first="Serviço" />}
-      {view === "client" && <JobsTable lines={groupJobs(periodJobs, periodCosts, (j) => j.clientId ?? "", (k) => clientName(k))} first="Cliente" />}
+      {loading && <Skeleton rows={5} />}
+      {!loading && view === "service" && <JobsTable lines={groupJobs(periodJobs, periodCosts, (j) => j.serviceTypeId ?? "", (k) => serviceTypeName(k || null))} first="Serviço" />}
+      {!loading && view === "client" && <JobsTable lines={groupJobs(periodJobs, periodCosts, (j) => j.clientId ?? "", (k) => clientName(k))} first="Cliente" />}
 
-      {view === "category" && (
+      {!loading && view === "category" && (
         <div className="grid gap-10 lg:grid-cols-2">
           <AmountTable
             title="Entradas"
@@ -120,7 +122,7 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {view === "monthly" && (
+      {!loading && view === "monthly" && (
         <Table
           head={["Mês", "Receita", "Custos", "Avulsos", "Resultado"]}
           rows={Array.from({ length: 12 }, (_, i) => {
