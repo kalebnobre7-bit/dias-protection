@@ -41,7 +41,7 @@ const pt = {
     lead: "Proteção executiva, escolta veicular e motoristas bilíngues, com o padrão de quem já atuou em operações das maiores empresas de segurança do mundo.",
     credentials: [
       "Ex-detetive da Polícia Civil de SP",
-      "Close Protection Officer desde 2022",
+      "Close Protection Officer desde 2021",
       "Operações para empresas globais de segurança",
       "Zero incidentes em operação",
       "Atendimento em PT · EN · ES",
@@ -315,7 +315,7 @@ const en: Dictionary = {
     lead: "Executive protection, vehicle escort and bilingual drivers, delivered to the standard of someone who has worked operations for the world's leading security firms.",
     credentials: [
       "Former São Paulo Civil Police detective",
-      "Close Protection Officer since 2022",
+      "Close Protection Officer since 2021",
       "Operations for global security firms",
       "Zero incidents on duty",
       "Service in PT · EN · ES",
