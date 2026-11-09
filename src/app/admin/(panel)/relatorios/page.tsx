@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { DataTable } from "@/components/admin/DataTable";
 import { EmptyState, PageHeader, PeriodStepper, Section, Segmented, Skeleton } from "@/components/admin/ui";
 import { serviceTypeName } from "@/lib/admin/catalog";
 import { countsAsRevenue, currentMonth, jobCostTotal, monthlySummary, shiftMonth } from "@/lib/admin/finance";
@@ -120,17 +121,18 @@ export default function ReportsPage() {
       )}
 
       {!loading && view === "monthly" && (
-        <Table
-          head={["Mês", "Receita", "Custos", "Avulsos", "Resultado"]}
+        <DataTable
+          striped
+          head={["Mês", "Receita", "Custos", "Avulsos", "Imposto", "Resultado"]}
           rows={Array.from({ length: 12 }, (_, i) => {
             const m = `${year}-${String(i + 1).padStart(2, "0")}`;
             const s = monthlySummary(m, jobs, costs, transactions);
-            return [formatMonth(m), brl.format(s.revenue), brl.format(s.jobCosts), brl.format(s.otherIncome - s.otherExpense), brl.format(s.profit)];
+            return [formatMonth(m), brl.format(s.revenue), brl.format(s.jobCosts), brl.format(s.otherIncome - s.otherExpense), brl.format(s.tax), brl.format(s.profit)];
           })}
           foot={(() => {
             const all = Array.from({ length: 12 }, (_, i) => monthlySummary(`${year}-${String(i + 1).padStart(2, "0")}`, jobs, costs, transactions));
             const total = (f: (s: (typeof all)[number]) => number) => brl.format(all.reduce((acc, s) => acc + f(s), 0));
-            return ["Total", total((s) => s.revenue), total((s) => s.jobCosts), total((s) => s.otherIncome - s.otherExpense), total((s) => s.profit)];
+            return ["Total", total((s) => s.revenue), total((s) => s.jobCosts), total((s) => s.otherIncome - s.otherExpense), total((s) => s.tax), total((s) => s.profit)];
           })()}
         />
       )}
@@ -144,7 +146,7 @@ function JobsTable({ lines, first }: { lines: Line[]; first: string }) {
   if (!lines.length) return <EmptyState title="Nenhum serviço no período" text="Troque o período ou registre serviços em Serviços." />;
   const total = lines.reduce((t, l) => ({ count: t.count + l.count, revenue: t.revenue + l.revenue, costs: t.costs + l.costs }), { count: 0, revenue: 0, costs: 0 });
   return (
-    <Table
+    <DataTable
       head={[first, "Serviços", "Receita", "Custos", "Margem"]}
       rows={lines.map((l) => [l.label, String(l.count), brl.format(l.revenue), brl.format(l.costs), brl.format(l.revenue - l.costs)])}
       foot={["Total", String(total.count), brl.format(total.revenue), brl.format(total.costs), brl.format(total.revenue - total.costs)]}
@@ -156,7 +158,7 @@ function AmountTable({ title, rows }: { title: string; rows: { label: string; am
   return (
     <Section title={title}>
       {rows.length ? (
-        <Table
+        <DataTable
           head={["Categoria", "Valor"]}
           rows={rows.map((r) => [r.label, brl.format(r.amount)])}
           foot={["Total", brl.format(rows.reduce((s, r) => s + r.amount, 0))]}
@@ -165,46 +167,5 @@ function AmountTable({ title, rows }: { title: string; rows: { label: string; am
         <p className="px-1 text-sm text-muted">Nada no período.</p>
       )}
     </Section>
-  );
-}
-
-// Primeira coluna é o rótulo e fica fixa ao rolar para o lado no celular; as demais, valores alinhados à direita
-const STICKY = "sticky left-0 bg-[color-mix(in_srgb,var(--color-navy)_60%,var(--color-ink))]";
-
-function Table({ head, rows, foot }: { head: string[]; rows: string[][]; foot: string[] }) {
-  return (
-    <div className="overflow-x-auto rounded-xl border border-line bg-navy/60">
-      <table className="w-full min-w-[34rem] border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-line text-[0.8125rem] text-muted">
-            {head.map((h, i) => (
-              <th key={h} className={`px-4 py-3 font-medium ${i ? "text-right" : `text-left ${STICKY}`}`}>
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-line">
-          {rows.map((r, ri) => (
-            <tr key={ri}>
-              {r.map((c, i) => (
-                <td key={i} className={`px-4 py-3 ${i ? "num text-right" : `font-medium ${STICKY}`}`}>
-                  {c}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr className="border-t border-line-strong font-semibold">
-            {foot.map((c, i) => (
-              <td key={i} className={`px-4 py-3 ${i ? "num text-right" : STICKY}`}>
-                {c}
-              </td>
-            ))}
-          </tr>
-        </tfoot>
-      </table>
-    </div>
   );
 }

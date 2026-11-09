@@ -10,10 +10,12 @@ import { PhotoInput } from "./PhotoInput";
 import { Button, Field, TextArea } from "./ui";
 
 // Avulso (freelancer): vira um agente marcado como avulso e já entra na escala de quem chamou
-export function FreelanceForm({ onAdded }: { onAdded: (id: string) => void }) {
+export function FreelanceForm({ onAdded, kind = "agent" }: { onAdded: (id: string) => void; kind?: AgentRecord["kind"] }) {
+  const driver = kind === "driver";
+  const defaultRole = driver ? "Motorista" : "Agente de proteção";
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [role, setRole] = useState("Agente de proteção");
+  const [role, setRole] = useState(defaultRole);
   const [bio, setBio] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -22,7 +24,7 @@ export function FreelanceForm({ onAdded }: { onAdded: (id: string) => void }) {
   const reset = () => {
     setOpen(false);
     setName("");
-    setRole("Agente de proteção");
+    setRole(defaultRole);
     setBio("");
     setPhoto(null);
     setError("");
@@ -32,6 +34,7 @@ export function FreelanceForm({ onAdded }: { onAdded: (id: string) => void }) {
     if (!name.trim()) return setError("Informe o nome.");
     const agent: AgentRecord = {
       id: newId(),
+      kind,
       name: name.trim(),
       rolePt: role.trim(),
       roleEn: "",
@@ -67,13 +70,13 @@ export function FreelanceForm({ onAdded }: { onAdded: (id: string) => void }) {
   if (!open)
     return (
       <Button variant="ghost" className="!min-h-9 !px-3" onClick={() => setOpen(true)}>
-        <IconUserPlus className="size-4" /> Adicionar avulso (freelancer)
+        <IconUserPlus className="size-4" /> {driver ? "Adicionar motorista avulso" : "Adicionar avulso (freelancer)"}
       </Button>
     );
 
   return (
     <div className="space-y-4 border-l-2 border-line-strong pl-4">
-      <p className="text-[0.875rem] text-muted">Freelancer só para este trabalho. Fica salvo em Agentes como avulso e nunca vai para o site.</p>
+      <p className="text-[0.875rem] text-muted">Freelancer só para este trabalho. Fica salvo em {driver ? "Motoristas" : "Agentes"} como avulso e nunca vai para o site.</p>
       <PhotoInput name={name} folder="agents" value={photo} onChange={setPhoto} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Nome">

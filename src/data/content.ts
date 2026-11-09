@@ -158,6 +158,7 @@ export const localContent: SiteContent = {
       { name: "Royal American Group", logo: "/images/logos/royal-american.png", scale: 1.7 },
       { name: "Crisol Group" },
       { name: "Prosegur", logo: "/images/logos/prosegur.svg" }, // SVG oficial; preto trocado pelo amarelo da marca para o hover não sumir no fundo escuro
+      { name: "Audi Revolut F1 Team" },
     ],
     notableClients: [
       { name: "Mario Isola", context: "Pirelli · Fórmula 1" },

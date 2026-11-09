@@ -4,6 +4,7 @@ import { Emblem, Wordmark } from "@/components/brand/Logo";
 import { RichText } from "@/components/RichText";
 import { vehicleCategoryName } from "@/lib/admin/catalog";
 import { formatDoc, formatPhone } from "@/lib/admin/labels";
+import type { DocLang } from "@/lib/admin/proposal-i18n";
 import type { AgentRecord, Vehicle } from "@/lib/admin/types";
 
 // Peças dos documentos A4 do painel (proposta e currículo): folha branca, prontas para imprimir em PDF
@@ -41,8 +42,8 @@ export function DocBrandHeader({ kind, children }: { kind: string; children?: Re
   return (
     <header className="flex items-start justify-between gap-6 border-b border-[#141922]/15 pb-6">
       <div className="flex items-center gap-3 text-[#141922]">
-        <Emblem className="h-14" />
-        <Wordmark className="h-12" />
+        <Emblem className="h-20" />
+        <Wordmark className="h-[4.25rem]" />
       </div>
       <div className="text-right">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[#141922]/55">{kind}</p>
@@ -73,33 +74,37 @@ function Photo({ src, name, className }: { src: string | null; name: string; cla
   );
 }
 
-const agentMeta = (a: AgentRecord) =>
-  [a.languages.join(", "), a.yearsExperience ? `${a.yearsExperience} anos de experiência` : ""].filter(Boolean).join(" · ");
+const agentMeta = (a: AgentRecord, lang: DocLang) =>
+  [a.languages.join(", "), a.yearsExperience ? `${a.yearsExperience} ${lang === "en" ? "years of experience" : "anos de experiência"}` : ""].filter(Boolean).join(" · ");
+const agentRole = (a: AgentRecord, lang: DocLang) => (lang === "en" && a.roleEn) || a.rolePt;
+const agentBio = (a: AgentRecord, lang: DocLang) => (lang === "en" && a.bioEn) || a.bioPt;
 
 // Proposta comercial: só apresentação (sem contato nem documentos)
-export function AgentCard({ agent: a }: { agent: AgentRecord }) {
+export function AgentCard({ agent: a, lang = "pt" }: { agent: AgentRecord; lang?: DocLang }) {
   return (
     <div className="flex gap-4 break-inside-avoid">
       <Photo src={a.photoUrl} name={a.name} className="size-[22mm]" />
       <div className="min-w-0 text-[0.875rem] leading-relaxed">
         <p className="text-[1rem] font-semibold">{a.name}</p>
-        {a.rolePt && <p className="text-[#141922]/65">{a.rolePt}</p>}
-        {agentMeta(a) && <p className="text-[0.8125rem] text-[#141922]/55">{agentMeta(a)}</p>}
+        {agentRole(a, lang) && <p className="text-[#141922]/65">{agentRole(a, lang)}</p>}
+        {agentMeta(a, lang) && <p className="text-[0.8125rem] text-[#141922]/55">{agentMeta(a, lang)}</p>}
         {/* Proposta: bio resumida; o currículo completo vai no serviço fechado */}
-        {a.bioPt && <RichText text={a.bioPt} className="mt-1.5 line-clamp-4" />}
+        {agentBio(a, lang) && <RichText text={agentBio(a, lang)} className="mt-1.5 line-clamp-4" />}
       </div>
     </div>
   );
 }
 
-export function VehicleCard({ vehicle: v, showPlate = false }: { vehicle: Vehicle; showPlate?: boolean }) {
+export function VehicleCard({ vehicle: v, showPlate = false, lang = "pt" }: { vehicle: Vehicle; showPlate?: boolean; lang?: DocLang }) {
+  const en = lang === "en";
+  const description = (en && v.descriptionEn) || v.descriptionPt;
   const facts = [
-    vehicleCategoryName(v.categoryId),
+    vehicleCategoryName(v.categoryId, lang),
     v.year ? String(v.year) : "",
     v.color,
-    v.capacity ? `${v.capacity} lugares` : "",
-    v.armored ? "Blindado" : "",
-    showPlate && v.plate ? `Placa ${v.plate}` : "",
+    v.capacity ? `${v.capacity} ${en ? "seats" : "lugares"}` : "",
+    v.armored ? (en ? "Armored" : "Blindado") : "",
+    showPlate && v.plate ? `${en ? "Plate" : "Placa"} ${v.plate}` : "",
   ].filter(Boolean);
   return (
     <div className="break-inside-avoid overflow-hidden rounded-lg border border-[#141922]/12">
@@ -107,36 +112,37 @@ export function VehicleCard({ vehicle: v, showPlate = false }: { vehicle: Vehicl
       <div className="p-3 text-[0.875rem] leading-relaxed">
         <p className="font-semibold">{v.model}</p>
         <p className="text-[0.8125rem] text-[#141922]/60">{facts.join(" · ")}</p>
-        {v.descriptionPt && <p className="mt-1">{v.descriptionPt}</p>}
+        {description && <p className="mt-1">{description}</p>}
       </div>
     </div>
   );
 }
 
 // Currículo completo; contato e CNH só quando o serviço já está fechado
-export function AgentCv({ agent: a, withPrivate }: { agent: AgentRecord; withPrivate: boolean }) {
+export function AgentCv({ agent: a, withPrivate, lang = "pt" }: { agent: AgentRecord; withPrivate: boolean; lang?: DocLang }) {
   const career = lines(a.career);
+  const en = lang === "en";
   return (
     <div className="space-y-7">
       <div className="flex items-center gap-6">
         <Photo src={a.photoUrl} name={a.name} className="size-[32mm]" />
         <div className="min-w-0">
           <p className="text-[1.75rem] font-semibold leading-tight tracking-[-0.03em]">{a.name}</p>
-          {a.rolePt && <p className="mt-1 text-[1rem] text-[#141922]/70">{a.rolePt}</p>}
-          {agentMeta(a) && <p className="mt-1 text-[0.875rem] text-[#141922]/55">{agentMeta(a)}</p>}
+          {agentRole(a, lang) && <p className="mt-1 text-[1rem] text-[#141922]/70">{agentRole(a, lang)}</p>}
+          {agentMeta(a, lang) && <p className="mt-1 text-[0.875rem] text-[#141922]/55">{agentMeta(a, lang)}</p>}
         </div>
       </div>
 
-      {a.bioPt && (
+      {agentBio(a, lang) && (
         <section>
-          <DocLabel>Perfil</DocLabel>
-          <RichText text={a.bioPt} className="mt-2 text-sm leading-relaxed" />
+          <DocLabel>{en ? "Profile" : "Perfil"}</DocLabel>
+          <RichText text={agentBio(a, lang)} className="mt-2 text-sm leading-relaxed" />
         </section>
       )}
 
       {career.length > 0 && (
         <section>
-          <DocLabel>Experiência profissional</DocLabel>
+          <DocLabel>{en ? "Professional experience" : "Experiência profissional"}</DocLabel>
           <ul className="mt-2 space-y-1.5 text-sm leading-relaxed">
             {career.map((c, i) => (
               <li key={i} className="border-b border-[#141922]/10 pb-1.5 last:border-0">
@@ -149,7 +155,7 @@ export function AgentCv({ agent: a, withPrivate }: { agent: AgentRecord; withPri
 
       {a.certifications.length > 0 && (
         <section>
-          <DocLabel>Certificações</DocLabel>
+          <DocLabel>{en ? "Certifications" : "Certificações"}</DocLabel>
           <ul className="mt-2 grid gap-x-8 gap-y-1.5 text-sm sm:grid-cols-2">
             {a.certifications.map((c) => (
               <li key={c}>{c}</li>
@@ -160,17 +166,17 @@ export function AgentCv({ agent: a, withPrivate }: { agent: AgentRecord; withPri
 
       {withPrivate && (a.phone || a.documentId) && (
         <section>
-          <DocLabel>Contato e documento</DocLabel>
+          <DocLabel>{en ? "Contact and ID" : "Contato e documento"}</DocLabel>
           <dl className="mt-2 grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2">
             {a.phone && (
               <div>
-                <dt className="text-[0.8125rem] text-[#141922]/55">Telefone</dt>
+                <dt className="text-[0.8125rem] text-[#141922]/55">{en ? "Phone" : "Telefone"}</dt>
                 <dd>{formatPhone(a.phone)}</dd>
               </div>
             )}
             {a.documentId && (
               <div>
-                <dt className="text-[0.8125rem] text-[#141922]/55">Documento</dt>
+                <dt className="text-[0.8125rem] text-[#141922]/55">{en ? "ID" : "Documento"}</dt>
                 <dd>{formatDoc(a.documentId)}</dd>
               </div>
             )}
@@ -180,7 +186,7 @@ export function AgentCv({ agent: a, withPrivate }: { agent: AgentRecord; withPri
 
       {withPrivate && a.cnhUrl && (
         <section className="break-inside-avoid">
-          <DocLabel>CNH</DocLabel>
+          <DocLabel>{en ? "Driver's license" : "CNH"}</DocLabel>
           <img src={a.cnhUrl} alt={`CNH de ${a.name}`} className="mt-3 max-h-[110mm] w-auto max-w-full rounded-lg border border-[#141922]/12" />
         </section>
       )}

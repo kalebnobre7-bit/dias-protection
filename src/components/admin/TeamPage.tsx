@@ -1,0 +1,303 @@
+"use client";
+
+import { useState } from "react";
+import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
+
+import { DocumentInput, PhotoInput } from "@/components/admin/PhotoInput";
+import { Avatar, Badge, Button, DeleteButton, DocInput, EmptyState, Field, List, NumberInput, PageHeader, PhoneInput, PickMark, Row, SearchBox, Section, Sheet, Skeleton, Switch, TextArea, useForm } from "@/components/admin/ui";
+import { newId, repo, useTable } from "@/lib/admin/store";
+import type { AgentRecord } from "@/lib/admin/types";
+
+const TEXT = {
+  agent: {
+    title: "Agentes",
+    subtitle: "Perfil tipo currículo. Os publicados aparecem na página Equipe do site.",
+    add: "Novo agente",
+    pick: "Toque nos agentes que vão no PDF. Sai um currículo por página, sem contato nem documentos.",
+    emptyTitle: "Nenhum agente cadastrado",
+    emptyText: "Cadastre a equipe com foto, idiomas e certificações.",
+    notFound: "Nenhum agente encontrado.",
+    one: "Agente",
+    rolePt: "Agente de proteção",
+    roleEn: "Protection agent",
+  },
+  driver: {
+    title: "Motoristas",
+    subtitle: "Perfil tipo currículo. Motoristas ficam só no painel, não vão para o site.",
+    add: "Novo motorista",
+    pick: "Toque nos motoristas que vão no PDF. Sai um currículo por página, sem contato nem documentos.",
+    emptyTitle: "Nenhum motorista cadastrado",
+    emptyText: "Cadastre os motoristas com foto, idiomas e CNH.",
+    notFound: "Nenhum motorista encontrado.",
+    one: "Motorista",
+    rolePt: "Motorista",
+    roleEn: "Driver",
+  },
+} as const;
+
+const blank = (kind: AgentRecord["kind"]): AgentRecord => ({
+  id: newId(),
+  kind,
+  name: "",
+  rolePt: kind === "driver" ? "Motorista" : "",
+  roleEn: "",
+  bioPt: "",
+  bioEn: "",
+  languages: [],
+  yearsExperience: null,
+  certifications: [],
+  photoUrl: null,
+  career: "",
+  phone: "",
+  documentId: "",
+  cnhUrl: null,
+  notes: "",
+  active: true,
+  published: false,
+  freelance: false,
+  sortOrder: 0,
+  createdAt: new Date().toISOString(),
+});
+
+// Agentes e motoristas: mesma tabela e mesma tela, separados por `kind`
+export function TeamPage({ kind }: { kind: AgentRecord["kind"] }) {
+  const t = TEXT[kind];
+  const { rows: all, loading } = useTable("agents");
+  const rows = all.filter((a) => a.kind === kind);
+  const { rows: jobs } = useTable("jobs");
+  const [editing, setEditing] = useState<AgentRecord | null>(null);
+  // Modo "Exportar PDF": ids escolhidos (null = fora do modo)
+  const [picking, setPicking] = useState<string[] | null>(null);
+  const [query, setQuery] = useState("");
+  // Fixos primeiro, avulsos depois, inativos no fim
+  const sorted = [...rows].sort((a, b) => Number(b.active) - Number(a.active) || Number(a.freelance) - Number(b.freelance) || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+  const q = query.trim().toLowerCase();
+  const shown = sorted.filter((a) => !q || `${a.name} ${a.rolePt} ${a.languages.join(" ")}`.toLowerCase().includes(q));
+
+  return (
+    <>
+      <PageHeader
+        title={t.title}
+        subtitle={t.subtitle}
+        action={
+          picking ? (
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => setPicking(null)}>
+                Cancelar
+              </Button>
+              <Button disabled={!picking.length} onClick={() => exportPdf(picking)}>
+                <IconDoc className="size-4" /> Gerar PDF ({picking.length})
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              {rows.length > 0 && (
+                <Button variant="secondary" onClick={() => setPicking([])}>
+                  <IconDoc className="size-4" /> Exportar PDF
+                </Button>
+              )}
+              <Button onClick={() => setEditing(blank(kind))}>
+                <IconPlus className="size-4" /> {t.add}
+              </Button>
+            </div>
+          )
+        }
+      />
+      {picking && <p className="-mt-4 mb-4 px-1 text-[0.875rem] text-muted">{t.pick}</p>}
+      {loading ? (
+        <Skeleton />
+      ) : !rows.length ? (
+        <EmptyState title={t.emptyTitle} text={t.emptyText} />
+      ) : (
+        <>
+          <SearchBox value={query} onChange={setQuery} placeholder="Buscar por nome, função ou idioma" />
+          {shown.length ? (
+            <List>
+              {shown.map((a) => {
+                const count = jobs.filter((j) => j.agentIds.includes(a.id)).length;
+                return (
+                  <Row
+                    key={a.id}
+                    onClick={() => (picking ? setPicking(picking.includes(a.id) ? picking.filter((x) => x !== a.id) : [...picking, a.id]) : setEditing(a))}
+                    leading={<Avatar name={a.name} photo={a.photoUrl} />}
+                    title={a.name}
+                    subtitle={[a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ")}
+                    trailing={
+                      picking ? (
+                        <PickMark on={picking.includes(a.id)} />
+                      ) : (
+                        <span className="flex flex-col items-end gap-1">
+                          {!a.active ? (
+                            <Badge tone="bad">Inativo</Badge>
+                          ) : a.freelance ? (
+                            <Badge tone="warn">Avulso</Badge>
+                          ) : a.published ? (
+                            <Badge tone="good">No site</Badge>
+                          ) : (
+                            <Badge>Interno</Badge>
+                          )}
+                          <span className="num text-xs text-muted">{count} serviço(s)</span>
+                        </span>
+                      )
+                    }
+                  />
+                );
+              })}
+            </List>
+          ) : (
+            <p className="mt-6 text-center text-muted">{t.notFound}</p>
+          )}
+        </>
+      )}
+      {editing && <AgentSheet agent={editing} isNew={!rows.some((r) => r.id === editing.id)} onClose={() => setEditing(null)} />}
+    </>
+  );
+}
+
+// Abre a apresentação em A4 (sem dados internos) em outra aba
+const exportPdf = (ids: string[]) =>
+  window.open(`${process.env.NEXT_PUBLIC_BASE_PATH}/admin/apresentacao?agentes=${ids.join(",")}`, "_blank", "noopener");
+
+function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: boolean; onClose: () => void }) {
+  const { value: a, set, dirty } = useForm(agent);
+  const t = TEXT[agent.kind];
+  const [error, setError] = useState("");
+
+  const persist = async () => {
+    if (!a.name.trim()) {
+      setError("Informe o nome.");
+      return false;
+    }
+    try {
+      await repo.upsert("agents", { ...a, name: a.name.trim() });
+      return true;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+      return false;
+    }
+  };
+  const save = async () => {
+    if (await persist()) onClose();
+  };
+  // Salva e abre o currículo em A4 em outra aba
+  const openCv = async () => {
+    if (await persist()) window.open(`${process.env.NEXT_PUBLIC_BASE_PATH}/admin/agentes/curriculo?id=${a.id}`, "_blank", "noopener");
+  };
+  const remove = async () => {
+    try {
+      await repo.remove("agents", a.id);
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível excluir.");
+    }
+  };
+
+  return (
+    <Sheet
+      open
+      error={error}
+      dirty={dirty}
+      onClose={onClose}
+      title={isNew ? t.add : a.name || t.one}
+      footer={
+        <>
+          {!isNew && <DeleteButton onConfirm={remove} />}
+          <Button className="ml-auto" onClick={save}>
+            Salvar
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <PhotoInput name={a.name} folder="agents" value={a.photoUrl} onChange={(v) => set("photoUrl", v)} />
+        <Button variant="secondary" onClick={openCv}>
+          <IconDoc className="size-4" /> Currículo / PDF
+        </Button>
+      </div>
+      <Field label="Nome">
+        <input className="input" value={a.name} onChange={(e) => set("name", e.target.value)} autoFocus={isNew} />
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Função (PT)">
+          <input className="input" value={a.rolePt} onChange={(e) => set("rolePt", e.target.value)} placeholder={t.rolePt} />
+        </Field>
+        <Field label="Função (EN)">
+          <input className="input" value={a.roleEn} onChange={(e) => set("roleEn", e.target.value)} placeholder={t.roleEn} />
+        </Field>
+      </div>
+      <Field label="Bio (PT)">
+        <TextArea rows={4} value={a.bioPt} onChange={(e) => set("bioPt", e.target.value)} />
+      </Field>
+      <Field label="Bio (EN)">
+        <TextArea rows={4} value={a.bioEn} onChange={(e) => set("bioEn", e.target.value)} />
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Idiomas" hint="Separados por vírgula">
+          <input
+            className="input"
+            defaultValue={a.languages.join(", ")}
+            onChange={(e) => set("languages", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+          />
+        </Field>
+        <Field label="Anos de experiência">
+          <NumberInput value={a.yearsExperience} onChange={(y) => set("yearsExperience", y)} digits={2} max={60} suffix="anos" label="Anos de experiência" />
+        </Field>
+      </div>
+      <Field label="Certificações" hint="Uma por linha">
+        <TextArea
+          rows={3}
+          defaultValue={a.certifications.join("\n")}
+          onChange={(e) => set("certifications", e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))}
+        />
+      </Field>
+
+      <Field label="Experiência profissional" hint="Uma por linha. Ex.: 2019–2024 · Agente de proteção · Empresa X. Vai só no currículo.">
+        <TextArea rows={5} value={a.career} onChange={(e) => set("career", e.target.value)} />
+      </Field>
+
+      <Section title="Visibilidade">
+        <div className="px-1">
+          <Switch checked={a.active} onChange={(v) => set("active", v)} label="Ativo" hint="Inativos não aparecem na escala de serviços" />
+          <div className="border-t border-line" />
+          <Switch
+            checked={a.freelance}
+            onChange={(v) => {
+              set("freelance", v);
+              if (v) set("published", false);
+            }}
+            label="Avulso (freelancer)"
+            hint="Não é fixo da empresa. Avulsos nunca vão para o site."
+          />
+          {!a.freelance && a.kind === "agent" && (
+            <>
+              <div className="border-t border-line" />
+              <Switch checked={a.published} onChange={(v) => set("published", v)} label="Mostrar no site" hint="Nome, função, bio, idiomas, certificações e foto. Depois, publique na aba Site." />
+            </>
+          )}
+        </div>
+      </Section>
+
+      <Section title="Dados internos (não aparecem no site)">
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Telefone">
+              <PhoneInput value={a.phone} onChange={(v) => set("phone", v)} label="Telefone" />
+            </Field>
+            <Field label="Documento" hint="CPF ou registro de vigilante">
+              <DocInput value={a.documentId} onChange={(v) => set("documentId", v)} label="Documento" />
+            </Field>
+          </div>
+          {/* div em vez de Field: label com botões dentro dispararia o upload ao clicar no texto */}
+          <div>
+            <span className="mb-1.5 block text-[0.875rem] font-medium text-silver">CNH</span>
+            <DocumentInput label="CNH" value={a.cnhUrl} onChange={(v) => set("cnhUrl", v)} />
+            <span className="mt-1.5 block text-xs text-muted">Foto ou print da CNH. Só aparece no documento de serviço fechado.</span>
+          </div>
+          <Field label="Observações">
+            <TextArea rows={2} value={a.notes} onChange={(e) => set("notes", e.target.value)} />
+          </Field>
+        </div>
+      </Section>
+    </Sheet>
+  );
+}

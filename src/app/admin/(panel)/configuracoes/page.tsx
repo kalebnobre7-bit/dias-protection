@@ -63,7 +63,7 @@ function SettingsForm({ initial }: { initial: Settings }) {
       ...s,
       company: { ...s.company, whatsapp: onlyDigits(s.company.whatsapp), instagram: s.company.instagram.trim().replace(/^@/, "") },
       proposal: { ...s.proposal, units: unitList, presets: s.proposal.presets.filter((x) => x.description.trim()) },
-      costs: { categories: named.map((c) => c.name) },
+      costs: { ...s.costs, categories: named.map((c) => c.name) },
       createdAt: s.createdAt || new Date().toISOString(),
     };
     try {

@@ -9,6 +9,7 @@ import {
   Button,
   buttonClass,
   ChipSelect,
+  DaysField,
   Checkbox,
   DeleteButton,
   EmptyState,
@@ -29,11 +30,12 @@ import {
 } from "@/components/admin/ui";
 import { FreelanceForm } from "@/components/admin/FreelanceForm";
 import { DateTile, MoneyInput, statusTone } from "@/components/admin/job-bits";
-import { serviceTypeName, serviceTypeOptions } from "@/lib/admin/catalog";
-import { brl, costCategoryName, formatDateTime, jobStatusLabel } from "@/lib/admin/labels";
+import { jobServiceNames, serviceTypeOptions } from "@/lib/admin/catalog";
+import { monthOf, monthTaxRate } from "@/lib/admin/finance";
+import { brl, clientLine, costCategoryName, formatDateTime, jobDatesText, jobStatusLabel, percent } from "@/lib/admin/labels";
 import { useSettings } from "@/lib/admin/settings";
 import { newId, repo, useTable } from "@/lib/admin/store";
-import type { Job, JobCost, JobStatus } from "@/lib/admin/types";
+import type { AgentRecord, Job, JobCost, JobStatus } from "@/lib/admin/types";
 
 type Filter = "all" | JobStatus;
 
@@ -48,12 +50,16 @@ const tomorrowAt8 = () => {
   return `${localDate(d)}T08:00`;
 };
 
+const firstServiceType = serviceTypeOptions[0]?.value ?? null;
+
 const blank = (): Job => ({
   id: newId(),
   clientId: null,
-  serviceTypeId: serviceTypeOptions[0]?.value ?? null,
+  serviceTypeId: firstServiceType,
+  serviceTypeIds: firstServiceType ? [firstServiceType] : [],
   startsAt: tomorrowAt8(),
   endsAt: "",
+  days: [],
   origin: "",
   destination: "",
   status: "scheduled",
@@ -84,12 +90,12 @@ export default function JobsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
-  const clientName = (id: string | null) => clients.find((c) => c.id === id)?.name ?? "Sem cliente";
+  const clientOf = (id: string | null) => clients.find((c) => c.id === id);
   const q = query.trim().toLowerCase();
   // "Todos" deixa os cancelados de fora; eles têm filtro próprio
   const filtered = rows
     .filter((j) => (filter === "all" ? j.status !== "canceled" : j.status === filter))
-    .filter((j) => !q || `${clientName(j.clientId)} ${serviceTypeName(j.serviceTypeId)} ${j.origin} ${j.destination}`.toLowerCase().includes(q));
+    .filter((j) => !q || `${clientLine(clientOf(j.clientId))} ${jobServiceNames(j)} ${j.origin} ${j.destination}`.toLowerCase().includes(q));
   // Próximos do mais perto ao mais longe; anteriores do mais recente ao mais antigo
   const today = localDate(new Date());
   const upcoming = filtered.filter((j) => j.startsAt.slice(0, 10) >= today).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
@@ -141,8 +147,8 @@ export default function JobsPage() {
                           key={j.id}
                           onClick={() => setEditing(j)}
                           leading={<DateTile value={j.startsAt} />}
-                          title={clientName(j.clientId)}
-                          subtitle={[serviceTypeName(j.serviceTypeId), j.destination].filter(Boolean).join(" · ")}
+                          title={clientLine(clientOf(j.clientId))}
+                          subtitle={[jobServiceNames(j), jobDatesText(j), j.destination].filter(Boolean).join(" · ")}
                           trailing={
                             <span className="flex flex-col items-end gap-1">
                               <span className="num font-medium">{brl.format(j.price)}</span>
@@ -168,17 +174,120 @@ export default function JobsPage() {
   );
 }
 
+// Data e hora separadas: o datetime-local devolve "" enquanto falta a hora, e o término sumia ao salvar
+function DateTimeFields(props: { label: string; value: string; defaultTime: string; onChange: (v: string) => void }) {
+  const date = props.value.slice(0, 10);
+  const time = props.value.slice(11, 16);
+  return (
+    <Field label={props.label}>
+      <div className="flex gap-2">
+        <input
+          className="input min-w-0 flex-1"
+          type="date"
+          value={date}
+          onChange={(e) => props.onChange(e.target.value ? `${e.target.value}T${time || props.defaultTime}` : "")}
+        />
+        <input
+          className="input !w-28 shrink-0 disabled:opacity-50"
+          type="time"
+          aria-label={`Hora de ${props.label.toLowerCase()}`}
+          value={time}
+          disabled={!date}
+          onChange={(e) => props.onChange(`${date}T${e.target.value || props.defaultTime}`)}
+        />
+      </div>
+    </Field>
+  );
+}
+
+const FIXED_COSTS = ["Agente", "Parceiro"];
+
+// Edita as mesmas categorias de Configurações sem sair do serviço; renomear leva junto os custos já lançados
+function CostCategoriesEditor(props: { onClose: () => void; onRenamed: (from: string, to: string) => void }) {
+  const { settings } = useSettings();
+  const [items, setItems] = useState<{ name: string; from: string | null }[]>(() => settings.costs.categories.map((name) => ({ name, from: name })));
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const save = async () => {
+    const named = items.map((c) => ({ ...c, name: c.name.trim() })).filter((c) => c.name);
+    const names = named.map((c) => c.name.toLowerCase());
+    const clash = named.find((c, i) => names.indexOf(c.name.toLowerCase()) !== i || FIXED_COSTS.some((f) => f.toLowerCase() === c.name.toLowerCase()));
+    if (clash) return setError(`Categoria repetida: ${clash.name}.`);
+    setBusy(true);
+    try {
+      await repo.upsert("settings", { ...settings, costs: { ...settings.costs, categories: named.map((c) => c.name) } });
+      for (const c of named) {
+        if (c.from && c.from !== c.name) {
+          await repo.renameCostCategory(c.from, c.name);
+          props.onRenamed(c.from, c.name);
+        }
+      }
+      props.onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mb-4 space-y-2 border-l-2 border-line-strong pl-4">
+      <p className="text-[0.875rem] text-muted">Agente e Parceiro são fixos. O que mudar aqui vale para todos os serviços.</p>
+      {items.map((c, n) => (
+        <div key={n} className="flex items-center gap-1">
+          <input
+            className="input !min-h-9"
+            value={c.name}
+            aria-label="Nome da categoria"
+            onChange={(e) => setItems(items.map((x, i) => (i === n ? { ...x, name: e.target.value } : x)))}
+          />
+          <button
+            type="button"
+            onClick={() => setItems(items.filter((_, i) => i !== n))}
+            aria-label={`Remover categoria ${c.name}`}
+            className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-white/6 hover:text-danger"
+          >
+            <IconClose className="size-4" />
+          </button>
+        </div>
+      ))}
+      {error && (
+        <p role="alert" className="text-[0.875rem] text-danger">
+          {error}
+        </p>
+      )}
+      <div className="flex items-center justify-between gap-2">
+        <Button variant="ghost" className="!min-h-9 !px-3" onClick={() => setItems([...items, { name: "", from: null }])}>
+          <IconPlus className="size-4" /> Categoria
+        </Button>
+        <span className="flex gap-2">
+          <Button variant="ghost" className="!min-h-9 !px-3" onClick={props.onClose} disabled={busy}>
+            Cancelar
+          </Button>
+          <Button variant="secondary" className="!min-h-9 !px-3" onClick={save} disabled={busy}>
+            {busy ? "Salvando…" : "Salvar categorias"}
+          </Button>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   const { value: j, set, dirty } = useForm(props.job);
   const { rows: clients } = useTable("clients");
   const { rows: agents } = useTable("agents");
   const { rows: vehicles } = useTable("vehicles");
   const { rows: partners } = useTable("partners");
+  const { rows: jobs } = useTable("jobs");
   const costCategories = useSettings().settings.costs.categories;
   const { rows: allCosts, loading: costsLoading } = useTable("jobCosts");
   const [costs, setCosts] = useState<JobCost[] | null>(null);
   const [newClient, setNewClient] = useState("");
+  const [newCompany, setNewCompany] = useState("");
   const [clientChoice, setClientChoice] = useState(props.job.clientId ?? "");
+  const [editingCategories, setEditingCategories] = useState(false);
   const [error, setError] = useState("");
 
   // Custos são editados localmente e gravados juntos no salvar
@@ -188,7 +297,9 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   const list = costs ?? [];
   const costsDirty = costs !== null && JSON.stringify(costs) !== JSON.stringify(allCosts.filter((c) => c.jobId === props.job.id));
   const totalCosts = list.reduce((s, c) => s + (Number.isFinite(c.amount) ? c.amount : 0), 0);
-  const profit = j.price - totalCosts;
+  const taxRate = monthTaxRate(monthOf(j.startsAt), jobs);
+  const tax = j.price * taxRate;
+  const profit = j.price - totalCosts - tax;
 
   const updateCost = (id: string, patch: Partial<JobCost>) => setCosts(list.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   // Escolher o agente preenche a descrição vazia ("Diária · Nome")
@@ -209,10 +320,14 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       let clientId = clientChoice || null;
       if (clientChoice === NEW_CLIENT) {
         clientId = newId();
-        await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
+        await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: newCompany.trim(), phone: "", email: "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
         setClientChoice(clientId); // se o resto falhar, salvar de novo não duplica o cliente
       }
-      await repo.upsert("jobs", { ...j, clientId, paidAt: j.paymentStatus === "paid" ? j.paidAt || j.startsAt.slice(0, 10) : "" });
+      // Com dias avulsos, início e término acompanham o primeiro e o último dia
+      const first = j.days[0];
+      const last = j.days[j.days.length - 1];
+      const dates = first ? { startsAt: first + j.startsAt.slice(10), endsAt: j.endsAt ? last + j.endsAt.slice(10) : "" } : {};
+      await repo.upsert("jobs", { ...j, ...dates, clientId, paidAt: j.paymentStatus === "paid" ? j.paidAt || j.startsAt.slice(0, 10) : "" });
       await repo.replaceJobCosts(
         j.id,
         list.filter((c) => c.description.trim() || c.amount > 0).map((c) => ({ ...c, description: c.description.trim() || costCategoryName(c.category) })),
@@ -232,7 +347,11 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   };
 
   // Mostra os ativos + os já escalados (mesmo que tenham ficado inativos)
-  const agentOptions = agents.filter((a) => a.active || j.agentIds.includes(a.id)).map((a) => ({ value: a.id, label: a.freelance ? `${a.name} (avulso)` : a.name }));
+  const teamOf = (kind: AgentRecord["kind"]) => agents.filter((a) => a.kind === kind && (a.active || j.agentIds.includes(a.id)));
+  const teamOptions = (kind: AgentRecord["kind"]) => teamOf(kind).map((a) => ({ value: a.id, label: a.freelance ? `${a.name} (avulso)` : a.name }));
+  const pickedOf = (kind: AgentRecord["kind"]) => j.agentIds.filter((id) => teamOf(kind).some((a) => a.id === id));
+  // Agentes e motoristas ficam em agentIds; cada grupo de chips só troca os seus
+  const setPicked = (kind: AgentRecord["kind"], picked: string[]) => set("agentIds", [...j.agentIds.filter((id) => !teamOf(kind).some((a) => a.id === id)), ...picked]);
   const vehicleOptions = vehicles
     .filter((v) => v.active || j.vehicleIds.includes(v.id))
     .map((v) => ({ value: v.id, label: [v.model, v.plate].filter(Boolean).join(" · ") }));
@@ -243,7 +362,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       error={error}
       dirty={dirty || costsDirty}
       onClose={props.onClose}
-      title={props.isNew ? "Novo serviço" : `${serviceTypeName(j.serviceTypeId)} · ${formatDateTime(j.startsAt)}`}
+      title={props.isNew ? "Novo serviço" : `${jobServiceNames(j)} · ${formatDateTime(j.startsAt)}`}
       footer={
         <>
           {!props.isNew && <DeleteButton onConfirm={remove} />}
@@ -277,34 +396,38 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
             .map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
+                {c.company ? ` · ${c.company}` : ""}
               </option>
             ))}
           <option value={NEW_CLIENT}>+ Novo cliente…</option>
         </Select>
       </Field>
       {clientChoice === NEW_CLIENT && (
-        <Field label="Nome do novo cliente" hint="Os demais dados podem ser completados na aba Clientes.">
-          <input className="input" value={newClient} onChange={(e) => setNewClient(e.target.value)} autoFocus />
-        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Cliente" hint="Os demais dados podem ser completados na aba Clientes.">
+            <input className="input" value={newClient} onChange={(e) => setNewClient(e.target.value)} autoFocus />
+          </Field>
+          <Field label="Contratante">
+            <input className="input" value={newCompany} onChange={(e) => setNewCompany(e.target.value)} />
+          </Field>
+        </div>
       )}
 
-      <Field label="Tipo de serviço">
-        <Select value={j.serviceTypeId ?? ""} onChange={(e) => set("serviceTypeId", e.target.value || null)}>
-          {serviceTypeOptions.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </Select>
+      <Field label="Tipo de serviço" hint="Pode marcar mais de um.">
+        <ChipSelect
+          options={serviceTypeOptions}
+          value={j.serviceTypeIds}
+          onChange={(v) => {
+            set("serviceTypeIds", v);
+            set("serviceTypeId", v[0] ?? null); // o primeiro segue sendo o usado nos relatórios
+          }}
+          empty=""
+        />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Início">
-          <input className="input" type="datetime-local" value={j.startsAt} onChange={(e) => set("startsAt", e.target.value)} />
-        </Field>
-        <Field label="Término (opcional)">
-          <input className="input" type="datetime-local" value={j.endsAt} onChange={(e) => set("endsAt", e.target.value)} />
-        </Field>
+        <DateTimeFields label="Início" value={j.startsAt} defaultTime="08:00" onChange={(v) => set("startsAt", v)} />
+        <DateTimeFields label="Término (opcional)" value={j.endsAt} defaultTime="18:00" onChange={(v) => set("endsAt", v)} />
         <Field label="Origem">
           <input className="input" value={j.origin} onChange={(e) => set("origin", e.target.value)} />
         </Field>
@@ -313,12 +436,18 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
         </Field>
       </div>
 
+      <DaysField days={j.days} seed={j.startsAt.slice(0, 10)} onChange={(days) => set("days", days)} />
+
       <Section title="Equipe e veículos">
         <div className="space-y-5">
           <Field label="Agentes">
-            <ChipSelect options={agentOptions} value={j.agentIds} onChange={(v) => set("agentIds", v)} empty="Cadastre agentes na aba Agentes." />
+            <ChipSelect options={teamOptions("agent")} value={pickedOf("agent")} onChange={(v) => setPicked("agent", v)} empty="Cadastre agentes na aba Agentes." />
           </Field>
           <FreelanceForm onAdded={(id) => set("agentIds", [...j.agentIds, id])} />
+          <Field label="Motoristas">
+            <ChipSelect options={teamOptions("driver")} value={pickedOf("driver")} onChange={(v) => setPicked("driver", v)} empty="Cadastre motoristas na aba Motoristas." />
+          </Field>
+          <FreelanceForm kind="driver" onAdded={(id) => set("agentIds", [...j.agentIds, id])} />
           <Field label="Veículos">
             <ChipSelect options={vehicleOptions} value={j.vehicleIds} onChange={(v) => set("vehicleIds", v)} empty="Cadastre veículos na aba Veículos." />
           </Field>
@@ -356,11 +485,22 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       <Section
         title="Custos do serviço"
         action={
-          <Button variant="ghost" className="!min-h-9 !px-3" onClick={addCost}>
-            <IconPlus className="size-4" /> Adicionar
-          </Button>
+          <span className="flex gap-1">
+            <Button variant="ghost" className="!min-h-9 !px-3" onClick={() => setEditingCategories(!editingCategories)}>
+              Editar categorias
+            </Button>
+            <Button variant="ghost" className="!min-h-9 !px-3" onClick={addCost}>
+              <IconPlus className="size-4" /> Adicionar
+            </Button>
+          </span>
         }
       >
+        {editingCategories && (
+          <CostCategoriesEditor
+            onClose={() => setEditingCategories(false)}
+            onRenamed={(from, to) => setCosts((prev) => prev?.map((c) => (c.category === from ? { ...c, category: to } : c)) ?? null)}
+          />
+        )}
         {/* Uma linha por custo: descrição · categoria · valor · pago · remover; agente/parceiro numa segunda linha */}
         {list.length ? (
           <ul className="divide-y divide-line border-y border-line">
@@ -436,10 +576,11 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
         )}
       </Section>
 
-      <dl className="grid grid-cols-3 divide-x divide-line border-y border-line text-center">
+      <dl className="grid grid-cols-2 border-y border-line text-center sm:grid-cols-4">
         {[
           ["Cobrado", brl.format(j.price), ""],
           ["Custos", brl.format(totalCosts), ""],
+          [`Imposto (${percent.format(taxRate)})`, brl.format(tax), ""],
           ["Lucro", brl.format(profit), profit < 0 ? "text-danger" : "text-[#8fd6a5]"],
         ].map(([label, value, tone]) => (
           <div key={label} className="px-2 py-3">

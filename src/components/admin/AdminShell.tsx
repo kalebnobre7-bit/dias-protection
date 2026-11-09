@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Briefcase as IconJobs, Building2 as IconPartners, Calculator as IconCalculator, Car as IconVehicles, ChartColumn as IconFinance, ChartPie as IconReports, ExternalLink as IconExternal, FileText as IconProposals, Globe as IconSite, House as IconHome, LogOut as IconLogout, Menu as IconMenu, Settings as IconSettings, ShieldCheck as IconAgents, Users as IconClients } from "lucide-react";
+import { Briefcase as IconJobs, Building2 as IconPartners, Calculator as IconCalculator, Car as IconVehicles, ChartColumn as IconFinance, ChartPie as IconReports, ExternalLink as IconExternal, FileText as IconProposals, Globe as IconSite, House as IconHome, IdCard as IconDrivers, LogOut as IconLogout, Menu as IconMenu, Settings as IconSettings, ShieldCheck as IconAgents, Users as IconClients } from "lucide-react";
 
 import { Emblem } from "@/components/brand/Logo";
 import { signOut, useSession } from "@/lib/admin/auth";
@@ -18,6 +18,7 @@ const nav = [
   { href: "/admin/clientes", label: "Clientes", Icon: IconClients },
   { href: "/admin/parceiros", label: "Parceiros", Icon: IconPartners },
   { href: "/admin/agentes", label: "Agentes", Icon: IconAgents },
+  { href: "/admin/motoristas", label: "Motoristas", Icon: IconDrivers },
   { href: "/admin/veiculos", label: "Veículos", Icon: IconVehicles },
   { href: "/admin/financeiro", label: "Financeiro", Icon: IconFinance },
   { href: "/admin/relatorios", label: "Relatórios", Icon: IconReports },

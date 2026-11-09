@@ -1,3 +1,5 @@
+import type { Order } from "@/lib/order";
+
 // Espelham as tabelas de supabase/migrations/0001_init.sql (snake_case lá, camelCase aqui).
 // Textos opcionais usam "" em vez de null para simplificar os formulários.
 // job_agents / job_vehicles viram os arrays agentIds / vehicleIds de Job.
@@ -22,6 +24,7 @@ export type AgentRecord = {
   active: boolean;
   published: boolean;
   freelance: boolean; // avulso, criado direto no serviço ou na proposta
+  kind: "agent" | "driver"; // motoristas têm guia própria e não vão para o site
   sortOrder: number;
   createdAt: string;
 };
@@ -77,9 +80,11 @@ export type JobStatus = "quote" | "scheduled" | "done" | "canceled";
 export type Job = {
   id: string;
   clientId: string | null;
-  serviceTypeId: string | null;
+  serviceTypeId: string | null; // primeiro de serviceTypeIds (é o que os relatórios agrupam)
+  serviceTypeIds: string[];
   startsAt: string; // "YYYY-MM-DDTHH:mm" (horário local)
   endsAt: string;
+  days: string[]; // dias não contínuos ("YYYY-MM-DD"); vazio = vale o intervalo início → término
   origin: string;
   destination: string;
   status: JobStatus;
@@ -133,9 +138,16 @@ export type PricingCost = {
   description: string;
   qty: number;
   unitCost: number;
+  extras: PricingExtra[]; // subcustos que somam no custo unitário (pedágio, combustível…)
+  // Percentuais do item, em fração sobre o preço de venda
+  margin: number;
+  taxes: number;
+  fees: number;
 };
 
-// Percentuais em fração (0.25 = 25%), sobre o preço de venda
+export type PricingExtra = { id: string; description: string; amount: number };
+
+// Percentuais em fração (0.25 = 25%), sobre o preço de venda; ao mudar, valem para todos os itens
 export type Pricing = {
   costs: PricingCost[];
   margin: number;
@@ -167,10 +179,12 @@ export type Proposal = {
   issuedAt: string; // "YYYY-MM-DD"
   validUntil: string; // "YYYY-MM-DD"
   serviceIds: string[]; // tipos de serviço do site
-  summary: string; // contexto e escopo, em texto corrido
+  summary: string; // descrição do serviço; aparece dentro de Serviço no documento
   period: string; // "10 a 15 de outubro de 2026"; gerado pelo calendário ou texto livre (propostas antigas)
   startDate: string; // "YYYY-MM-DD" ou ""
   endDate: string; // "YYYY-MM-DD" ou "" (transfer de um dia só)
+  days: string[]; // dias não contínuos ("YYYY-MM-DD"); vazio = período corrido
+  en: Record<string, string>; // traduções digitadas; a chave é o texto em português
   nature: ProposalNature;
   guards: number; // seguranças; 0 = sem segurança
   location: string;
@@ -193,6 +207,9 @@ export type ItemPreset = {
   unitPrice: number;
 };
 
+// Custo que se repete todo mês; vira lançamento avulso ao replicar no Financeiro
+export type FixedCost = { id: string; description: string; category: string; amount: number };
+
 // Configurações do painel: uma linha só (id "app")
 export type Settings = {
   id: string;
@@ -214,7 +231,21 @@ export type Settings = {
   };
   costs: {
     categories: string[]; // além de Agente e Parceiro, que são fixos
+    fixed: FixedCost[];
   };
+  finance: {
+    cashOpening: number; // saldo em caixa na data abaixo
+    cashDate: string; // "YYYY-MM-DD" ou ""
+  };
+  createdAt: string;
+};
+
+// Pedido feito em /solicitar; vira proposta pré-preenchida no painel
+export type SiteRequest = {
+  id: string;
+  payload: { order: Order; locale: string; message: string };
+  status: "new" | "converted" | "archived";
+  proposalId: string | null;
   createdAt: string;
 };
 
@@ -229,6 +260,7 @@ export type Tables = {
   financeCategories: FinanceCategory;
   proposals: Proposal;
   settings: Settings;
+  siteRequests: SiteRequest;
 };
 
 export type TableName = keyof Tables;

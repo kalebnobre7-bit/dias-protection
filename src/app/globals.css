@@ -282,6 +282,13 @@
     text-align: left;
   }
 
+  /* Lista aberta do select: sem isso o Windows mostra texto claro em fundo branco */
+  & option,
+  & optgroup {
+    background: var(--color-ink);
+    color: var(--color-text);
+  }
+
   &::placeholder {
     color: rgb(138 148 163 / 0.6);
   }

@@ -1,4 +1,4 @@
-import type { CostCategory, JobStatus, ProposalStatus } from "./types";
+import type { Client, CostCategory, Job, JobStatus, ProposalStatus } from "./types";
 
 export const jobStatusLabel: Record<JobStatus, string> = {
   quote: "Orçamento",
@@ -50,6 +50,30 @@ export const formatDoc = (value: string) => (/^\d{11}$/.test(value) ? value.repl
 export const clientLanguageLabel = { pt: "Português", en: "Inglês", other: "Outro" } as const;
 
 export const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+export const percent = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 });
+
+// "AUDI / Jan Gabriel" ou "ZOETIS / Pinkerton / Cel. Giovanini": cliente, contratante e representantes
+export function clientLine(c?: Client): string {
+  if (!c) return "Sem cliente";
+  return [c.name, c.company, ...c.representatives.map((r) => r.name)].filter(Boolean).join(" / ");
+}
+
+const dayMonth = (v: string) => (v ? `${v.slice(8, 10)}/${v.slice(5, 7)}` : "");
+
+// "29/10, 01/11, 03/11" (dias avulsos), "29/10 a 01/11" (período) ou "29/10"
+export function jobDatesText(j: Pick<Job, "days" | "startsAt" | "endsAt">): string {
+  if (j.days.length) return j.days.map(dayMonth).join(", ");
+  const start = j.startsAt.slice(0, 10);
+  const end = j.endsAt.slice(0, 10);
+  return end && end !== start ? `${dayMonth(start)} a ${dayMonth(end)}` : dayMonth(start);
+}
+
+export function jobDayCount(j: Pick<Job, "days" | "startsAt" | "endsAt">): number {
+  if (j.days.length) return j.days.length;
+  const end = j.endsAt.slice(0, 10);
+  if (!end) return 1;
+  return Math.max(Math.round((Date.parse(end) - Date.parse(j.startsAt.slice(0, 10))) / 86_400_000) + 1, 1);
+}
 
 // "2026-09-28T14:30" → "28 set, 14:30"
 export function formatDateTime(value: string): string {

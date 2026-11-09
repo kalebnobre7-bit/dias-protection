@@ -9,13 +9,53 @@ import {
   ChevronLeft as IconChevronLeft,
   ChevronRight as IconChevron,
   LoaderCircle as IconLoader,
+  Plus as IconPlus,
   Search as IconSearch,
   X as IconClose,
 } from "lucide-react";
 
-import { formatDoc, formatPhone } from "@/lib/admin/labels";
+import { formatDate, formatDoc, formatPhone } from "@/lib/admin/labels";
 import { useSaving } from "@/lib/admin/store";
 
+
+// Serviços e propostas em dias não seguidos; o primeiro dia avulso já leva junto a data inicial (seed)
+export function DaysField(props: { days: string[]; seed: string; onChange: (days: string[]) => void }) {
+  const [draft, setDraft] = useState("");
+  const add = () => {
+    const base = props.days.length ? props.days : [props.seed];
+    props.onChange([...new Set([...base.filter(Boolean), draft])].sort());
+    setDraft("");
+  };
+  return (
+    <>
+      <Field label="Dias não contínuos (opcional)" hint="Use quando o serviço não acontece em dias seguidos.">
+        <div className="flex gap-2">
+          <input className="input min-w-0 flex-1" type="date" value={draft} onChange={(e) => setDraft(e.target.value)} />
+          <Button variant="secondary" onClick={add} disabled={!draft}>
+            <IconPlus className="size-4" /> Dia
+          </Button>
+        </div>
+      </Field>
+      {props.days.length > 0 && (
+        <ul className="flex flex-wrap gap-1.5">
+          {props.days.map((d) => (
+            <li key={d} className="num flex items-center gap-1 rounded-full border border-line py-0.5 pl-3 pr-1 text-sm">
+              {formatDate(d)}
+              <button
+                type="button"
+                onClick={() => props.onChange(props.days.filter((x) => x !== d))}
+                aria-label={`Remover ${formatDate(d)}`}
+                className="grid size-6 place-items-center rounded-full text-muted hover:text-danger"
+              >
+                <IconClose className="size-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
 
 /* ——— Estrutura de página ——— */
 
@@ -125,14 +165,22 @@ export const statStrip = {
   4: "grid grid-cols-2 border-y border-line lg:grid-cols-4 [&>*]:border-line [&>*:nth-child(even)]:border-l [&>*:nth-child(n+3)]:border-t lg:[&>*:nth-child(n+2)]:border-l lg:[&>*:nth-child(n+3)]:border-t-0",
 } as const;
 
-export function Stat(props: { label: string; value: string; tone?: "default" | "good" | "bad" | "muted" }) {
+export function Stat(props: { label: string; value: string; tone?: "default" | "good" | "bad" | "muted"; onClick?: () => void }) {
   const tone = { default: "text-text", good: "text-[#8fd6a5]", bad: "text-danger", muted: "text-silver" }[props.tone ?? "default"];
-  return (
-    <div className="@container min-w-0 px-3 py-3 text-center">
-      <p className="text-[0.8125rem] text-muted">{props.label}</p>
+  const content = (
+    <>
+      <span className="block text-[0.8125rem] text-muted">{props.label}</span>
       {/* Fonte acompanha a largura do card (cqi), não da tela: valor cabe com a barra lateral aberta */}
-      <p className={`num mt-1 truncate text-[clamp(0.9375rem,11cqi,1.375rem)] font-semibold tracking-[-0.02em] ${tone}`}>{props.value}</p>
-    </div>
+      <span className={`num mt-1 block truncate text-[clamp(0.9375rem,11cqi,1.375rem)] font-semibold tracking-[-0.02em] ${tone}`}>{props.value}</span>
+    </>
+  );
+  const box = "@container min-w-0 px-3 py-3 text-center";
+  return props.onClick ? (
+    <button type="button" onClick={props.onClick} className={`${box} transition-colors duration-200 hover:bg-navy-2`}>
+      {content}
+    </button>
+  ) : (
+    <div className={box}>{content}</div>
   );
 }
 

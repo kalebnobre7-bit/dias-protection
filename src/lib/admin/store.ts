@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 
 import { getBrowserClient } from "@/lib/supabase";
 
-import type { Job, Proposal, ProposalItem, TableName, Tables } from "./types";
+import { normalizePricing } from "./pricing";
+import type { Job, Pricing, Proposal, ProposalItem, TableName, Tables } from "./types";
 
 // Repositório do painel sobre o Supabase. As telas só usam `repo.*` e `useTable`;
 // aqui o camelCase dos tipos vira snake_case das tabelas e o contrário.
@@ -17,7 +18,7 @@ const notify = () => listeners.forEach((fn) => fn());
 
 export const newId = () => crypto.randomUUID();
 
-const dbTable = (table: TableName) => (table === "jobCosts" || table === "financeCategories" ? snake(table) : table);
+const dbTable = (table: TableName) => (table === "jobCosts" || table === "financeCategories" || table === "siteRequests" ? snake(table) : table);
 
 const snake = (k: string) => k.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 const camel = (k: string) => k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
@@ -25,7 +26,7 @@ const camel = (k: string) => k.replace(/_([a-z])/g, (_, c: string) => c.toUpperC
 // Campos que o tipo declara como `| null`; os demais textos usam "" no lugar de null
 const NULLABLE = new Set([
   "photoUrl", "cnhUrl", "yearsExperience", "categoryId", "partnerId", "clientId",
-  "serviceTypeId", "language", "jobId", "agentId", "capacity", "year", "pricing",
+  "serviceTypeId", "language", "jobId", "agentId", "capacity", "year", "pricing", "proposalId",
 ]);
 // Colunas de data/hora que não aceitam "" (vão como null)
 const OPTIONAL_DATES = new Set(["endsAt", "paidAt"]);
@@ -79,6 +80,9 @@ function parse<T extends TableName>(table: T, raw: Row): Tables[T] {
       ...job,
       startsAt: toLocalInput(job.startsAt as string),
       endsAt: job.endsAt ? toLocalInput(job.endsAt as string) : "",
+      // Linha antiga: só tinha um tipo e nenhum dia avulso
+      serviceTypeIds: (job.serviceTypeIds as string[] | "") || (job.serviceTypeId ? [job.serviceTypeId] : []),
+      days: job.days || [],
       agentIds: (jobAgents as { agent_id: string }[]).map((r) => r.agent_id),
       vehicleIds: (jobVehicles as { vehicle_id: string }[]).map((r) => r.vehicle_id),
     } as Tables[T];
@@ -95,7 +99,11 @@ function parse<T extends TableName>(table: T, raw: Row): Tables[T] {
         unit: i.unit as string,
         unitPrice: Number(i.unit_price),
       }));
-    return { ...proposal, items } as Tables[T];
+    return { ...proposal, items, days: proposal.days || [], en: proposal.en || {}, pricing: proposal.pricing ? normalizePricing(proposal.pricing as Pricing) : null } as Tables[T];
+  }
+  if (table === "agents") {
+    const agent = fromRow(raw);
+    return { ...agent, kind: agent.kind || "agent" } as Tables[T];
   }
   return fromRow(raw) as Tables[T];
 }
@@ -107,6 +115,7 @@ async function check<T>(table: TableName, query: PromiseLike<{ data: T; error: P
 }
 
 // Troca os vínculos de um serviço (equipe e veículos) ou os itens de uma proposta
+// (o id do item vai junto: é ele que liga o item à linha da aba Preço)
 async function syncChildren(table: "jobs" | "proposals", row: Job | Proposal) {
   const sb = getBrowserClient();
   if (table === "jobs") {
@@ -124,7 +133,7 @@ async function syncChildren(table: "jobs" | "proposals", row: Job | Proposal) {
       "proposals",
       sb.from("proposal_items").insert(
         proposal.items.map((i, sort_order) => ({
-          proposal_id: proposal.id, description: i.description, detail: i.detail,
+          id: i.id, proposal_id: proposal.id, description: i.description, detail: i.detail,
           qty: i.qty, unit: i.unit, unit_price: i.unitPrice, sort_order,
         })),
       ),

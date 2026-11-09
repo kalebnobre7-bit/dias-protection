@@ -21,13 +21,39 @@ export function jobCostTotal(jobId: string, costs: JobCost[]): number {
   return costs.filter((c) => c.jobId === jobId).reduce((sum, c) => sum + c.amount, 0);
 }
 
+// Simples Nacional, Anexo III: alíquota nominal e parcela a deduzir por faixa de receita em 12 meses
+const ANEXO_III = [
+  { limit: 180_000, rate: 0.06, deduction: 0 },
+  { limit: 360_000, rate: 0.112, deduction: 9_360 },
+  { limit: 720_000, rate: 0.135, deduction: 17_640 },
+  { limit: 1_800_000, rate: 0.16, deduction: 35_640 },
+  { limit: 3_600_000, rate: 0.21, deduction: 125_640 },
+  { limit: Infinity, rate: 0.33, deduction: 648_000 },
+];
+
+// Alíquota efetiva = (RBT12 × nominal − parcela a deduzir) ÷ RBT12
+export function effectiveTaxRate(rbt12: number): number {
+  const band = ANEXO_III.find((b) => rbt12 <= b.limit) ?? ANEXO_III[0];
+  return band.deduction === 0 ? band.rate : (rbt12 * band.rate - band.deduction) / rbt12;
+}
+
+// RBT12: receita de serviços dos 12 meses anteriores ao mês de apuração
+export function rbt12(month: string, jobs: Job[]): number {
+  const from = shiftMonth(month, -12);
+  return jobs.filter((j) => countsAsRevenue(j) && monthOf(j.startsAt) >= from && monthOf(j.startsAt) < month).reduce((s, j) => s + j.price, 0);
+}
+
+export const monthTaxRate = (month: string, jobs: Job[]) => effectiveTaxRate(rbt12(month, jobs));
+
 export type MonthSummary = {
   revenue: number;
   receivable: number;
   jobCosts: number;
   otherIncome: number;
   otherExpense: number;
-  profit: number;
+  taxRate: number;
+  tax: number; // imposto sobre a receita de serviços do mês
+  profit: number; // lucro líquido, já sem o imposto
 };
 
 export function monthlySummary(month: string, jobs: Job[], costs: JobCost[], transactions: Transaction[]): MonthSummary {
@@ -38,7 +64,9 @@ export function monthlySummary(month: string, jobs: Job[], costs: JobCost[], tra
   const monthTx = transactions.filter((t) => monthOf(t.date) === month);
   const otherIncome = monthTx.filter((t) => t.kind === "income").reduce((s, t) => s + t.amount, 0);
   const otherExpense = monthTx.filter((t) => t.kind === "expense").reduce((s, t) => s + t.amount, 0);
-  return { revenue, receivable, jobCosts, otherIncome, otherExpense, profit: revenue + otherIncome - jobCosts - otherExpense };
+  const taxRate = monthTaxRate(month, jobs);
+  const tax = revenue * taxRate;
+  return { revenue, receivable, jobCosts, otherIncome, otherExpense, taxRate, tax, profit: revenue + otherIncome - jobCosts - otherExpense - tax };
 }
 
 export type CategoryTotal = { label: string; amount: number };
@@ -76,4 +104,45 @@ export function serviceTotals(period: string, jobs: Job[], costs: JobCost[]): Se
     map.set(j.serviceTypeId, row);
   }
   return [...map.values()].sort((a, b) => b.margin - a.margin);
+}
+
+// Caixa: saldo informado + o que entrou menos o que saiu de fato desde a data do saldo
+export function cashBalance(opening: number, since: string, jobs: Job[], costs: JobCost[], transactions: Transaction[]): number {
+  const after = (date: string) => !since || date >= since;
+  const jobsById = new Map(jobs.map((j) => [j.id, j]));
+  const received = jobs.filter((j) => countsAsRevenue(j) && j.paymentStatus === "paid" && after(j.paidAt || j.startsAt.slice(0, 10))).reduce((s, j) => s + j.price, 0);
+  const paidCosts = costs
+    .filter((c) => {
+      const job = jobsById.get(c.jobId);
+      return c.paid && job && countsAsRevenue(job) && after(job.startsAt.slice(0, 10));
+    })
+    .reduce((s, c) => s + c.amount, 0);
+  const tx = transactions.filter((t) => t.paid && after(t.date)).reduce((s, t) => s + (t.kind === "income" ? t.amount : -t.amount), 0);
+  return opening + received - paidCosts + tx;
+}
+
+export type CategoryClientRow = { category: string; total: number; share: number; byClient: Record<string, number> };
+
+// Custos do mês por categoria e cliente ("" = sem cliente), da maior categoria para a menor
+export function categoryByClient(month: string, jobs: Job[], costs: JobCost[]): { clients: string[]; rows: CategoryClientRow[]; total: number } {
+  const monthJobs = new Map(jobs.filter((j) => countsAsRevenue(j) && monthOf(j.startsAt) === month).map((j) => [j.id, j]));
+  const map = new Map<string, Record<string, number>>();
+  const clients = new Set<string>();
+  let total = 0;
+  for (const c of costs) {
+    const job = monthJobs.get(c.jobId);
+    if (!job || !c.amount) continue;
+    const client = job.clientId ?? "";
+    const category = costCategoryName(c.category);
+    const row = map.get(category) ?? {};
+    row[client] = (row[client] ?? 0) + c.amount;
+    map.set(category, row);
+    clients.add(client);
+    total += c.amount;
+  }
+  const rows = [...map].map(([category, byClient]) => {
+    const sum = Object.values(byClient).reduce((s, v) => s + v, 0);
+    return { category, byClient, total: sum, share: total ? sum / total : 0 };
+  });
+  return { clients: [...clients], rows: rows.sort((a, b) => b.total - a.total), total };
 }

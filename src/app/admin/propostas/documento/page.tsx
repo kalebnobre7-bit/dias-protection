@@ -7,9 +7,9 @@ import { useEffect, useState } from "react";
 import { AgentCard, AgentCv, DocBrandHeader, DocLabel, DocSheet, DocShell as Shell, VehicleCard } from "@/components/admin/doc";
 import { localContent } from "@/data/content";
 import { useSession } from "@/lib/admin/auth";
-import { serviceTypeName } from "@/lib/admin/catalog";
-import { brl, formatDate, formatDateLong, formatPhone, proposalStatusLabel } from "@/lib/admin/labels";
-import { itemTotal, proposalTotals, scopeSummary } from "@/lib/admin/proposals";
+import { brl, formatDateLong, formatPhone, proposalStatusLabel } from "@/lib/admin/labels";
+import { DOC_LABELS, docDate, docPeriod, docServices, docText, type DocLang } from "@/lib/admin/proposal-i18n";
+import { itemTotal, proposalTotals } from "@/lib/admin/proposals";
 import { useSettings } from "@/lib/admin/settings";
 import { useTable } from "@/lib/admin/store";
 
@@ -35,6 +35,7 @@ export default function ProposalDocumentPage() {
   const { settings, loading: settingsLoading } = useSettings();
   const [id, setId] = useState<string | null>(null);
   const [closed, setClosed] = useState(false);
+  const [langChoice, setLangChoice] = useState<DocLang | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -69,23 +70,32 @@ export default function ProposalDocumentPage() {
   const client = clients.find((c) => c.id === p.clientId) ?? null;
   const team = p.agentIds.map((x) => agents.find((a) => a.id === x)).filter((a) => a !== undefined);
   const fleet = p.vehicleIds.map((x) => vehicles.find((v) => v.id === x)).filter((v) => v !== undefined);
-  const kind = closed ? "Serviço confirmado" : "Proposta comercial";
+  // Padrão vem do idioma do cliente; dá para trocar na barra
+  const lang: DocLang = langChoice ?? (client?.language === "en" ? "en" : "pt");
+  const t = DOC_LABELS[lang];
+  const kind = closed ? t.confirmed : t.commercial;
   // Marca fixa do site; contato e assinatura vêm de Configurações
   const company = { ...settings.company, brandName: localContent.company.brandName, tagline: localContent.company.tagline };
   const totals = proposalTotals(p);
   const terms = p.terms
     .split("\n")
-    .map((t) => t.trim())
+    .map((line) => line.trim())
     .filter(Boolean);
-  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-  const crew = [team.length ? plural(team.length, "agente", "agentes") : "", fleet.length ? plural(fleet.length, "veículo", "veículos") : ""]
+  const paymentTerms = p.paymentTerms
+    .split("\n")
+    .map((line) => docText(line.trim(), lang, p.en))
+    .join("\n");
+  const plural = (n: number, [one, many]: readonly [string, string]) => `${n} ${n === 1 ? one : many}`;
+  const crew = [team.length ? plural(team.length, t.agent) : "", fleet.length ? plural(fleet.length, t.vehicle) : ""]
     .filter(Boolean)
     .join(" · ");
+  const services = docServices(p, lang);
   const highlights = ([
-    ["Serviço", scopeSummary(p)],
-    ["Período", p.period],
-    ["Local", p.location],
-    ["Equipe", crew],
+    // Com descrição, o serviço ganha um bloco inteiro acima da grade
+    [t.service, p.summary ? "" : services],
+    [t.period, docText(docPeriod(p, lang), lang, p.en)],
+    [t.location, docText(p.location, lang, p.en)],
+    [t.team, crew],
   ] as const).filter(([, value]) => value);
   const phone = company.whatsapp && `+${company.whatsapp.slice(0, 2)} ${company.whatsapp.slice(2, 4)} ${company.whatsapp.slice(4, -4)}-${company.whatsapp.slice(-4)}`;
 
@@ -124,6 +134,21 @@ export default function ProposalDocumentPage() {
               </button>
             ))}
           </div>
+          <div className="inline-flex gap-x-1" role="group" aria-label="Idioma do documento">
+            {(["pt", "en"] as const).map((l) => (
+              <button
+                key={l}
+                type="button"
+                aria-pressed={lang === l}
+                onClick={() => setLangChoice(l)}
+                className={`min-h-9 border-b-2 px-3 text-[0.875rem] font-medium transition-colors duration-200 ${
+                  lang === l ? "border-text text-text" : "border-transparent text-muted hover:text-text"
+                }`}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             onClick={() => window.print()}
@@ -138,18 +163,25 @@ export default function ProposalDocumentPage() {
         {/* Cabeçalho: marca + número */}
         <DocBrandHeader kind={kind}>
           <p className="mt-2 text-[0.8125rem] text-[#141922]/65">
-            Emitida em {formatDate(p.issuedAt)}
-            {!closed && ` · válida até ${formatDate(p.validUntil)}`}
+            {t.issuedOn} {docDate(p.issuedAt, lang)}
+            {!closed && ` · ${t.validUntil} ${docDate(p.validUntil, lang)}`}
           </p>
         </DocBrandHeader>
 
         {/* Título + partes */}
         <section className="mt-8">
-          <h1 className="text-[1.75rem] font-semibold leading-tight tracking-[-0.03em] md:text-[2rem]">{p.title}</h1>
-          {p.serviceIds.length > 0 && <p className="mt-2 text-[0.9375rem] text-[#141922]/65">{p.serviceIds.map(serviceTypeName).join(" · ")}</p>}
+          <h1 className="text-[1.75rem] font-semibold leading-tight tracking-[-0.03em] md:text-[2rem]">{docText(p.title, lang, p.en)}</h1>
+
+          {p.summary && (
+            <div className="mt-6 rounded-lg bg-[#141922]/[0.05] px-4 py-3">
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">{t.service}</p>
+              {services && <p className="mt-1 text-[0.9375rem] font-semibold leading-snug">{services}</p>}
+              <p className="mt-1.5 whitespace-pre-line text-[0.9375rem] leading-relaxed">{docText(p.summary, lang, p.en)}</p>
+            </div>
+          )}
 
           {/* Resumo em blocos: o essencial da proposta numa linha */}
-          <dl className="mt-6 grid grid-cols-2 gap-2 sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none">
+          <dl className={`${p.summary ? "mt-2" : "mt-6"} grid grid-cols-2 gap-2 sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none`}>
             {highlights.map(([label, value]) => (
               <div key={label} className="rounded-lg bg-[#141922]/[0.05] px-4 py-3">
                 <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">{label}</dt>
@@ -157,18 +189,18 @@ export default function ProposalDocumentPage() {
               </div>
             ))}
             <div className="rounded-lg bg-[#141922] px-4 py-3 text-white">
-              <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-white/60">Total</dt>
+              <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-white/60">{t.total}</dt>
               <dd className="num mt-1 text-[1.125rem] font-semibold leading-snug tracking-[-0.01em]">{brl.format(totals.total)}</dd>
             </div>
           </dl>
 
           <dl className="mt-6 grid gap-6 text-[0.9375rem] sm:grid-cols-2">
             <div>
-              <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Preparada para</dt>
+              <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">{t.preparedFor}</dt>
               <dd className="mt-1.5 leading-relaxed">
                 {client ? (
                   <>
-                    <span className="block font-semibold">{client.name}</span>
+                    <span className="block text-[1.25rem] font-semibold leading-snug">{client.name}</span>
                     {client.company && <span className="block">{client.company}</span>}
                     {(client.email || client.phone) && <span className="block text-[#141922]/65">{[client.email, formatPhone(client.phone)].filter(Boolean).join(" · ")}</span>}
                     {client.representatives.map((r) => (
@@ -184,7 +216,7 @@ export default function ProposalDocumentPage() {
               </dd>
             </div>
             <div>
-              <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Preparada por</dt>
+              <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">{t.preparedBy}</dt>
               <dd className="mt-1.5 leading-relaxed">
                 <span className="block font-semibold">{company.founderName}</span>
                 <span className="block">
@@ -198,19 +230,12 @@ export default function ProposalDocumentPage() {
           </dl>
         </section>
 
-        {p.summary && (
-          <section className="mt-8">
-            <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Escopo</h2>
-            <p className="mt-2 max-w-[70ch] text-[0.9375rem] leading-relaxed">{p.summary}</p>
-          </section>
-        )}
-
         {team.length > 0 && (
           <section className="mt-8">
-            <DocLabel>Equipe designada</DocLabel>
+            <DocLabel>{t.assignedTeam}</DocLabel>
             <div className="mt-4 grid gap-6 sm:grid-cols-2">
               {team.map((a) => (
-                <AgentCard key={a.id} agent={a} />
+                <AgentCard key={a.id} agent={a} lang={lang} />
               ))}
             </div>
           </section>
@@ -218,10 +243,10 @@ export default function ProposalDocumentPage() {
 
         {fleet.length > 0 && (
           <section className="mt-8">
-            <DocLabel>Veículos</DocLabel>
+            <DocLabel>{t.vehicles}</DocLabel>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {fleet.map((v) => (
-                <VehicleCard key={v.id} vehicle={v} showPlate={closed} />
+                <VehicleCard key={v.id} vehicle={v} showPlate={closed} lang={lang} />
               ))}
             </div>
           </section>
@@ -229,25 +254,25 @@ export default function ProposalDocumentPage() {
 
         {/* Itens */}
         <section className="mt-8">
-          <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Investimento</h2>
+          <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">{t.investment}</h2>
           <table className="mt-3 w-full border-collapse text-[0.9375rem]">
             <thead>
               <tr className="border-b border-[#141922]/25 text-left text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[#141922]/55">
-                <th className="py-2 pr-3 font-semibold">Descrição</th>
-                <th className="num w-24 py-2 pr-3 text-right font-semibold">Qtd.</th>
-                <th className="num w-28 py-2 pr-3 text-right font-semibold">Unitário</th>
-                <th className="num w-28 py-2 text-right font-semibold">Total</th>
+                <th className="py-2 pr-3 font-semibold">{t.description}</th>
+                <th className="num w-24 py-2 pr-3 text-right font-semibold">{t.qty}</th>
+                <th className="num w-28 py-2 pr-3 text-right font-semibold">{t.unitPrice}</th>
+                <th className="num w-28 py-2 text-right font-semibold">{t.total}</th>
               </tr>
             </thead>
             <tbody>
               {p.items.map((i) => (
                 <tr key={i.id} className="border-b border-[#141922]/10 align-top">
                   <td className="py-3 pr-3">
-                    <span className="block font-medium">{i.description}</span>
-                    {i.detail && <span className="block text-[0.8125rem] text-[#141922]/60">{i.detail}</span>}
+                    <span className="block font-medium">{docText(i.description, lang, p.en)}</span>
+                    {i.detail && <span className="block text-[0.8125rem] text-[#141922]/60">{docText(i.detail, lang, p.en)}</span>}
                   </td>
                   <td className="num whitespace-nowrap py-3 pr-3 text-right">
-                    {i.qty} <span className="text-[#141922]/55">{i.unit}</span>
+                    {i.qty} <span className="text-[#141922]/55">{docText(i.unit, lang)}{lang === "en" && i.qty !== 1 ? "s" : ""}</span>
                   </td>
                   <td className="num py-3 pr-3 text-right">{brl.format(i.unitPrice)}</td>
                   <td className="num py-3 text-right font-medium">{brl.format(itemTotal(i))}</td>
@@ -259,13 +284,13 @@ export default function ProposalDocumentPage() {
                 <>
                   <tr className="text-[#141922]/65">
                     <td colSpan={3} className="num pr-4 pt-3 text-right">
-                      Subtotal
+                      {t.subtotal}
                     </td>
                     <td className="num pt-3 text-right">{brl.format(totals.subtotal)}</td>
                   </tr>
                   <tr className="text-[#141922]/65">
                     <td colSpan={3} className="num pr-4 pt-1 text-right">
-                      Desconto
+                      {t.discount}
                     </td>
                     <td className="num pt-1 text-right">− {brl.format(totals.discount)}</td>
                   </tr>
@@ -273,7 +298,7 @@ export default function ProposalDocumentPage() {
               )}
               <tr>
                 <td colSpan={3} className="pr-4 pt-4 text-right text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[#141922]/55">
-                  Total
+                  {t.total}
                 </td>
                 <td className="pt-3 text-right">
                   <span className="num inline-block whitespace-nowrap rounded-lg bg-[#141922] px-4 py-2 text-[1.375rem] font-semibold tracking-[-0.02em] text-white">
@@ -289,17 +314,17 @@ export default function ProposalDocumentPage() {
         <section className="mt-8 space-y-5 leading-relaxed">
           {p.paymentTerms && (
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-lg bg-[#141922]/[0.05] px-4 py-3 text-[0.875rem]">
-              <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Pagamento</h2>
-              <p className="whitespace-pre-line font-medium">{p.paymentTerms}</p>
+              <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">{t.payment}</h2>
+              <p className="whitespace-pre-line font-medium">{paymentTerms}</p>
             </div>
           )}
           {terms.length > 0 && (
             <div>
-              <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">Condições gerais</h2>
+              <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">{t.terms}</h2>
               <ol className="mt-2 list-decimal gap-x-10 pl-5 text-[0.75rem] text-[#141922]/75 sm:columns-2">
-                {terms.map((t, i) => (
+                {terms.map((line, i) => (
                   <li key={i} className="mb-1 break-inside-avoid">
-                    {t}
+                    {docText(line, lang, p.en)}
                   </li>
                 ))}
               </ol>
@@ -318,8 +343,8 @@ export default function ProposalDocumentPage() {
           </div>
           <div>
             <Signature name={client?.name ?? ""} />
-            <p className="mt-2 font-medium">{client?.name ?? "Cliente"}</p>
-            <p className="text-[#141922]/60">De acordo · data: ____ / ____ / ________</p>
+            <p className="mt-2 font-medium">{client?.name ?? t.client}</p>
+            <p className="text-[#141922]/60">{t.agreed}: ____ / ____ / ________</p>
           </div>
         </section>
 
@@ -337,9 +362,9 @@ export default function ProposalDocumentPage() {
       {closed &&
         team.map((a) => (
           <DocSheet key={a.id} className="mt-8 print:mt-0 print:break-before-page">
-            <DocBrandHeader kind="Equipe designada" />
+            <DocBrandHeader kind={t.assignedTeam} />
             <div className="mt-8">
-              <AgentCv agent={a} withPrivate />
+              <AgentCv agent={a} withPrivate lang={lang} />
             </div>
           </DocSheet>
         ))}

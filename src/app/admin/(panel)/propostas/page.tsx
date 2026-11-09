@@ -13,6 +13,7 @@ import {
   Badge,
   Button,
   ChipSelect,
+  DaysField,
   DeleteButton,
   EmptyState,
   Field,
@@ -32,11 +33,13 @@ import {
   cell,
   cellChild,
 } from "@/components/admin/ui";
-import { serviceTypeOptions, vehicleCategoryName } from "@/lib/admin/catalog";
+import { proposalServiceName, proposalServiceOptions, vehicleCategoryName } from "@/lib/admin/catalog";
 import { brl, formatDate, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
-import { blankPricing, pricingResult } from "@/lib/admin/pricing";
+import { blankPricing, syncPricingItems } from "@/lib/admin/pricing";
+import { textsToTranslate } from "@/lib/admin/proposal-i18n";
 import {
   blankProposal,
+  daysText,
   duplicateProposal,
   itemTotal,
   jobFromProposal,
@@ -44,6 +47,7 @@ import {
   onlyDigits,
   periodText,
   proposalFromJob,
+  proposalFromRequest,
   proposalText,
   proposalTotals,
   scopeItems,
@@ -51,7 +55,7 @@ import {
 } from "@/lib/admin/proposals";
 import { useSettings } from "@/lib/admin/settings";
 import { newId, repo, useTable } from "@/lib/admin/store";
-import type { Proposal, ProposalItem, ProposalStatus } from "@/lib/admin/types";
+import type { Proposal, ProposalItem, ProposalStatus, SiteRequest } from "@/lib/admin/types";
 import { whatsappUrl } from "@/lib/order";
 
 type Filter = "all" | "open" | ProposalStatus;
@@ -64,6 +68,14 @@ export default function ProposalsPage() {
   const { settings, loading: settingsLoading } = useSettings();
   const blank = () => blankProposal(newId(), rows, settings.proposal);
   const [editing, setEditing] = useState<Proposal | null>(null);
+  const [source, setSource] = useState<SiteRequest | null>(null);
+  const { rows: requests } = useTable("siteRequests");
+  const newRequests = requests.filter((r) => r.status === "new").sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const fromRequest = (r: SiteRequest) => {
+    setSource(r);
+    setEditing(proposalFromRequest(r, newId(), rows, settings.proposal));
+  };
+  const archive = (r: SiteRequest) => repo.upsert("siteRequests", { ...r, status: "archived" }).catch(() => window.alert("Não foi possível arquivar."));
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
@@ -103,6 +115,30 @@ export default function ProposalsPage() {
           </Button>
         }
       />
+
+      {newRequests.length > 0 && (
+        <Section title="Solicitações do site" className="mb-8">
+          <List>
+            {newRequests.map((r) => (
+              <Row
+                key={r.id}
+                title={r.payload.order.name}
+                subtitle={[r.payload.order.company, r.payload.order.date && formatDate(r.payload.order.date), r.payload.order.origin].filter(Boolean).join(" · ")}
+                trailing={
+                  <span className="flex items-center gap-1">
+                    <Button variant="ghost" className="!min-h-9 !px-3" onClick={() => archive(r)}>
+                      Arquivar
+                    </Button>
+                    <Button variant="secondary" className="!min-h-9 !px-3" onClick={() => fromRequest(r)}>
+                      Criar proposta
+                    </Button>
+                  </span>
+                }
+              />
+            ))}
+          </List>
+        </Section>
+      )}
 
       {loading ? (
         <Skeleton />
@@ -163,23 +199,32 @@ export default function ProposalsPage() {
           key={editing.id}
           proposal={editing}
           isNew={!rows.some((r) => r.id === editing.id)}
-          onClose={() => setEditing(null)}
-          onDuplicate={(p) => setEditing(duplicateProposal(p, newId(), rows, settings.proposal))}
+          sourceRequest={source}
+          onClose={() => {
+            setEditing(null);
+            setSource(null);
+          }}
+          onDuplicate={(p) => {
+            setSource(null);
+            setEditing(duplicateProposal(p, newId(), rows, settings.proposal));
+          }}
         />
       )}
     </>
   );
 }
 
-function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () => void; onDuplicate: (p: Proposal) => void }) {
+function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceRequest: SiteRequest | null; onClose: () => void; onDuplicate: (p: Proposal) => void }) {
   const { value: p, set, dirty } = useForm(props.proposal);
   const { rows: clients } = useTable("clients");
-  const [clientChoice, setClientChoice] = useState(props.proposal.clientId ?? "");
-  const [newClient, setNewClient] = useState("");
+  // Pedido do site já chega com o nome do cliente novo preenchido
+  const [clientChoice, setClientChoice] = useState(props.sourceRequest ? NEW_CLIENT : (props.proposal.clientId ?? ""));
+  const [newClient, setNewClient] = useState(props.sourceRequest?.payload.order.name ?? "");
+  const [newCompany, setNewCompany] = useState(props.sourceRequest?.payload.order.company ?? "");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [preset, setPreset] = useState("");
-  const [tab, setTab] = useState<"proposal" | "price" | "team" | "vehicles">("proposal");
+  const [tab, setTab] = useState<"proposal" | "price" | "team" | "vehicles" | "english">("proposal");
   const { rows: agents } = useTable("agents");
   const { rows: vehicles } = useTable("vehicles");
   const toggleIn = (key: "agentIds" | "vehicleIds", id: string) =>
@@ -199,18 +244,21 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
     setPreset("");
   };
 
-  // Calculadora → total da proposta: cria o item se não houver, ou acerta o valor do item único
-  const price = p.pricing ? pricingResult(p.pricing).price : null;
-  const priceTarget = price === null ? null : Math.round((price + p.discount) * 100) / 100;
-  const priceMatches = priceTarget !== null && Math.abs(totals.total - (priceTarget - p.discount)) < 0.05;
-  const applyPrice = () => {
-    if (priceTarget === null) return;
-    if (!p.items.length) set("items", [{ id: newId(), description: p.title.trim() || "Serviço", detail: "", qty: 1, unit: "un.", unitPrice: priceTarget }]);
-    else if (p.items.length === 1) {
-      const qty = p.items[0].qty || 1;
-      set("items", [{ ...p.items[0], qty, unitPrice: Math.round((priceTarget / qty) * 100) / 100 }]);
+  // Dias avulsos definem início, fim e o texto do período
+  const setDays = (days: string[]) => {
+    set("days", days);
+    if (days.length) {
+      set("startDate", days[0]);
+      set("endDate", days[days.length - 1]);
     }
+    set("period", days.length ? daysText(days) : periodText(p.startDate, p.endDate));
   };
+
+  // Ids antigos já salvos continuam visíveis para poder desmarcar
+  const serviceChoices = [
+    ...proposalServiceOptions,
+    ...p.serviceIds.filter((id) => !proposalServiceOptions.some((o) => o.value === id)).map((id) => ({ value: id, label: proposalServiceName(id) })),
+  ];
 
   // Resolve "+ Novo cliente" e grava
   async function persist(extra: Partial<Proposal> = {}): Promise<Proposal | null> {
@@ -226,7 +274,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
       let clientId = clientChoice || null;
       if (clientChoice === NEW_CLIENT) {
         clientId = newId();
-        await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: "", phone: "", email: "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
+        await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: newCompany.trim(), phone: "", email: "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
         setClientChoice(clientId);
       }
       const saved: Proposal = {
@@ -237,6 +285,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         items: p.items.filter((i) => i.description.trim()).map((i) => ({ ...i, description: i.description.trim() })),
       };
       await repo.upsert("proposals", saved);
+      if (props.sourceRequest) await repo.upsert("siteRequests", { ...props.sourceRequest, status: "converted", proposalId: saved.id });
       return saved;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível salvar.");
@@ -352,6 +401,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
           { value: "price", label: "Preço" },
           { value: "team", label: `Equipe${p.agentIds.length ? ` · ${p.agentIds.length}` : ""}` },
           { value: "vehicles", label: `Veículos${p.vehicleIds.length ? ` · ${p.vehicleIds.length}` : ""}` },
+          { value: "english", label: "Inglês" },
         ]}
       />
 
@@ -387,9 +437,14 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
           </Select>
         </Field>
         {clientChoice === NEW_CLIENT && (
-          <Field label="Nome do novo cliente">
-            <input className="input" value={newClient} onChange={(e) => setNewClient(e.target.value)} autoFocus />
-          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Cliente">
+              <input className="input" value={newClient} onChange={(e) => setNewClient(e.target.value)} autoFocus />
+            </Field>
+            <Field label="Contratante">
+              <input className="input" value={newCompany} onChange={(e) => setNewCompany(e.target.value)} />
+            </Field>
+          </div>
         )}
         {client && !client.phone && (
           <p className="-mt-3 text-xs text-muted">
@@ -400,7 +455,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
           </p>
         )}
 
-        <Section title="Escopo">
+        <Section title="Serviço">
           <div className="space-y-4">
             {/* Primeiro a operação (natureza, datas, seguranças); os itens saem daqui */}
             <Field label="Natureza do serviço">
@@ -419,12 +474,14 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
                 start={p.startDate}
                 end={p.endDate}
                 onChange={(start, end) => {
+                  set("days", []); // período corrido substitui os dias avulsos
                   set("startDate", start);
                   set("endDate", end);
                   set("period", periodText(start, end));
                 }}
               />
             </div>
+            <DaysField days={p.days} seed={p.startDate} onChange={setDays} />
             <Field label="Período no documento" hint="Preenchido pelo calendário. Dá pra completar com horário.">
               <input className="input" value={p.period} onChange={(e) => set("period", e.target.value)} placeholder="10 a 15 de outubro, 8h às 20h" />
             </Field>
@@ -459,9 +516,9 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
               <input className="input" value={p.location} onChange={(e) => set("location", e.target.value)} placeholder="São Paulo · SP" />
             </Field>
             <Field label="Serviços">
-              <ChipSelect options={serviceTypeOptions} value={p.serviceIds} onChange={(v) => set("serviceIds", v)} empty="" />
+              <ChipSelect options={serviceChoices} value={p.serviceIds} onChange={(v) => set("serviceIds", v)} empty="" />
             </Field>
-            <Field label="Descrição do escopo" hint="Contexto da operação, em 2 ou 3 frases. Vai para o documento.">
+            <Field label="Descrição do serviço (opcional)" hint="Aparece dentro de Serviço no documento. Pode pular linha.">
               <TextArea rows={3} value={p.summary} onChange={(e) => set("summary", e.target.value)} />
             </Field>
           </div>
@@ -488,9 +545,9 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         >
           {scopeItems(p).length > 0 && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
-              <span className="text-[0.875rem] text-muted">Escopo: {scopeSummary(p)}</span>
+              <span className="text-[0.875rem] text-muted">Serviço: {scopeSummary(p)}</span>
               <Button variant="secondary" className="!min-h-9 !px-3" onClick={() => set("items", mergeScopeItems(p, newId))}>
-                <IconMagic className="size-4" /> {p.items.length ? "Refazer itens do escopo" : "Gerar itens do escopo"}
+                <IconMagic className="size-4" /> {p.items.length ? "Refazer itens do serviço" : "Gerar itens do serviço"}
               </Button>
             </div>
           )}
@@ -582,26 +639,33 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
         </>
       )}
 
+      {tab === "english" && (
+        <div className="space-y-4">
+          <p className="text-[0.875rem] text-muted">Serviços, datas e textos padrão já saem em inglês. Traduza aqui o que foi digitado à mão; o que ficar em branco sai em português.</p>
+          {textsToTranslate(p).map((text) => (
+            <Field key={text} label={text}>
+              <TextArea rows={2} value={p.en[text] ?? ""} onChange={(e) => set("en", { ...p.en, [text]: e.target.value })} />
+            </Field>
+          ))}
+        </div>
+      )}
+
       {tab === "price" &&
         (p.pricing ? (
           <>
-            <PricingCalculator value={p.pricing} onChange={(v) => set("pricing", v)} />
+            <PricingCalculator
+              value={p.pricing}
+              onChange={(v) => {
+                set("pricing", v);
+                set("items", syncPricingItems(p.items, p.pricing, v));
+              }}
+            />
             <div className="space-y-3 border-t border-line px-1 pt-4 text-sm">
               <p className="flex justify-between gap-4">
                 <span className="text-muted">Total da proposta</span>
                 <span className="num font-medium">{brl.format(totals.total)}</span>
               </p>
-              {priceMatches ? (
-                <p className="flex items-center gap-2 text-accent">
-                  <IconCheck className="size-4" /> O total da proposta bate com o preço calculado.
-                </p>
-              ) : p.items.length > 1 ? (
-                <p className="text-muted">Com mais de um item, ajuste os valores na aba Proposta até chegar ao preço calculado.</p>
-              ) : (
-                <Button variant="secondary" onClick={applyPrice} disabled={priceTarget === null}>
-                  Usar o preço calculado na proposta
-                </Button>
-              )}
+              <p className="text-muted">Cada linha da planilha vira um item da aba Proposta, com o preço calculado. Itens criados à mão continuam lá e somam no total.</p>
             </div>
             <p className="text-xs text-muted">Interno: custos e margem não aparecem no documento nem no WhatsApp.</p>
           </>
@@ -609,7 +673,17 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; onClose: () 
           <EmptyState
             title="Calcule o preço desta proposta"
             text="Custos, margem e impostos da planilha de precificação. Fica salvo só aqui, o cliente não vê."
-            action={<Button onClick={() => set("pricing", blankPricing())}>Começar pela planilha</Button>}
+            action={
+              <Button
+                onClick={() => {
+                  const v = blankPricing();
+                  set("pricing", v);
+                  set("items", syncPricingItems(p.items, null, v));
+                }}
+              >
+                Começar pela planilha
+              </Button>
+            }
           />
         ))}
 

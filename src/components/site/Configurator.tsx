@@ -56,6 +56,7 @@ export function Configurator({ content, dict, locale }: Props) {
   const [dir, setDir] = useState(1);
   const [inView, setInView] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  const lastSaved = useRef("");
   const topRef = useRef<HTMLDivElement>(null);
 
   const key = STEPS[step];
@@ -132,6 +133,13 @@ export function Configurator({ content, dict, locale }: Props) {
       setDir(-1);
       setStep(STEPS.indexOf(bad));
       return;
+    }
+    // Guarda o pedido para o painel, sem segurar o WhatsApp; reabrir o mesmo pedido não duplica
+    if (lastSaved.current !== message) {
+      lastSaved.current = message;
+      import("@/lib/supabase")
+        .then(({ getBrowserClient }) => getBrowserClient().from("site_requests").insert({ id: crypto.randomUUID(), payload: { order, locale, message } }))
+        .catch(() => {});
     }
     window.open(whatsappUrl(content.company.whatsapp, message), "_blank", "noopener");
   }

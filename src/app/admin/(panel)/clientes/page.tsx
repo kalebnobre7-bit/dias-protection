@@ -51,7 +51,7 @@ export default function ClientsPage() {
         <EmptyState title="Nenhum cliente ainda" text="Os clientes também podem ser criados ao registrar um serviço." />
       ) : (
         <>
-          <SearchBox value={query} onChange={setQuery} placeholder="Buscar por nome, empresa, e-mail ou telefone" />
+          <SearchBox value={query} onChange={setQuery} placeholder="Buscar por cliente, contratante, e-mail ou telefone" />
           <List>
             {filtered.map((c) => {
               const mine = jobs.filter((j) => j.clientId === c.id && countsAsRevenue(j));
@@ -99,7 +99,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
     set("representatives", c.representatives.map((r) => (r.id === id ? { ...r, ...patch } : r)));
 
   const save = async () => {
-    if (!c.name.trim()) return setError("Informe o nome.");
+    if (!c.name.trim()) return setError("Informe o cliente.");
     const representatives = c.representatives.filter((r) => r.name.trim()).map((r) => ({ ...r, name: r.name.trim() }));
     try {
       await repo.upsert("clients", { ...c, name: c.name.trim(), representatives });
@@ -133,10 +133,10 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
         </>
       }
     >
-      <Field label="Nome">
+      <Field label="Cliente">
         <input className="input" value={c.name} onChange={(e) => set("name", e.target.value)} autoFocus={props.isNew} />
       </Field>
-      <Field label="Empresa">
+      <Field label="Contratante">
         <input className="input" value={c.company} onChange={(e) => set("company", e.target.value)} />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -158,7 +158,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
         </Select>
       </Field>
       <Section
-        title="Representantes da empresa"
+        title="Representantes do cliente"
         action={
           <Button variant="ghost" className="!min-h-9 !px-3" onClick={() => set("representatives", [...c.representatives, { id: newId(), name: "", role: "", contact: "" }])}>
             <IconPlus className="size-4" /> Adicionar
@@ -188,7 +188,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
             ))}
           </ul>
         ) : (
-          <p className="px-1 text-sm text-muted">Quem fala pela empresa: assistente, segurança corporativa, compras…</p>
+          <p className="px-1 text-sm text-muted">Quem fala pelo cliente: assistente, segurança corporativa, compras…</p>
         )}
       </Section>
 
