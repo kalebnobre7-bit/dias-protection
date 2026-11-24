@@ -34,6 +34,7 @@ export const localContent: SiteContent = {
       { name: "Pirelli", logo: "/images/logos/clients/pirelli.svg", scale: 0.85 },
       { name: "FIA WEC", logo: "/images/logos/clients/fia-wec.svg", scale: 1.5 },
       { name: "Cadillac Racing", logo: "/images/logos/clients/cadillac.svg", scale: 0.6 },
+      { name: "Audi Revolut F1 Team" },
       { name: "Hertz Team JOTA" },
       { name: "Richemont", logo: "/images/logos/clients/richemont.svg", scale: 0.55 },
       { name: "IWC Schaffhausen", logo: "/images/logos/clients/iwc.svg", scale: 1.6 },
@@ -60,7 +61,7 @@ export const localContent: SiteContent = {
     // Eventos e os clientes atendidos em cada um (lista do Gabriel, 10/2026)
     events: [
       { name: "SP Open", groups: [{ label: null, names: ["Bradesco"] }] },
-      { name: "Fórmula 1", logo: "/images/logos/f1.svg", groups: [{ label: null, names: ["Pirelli"] }] },
+      { name: "Fórmula 1", logo: "/images/logos/f1.svg", groups: [{ label: null, names: ["Pirelli", "Cadillac F1 Team", "Audi Revolut F1 Team", "Bradesco"] }] },
       {
         name: "Fórmula E",
         logo: "/images/logos/clients/formula-e.svg",

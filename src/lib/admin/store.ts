@@ -26,7 +26,7 @@ const camel = (k: string) => k.replace(/_([a-z])/g, (_, c: string) => c.toUpperC
 // Campos que o tipo declara como `| null`; os demais textos usam "" no lugar de null
 const NULLABLE = new Set([
   "photoUrl", "cnhUrl", "yearsExperience", "categoryId", "partnerId", "clientId",
-  "serviceTypeId", "language", "jobId", "agentId", "capacity", "year", "pricing", "proposalId",
+  "serviceTypeId", "language", "jobId", "agentId", "capacity", "year", "pricing", "proposalId", "rating",
 ]);
 // Colunas de data/hora que não aceitam "" (vão como null)
 const OPTIONAL_DATES = new Set(["endsAt", "paidAt"]);
@@ -103,7 +103,15 @@ function parse<T extends TableName>(table: T, raw: Row): Tables[T] {
   }
   if (table === "agents") {
     const agent = fromRow(raw);
-    return { ...agent, kind: agent.kind || "agent" } as Tables[T];
+    return { ...agent, kind: agent.kind || "agent", favorite: agent.favorite === true, blacklisted: agent.blacklisted === true, rating: agent.rating ?? null } as Tables[T];
+  }
+  if (table === "jobCosts") {
+    const cost = fromRow(raw);
+    return { ...cost, advance: Number(cost.advance || 0) } as Tables[T];
+  }
+  if (table === "vehicles") {
+    const vehicle = fromRow(raw);
+    return { ...vehicle, photos: vehicle.photos || [] } as Tables[T];
   }
   return fromRow(raw) as Tables[T];
 }

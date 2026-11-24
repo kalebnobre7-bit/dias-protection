@@ -4,7 +4,8 @@ import { useState } from "react";
 import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
 import { DocumentInput, PhotoInput } from "@/components/admin/PhotoInput";
-import { Avatar, Badge, Button, DeleteButton, DocInput, EmptyState, Field, List, NumberInput, PageHeader, PhoneInput, PickMark, Row, SearchBox, Section, Sheet, Skeleton, Switch, TextArea, useForm } from "@/components/admin/ui";
+import { Avatar, Badge, Button, DeleteButton, DocInput, EmptyState, Field, List, NumberInput, PageHeader, PhoneInput, PickMark, Row, SearchBox, Section, Sheet, Skeleton, Stars, Switch, TextArea, useForm } from "@/components/admin/ui";
+import { starsText } from "@/lib/admin/labels";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { AgentRecord } from "@/lib/admin/types";
 
@@ -52,6 +53,9 @@ const blank = (kind: AgentRecord["kind"]): AgentRecord => ({
   documentId: "",
   cnhUrl: null,
   notes: "",
+  favorite: false,
+  rating: null,
+  blacklisted: false,
   active: true,
   published: false,
   freelance: false,
@@ -69,8 +73,10 @@ export function TeamPage({ kind }: { kind: AgentRecord["kind"] }) {
   // Modo "Exportar PDF": ids escolhidos (null = fora do modo)
   const [picking, setPicking] = useState<string[] | null>(null);
   const [query, setQuery] = useState("");
-  // Fixos primeiro, avulsos depois, inativos no fim
-  const sorted = [...rows].sort((a, b) => Number(b.active) - Number(a.active) || Number(a.freelance) - Number(b.freelance) || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+  // Fixos primeiro, avulsos depois, inativos e lista negra no fim
+  const sorted = [...rows].sort(
+    (a, b) => Number(a.blacklisted) - Number(b.blacklisted) || Number(b.active) - Number(a.active) || Number(a.freelance) - Number(b.freelance) || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
+  );
   const q = query.trim().toLowerCase();
   const shown = sorted.filter((a) => !q || `${a.name} ${a.rolePt} ${a.languages.join(" ")}`.toLowerCase().includes(q));
 
@@ -120,14 +126,16 @@ export function TeamPage({ kind }: { kind: AgentRecord["kind"] }) {
                     key={a.id}
                     onClick={() => (picking ? setPicking(picking.includes(a.id) ? picking.filter((x) => x !== a.id) : [...picking, a.id]) : setEditing(a))}
                     leading={<Avatar name={a.name} photo={a.photoUrl} />}
-                    title={a.name}
-                    subtitle={[a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ")}
+                    title={a.favorite ? `♥ ${a.name}` : a.name}
+                    subtitle={[starsText(a.rating), a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ")}
                     trailing={
                       picking ? (
                         <PickMark on={picking.includes(a.id)} />
                       ) : (
                         <span className="flex flex-col items-end gap-1">
-                          {!a.active ? (
+                          {a.blacklisted ? (
+                            <Badge tone="bad">Lista negra</Badge>
+                          ) : !a.active ? (
                             <Badge tone="bad">Inativo</Badge>
                           ) : a.freelance ? (
                             <Badge tone="warn">Avulso</Badge>
@@ -274,6 +282,16 @@ function AgentSheet({ agent, isNew, onClose }: { agent: AgentRecord; isNew: bool
               <Switch checked={a.published} onChange={(v) => set("published", v)} label="Mostrar no site" hint="Nome, função, bio, idiomas, certificações e foto. Depois, publique na aba Site." />
             </>
           )}
+        </div>
+      </Section>
+
+      <Section title="Avaliação interna">
+        <div className="px-1">
+          <Stars value={a.rating} onChange={(v) => set("rating", v)} />
+          <div className="border-t border-line" />
+          <Switch checked={a.favorite} onChange={(v) => set("favorite", v)} label="Favorito" hint="Favoritos e mais bem avaliados aparecem primeiro ao montar equipe" />
+          <div className="border-t border-line" />
+          <Switch checked={a.blacklisted} onChange={(v) => set("blacklisted", v)} label="Lista negra" hint="Não aparece mais para escalar em serviços nem propostas" />
         </div>
       </Section>
 

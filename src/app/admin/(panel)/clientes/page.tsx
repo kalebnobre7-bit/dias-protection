@@ -141,7 +141,7 @@ function ClientSheet(props: { client: Client; isNew: boolean; history: Job[]; on
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Telefone / WhatsApp">
-          <PhoneInput value={c.phone} onChange={(v) => set("phone", v)} label="Telefone" placeholder="(11) 99999-9999 ou +1 …" />
+          <PhoneInput value={c.phone} onChange={(v) => set("phone", v)} label="Telefone" />
         </Field>
         <Field label="E-mail">
           <input className="input" type="email" value={c.email} onChange={(e) => set("email", e.target.value)} />

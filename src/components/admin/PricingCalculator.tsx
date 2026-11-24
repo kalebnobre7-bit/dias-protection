@@ -6,13 +6,13 @@ import { ChevronDown as IconChevron, Plus as IconPlus, X as IconClose } from "lu
 import { MoneyInput } from "@/components/admin/job-bits";
 import { cell, cellChild, Field, NumberInput, Section, Select } from "@/components/admin/ui";
 import { brl } from "@/lib/admin/labels";
-import { lineCost, lineUnitPrice, PRICING_CATEGORIES, pricingExtra, pricingLine, pricingResult } from "@/lib/admin/pricing";
+import { lineCost, lineQty, lineUnitPrice, PRICING_CATEGORIES, pricingExtra, pricingLine, pricingResult } from "@/lib/admin/pricing";
 import type { Pricing, PricingCost, PricingExtra } from "@/lib/admin/types";
 
 const pct = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 });
 
-// Planilha de precificação no painel: custos × quantidade, margem, impostos e taxas → preço final
-export function PricingCalculator({ value: p, onChange }: { value: Pricing; onChange: (p: Pricing) => void }) {
+// Planilha de precificação no painel: custos × fator × diárias, margem, impostos e taxas → preço final
+export function PricingCalculator({ value: p, onChange, taxNote }: { value: Pricing; onChange: (p: Pricing) => void; taxNote?: string }) {
   const r = pricingResult(p);
   const set = <K extends keyof Pricing>(key: K, v: Pricing[K]) => onChange({ ...p, [key]: v });
   const updateCost = (id: string, patch: Partial<PricingCost>) =>
@@ -34,7 +34,7 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
           </button>
         }
       >
-        {/* Uma linha por custo: descrição · categoria · qtd × unitário = total · remover. No celular a descrição fica em cima */}
+        {/* Uma linha por custo: descrição · categoria · fator × diárias × unitário = total · remover. No celular a descrição fica em cima */}
         <ul className="divide-y divide-line border-y border-line">
           {p.costs.map((c) => {
             const unitPrice = lineUnitPrice(c);
@@ -67,9 +67,11 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
                   <option key={cat}>{cat}</option>
                 ))}
               </Select>
-              <NumberInput value={c.qty} onChange={(v) => updateCost(c.id, { qty: v ?? 0 })} fallback={0} digits={3} suffix="×" label="Quantidade" className={`${cellChild} [&>input]:!min-h-9`} />
+              {/* Fator: quantos motoristas, veículos ou agentes; diárias de cada um */}
+              <NumberInput value={c.units} onChange={(v) => updateCost(c.id, { units: v ?? 1 })} fallback={1} min={1} digits={2} suffix="×" label="Fator (pessoas ou veículos)" className={`${cellChild} [&>input]:!min-h-9`} />
+              <NumberInput value={c.qty} onChange={(v) => updateCost(c.id, { qty: v ?? 0 })} fallback={0} digits={3} suffix="d ×" label="Diárias" className={`${cellChild} [&>input]:!min-h-9`} />
               <MoneyInput value={c.unitCost} onChange={(v) => updateCost(c.id, { unitCost: v })} label="Custo unitário" className={`${cellChild} !w-32 [&>input]:!min-h-9`} />
-              <span className="num ml-auto w-24 shrink-0 text-right text-sm font-medium">{brl.format(c.qty * lineCost(c))}</span>
+              <span className="num ml-auto w-24 shrink-0 text-right text-sm font-medium">{brl.format(lineQty(c) * lineCost(c))}</span>
               </div>
               <button type="button" onClick={() => toggle(c.id)} aria-expanded={open.includes(c.id)} className="flex items-center gap-1 text-[0.8125rem] text-muted hover:text-text">
                 <IconChevron className={`size-3.5 transition-transform duration-200 ${open.includes(c.id) ? "rotate-180" : ""}`} />
@@ -127,6 +129,7 @@ export function PricingCalculator({ value: p, onChange }: { value: Pricing; onCh
           <PercentInput label="Outras taxas" value={p.fees} onChange={(v) => applyAll("fees", v)} />
         </div>
         <p className="mt-2 px-1 text-xs text-muted">Alterar aqui aplica em todos os itens. Para um percentual diferente, abra o item.</p>
+        {taxNote && <p className="mt-1 px-1 text-xs text-muted">{taxNote}</p>}
       </Section>
 
       <dl className="space-y-2 border-t border-line px-1 pt-3 text-sm">

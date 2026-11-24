@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FileText as IconDoc, Plus as IconPlus } from "lucide-react";
 
-import { PhotoInput } from "@/components/admin/PhotoInput";
+import { AlbumInput, PhotoInput } from "@/components/admin/PhotoInput";
 import { Badge, Button, DeleteButton, EmptyState, Field, List, NumberInput, PageHeader, PickMark, Row, SearchBox, Section, Select, Segmented, Sheet, Skeleton, Switch, TextArea, useForm } from "@/components/admin/ui";
 import { vehicleCategoryName, vehicleCategoryOptions } from "@/lib/admin/catalog";
 import { newId, repo, useTable } from "@/lib/admin/store";
@@ -22,6 +22,7 @@ const blank = (): Vehicle => ({
   notes: "",
   published: false,
   photoUrl: null,
+  photos: [],
   descriptionPt: "",
   descriptionEn: "",
   capacity: null,
@@ -175,6 +176,12 @@ function VehicleSheet(props: { vehicle: Vehicle; isNew: boolean; partners: { val
         <Button variant="secondary" onClick={openPdf}>
           <IconDoc className="size-4" /> PDF
         </Button>
+      </div>
+      {/* div em vez de Field: label com botões dentro dispararia o upload ao clicar no texto */}
+      <div>
+        <span className="mb-1.5 block text-[0.875rem] font-medium text-silver">Álbum</span>
+        <AlbumInput value={v.photos} onChange={(x) => set("photos", x)} max={5} />
+        <span className="mt-1.5 block text-xs text-muted">Até 5 fotos além da capa (interior, porta-malas…). Vão no documento da proposta.</span>
       </div>
       <Field label="Modelo">
         <input className="input" value={v.model} onChange={(e) => set("model", e.target.value)} autoFocus={props.isNew} placeholder="Ex.: Toyota SW4" />

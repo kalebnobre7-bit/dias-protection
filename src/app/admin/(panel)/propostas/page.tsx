@@ -34,8 +34,9 @@ import {
   cellChild,
 } from "@/components/admin/ui";
 import { proposalServiceName, proposalServiceOptions, vehicleCategoryName } from "@/lib/admin/catalog";
-import { brl, formatDate, proposalStatusLabel, proposalStatusTone } from "@/lib/admin/labels";
-import { blankPricing, syncPricingItems } from "@/lib/admin/pricing";
+import { available, brl, byRank, formatDate, proposalStatusLabel, proposalStatusTone, starsText } from "@/lib/admin/labels";
+import { currentMonth, taxSuggestion } from "@/lib/admin/finance";
+import { blankPricing, CALC_PRICING_KEY, normalizePricing, pricingJobCosts, syncPricingItems } from "@/lib/admin/pricing";
 import { textsToTranslate } from "@/lib/admin/proposal-i18n";
 import {
   blankProposal,
@@ -50,12 +51,13 @@ import {
   proposalFromRequest,
   proposalText,
   proposalTotals,
+  scopeDays,
   scopeItems,
   scopeSummary,
 } from "@/lib/admin/proposals";
 import { useSettings } from "@/lib/admin/settings";
 import { newId, repo, useTable } from "@/lib/admin/store";
-import type { Proposal, ProposalItem, ProposalStatus, SiteRequest } from "@/lib/admin/types";
+import type { Pricing, Proposal, ProposalItem, ProposalStatus, SiteRequest } from "@/lib/admin/types";
 import { whatsappUrl } from "@/lib/order";
 
 type Filter = "all" | "open" | ProposalStatus;
@@ -89,7 +91,16 @@ export default function ProposalsPage() {
     else if (jobId) {
       const job = jobs.find((j) => j.id === jobId);
       if (job) setEditing(proposalFromJob(job, newId(), rows, settings.proposal));
-    } else if (params.has("nova")) setEditing(blank());
+    } else if (params.has("nova")) {
+      // Vindo da calculadora: a proposta nova já abre com a planilha e os itens com preço
+      const stored = sessionStorage.getItem(CALC_PRICING_KEY);
+      sessionStorage.removeItem(CALC_PRICING_KEY);
+      const fresh = blank();
+      if (stored) {
+        const pricing = normalizePricing(JSON.parse(stored) as Pricing);
+        setEditing({ ...fresh, pricing, items: syncPricingItems(fresh.items, null, pricing) });
+      } else setEditing(fresh);
+    }
     // só na carga inicial
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, settingsLoading]);
@@ -227,6 +238,10 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
   const [tab, setTab] = useState<"proposal" | "price" | "team" | "vehicles" | "english">("proposal");
   const { rows: agents } = useTable("agents");
   const { rows: vehicles } = useTable("vehicles");
+  const { rows: jobs } = useTable("jobs");
+  const { rows: jobCosts } = useTable("jobCosts");
+  // Imposto sugerido pela faixa do Simples no mês do serviço
+  const tax = taxSuggestion(p.startDate.slice(0, 7) || currentMonth(), jobs);
   const toggleIn = (key: "agentIds" | "vehicleIds", id: string) =>
     set(key, p[key].includes(id) ? p[key].filter((x) => x !== id) : [...p[key], id]);
 
@@ -284,13 +299,26 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
         title: p.title.trim(),
         items: p.items.filter((i) => i.description.trim()).map((i) => ({ ...i, description: i.description.trim() })),
       };
+      if (saved.status === "accepted") saved.jobId = await ensureJob(saved);
       await repo.upsert("proposals", saved);
+      set("jobId", saved.jobId);
       if (props.sourceRequest) await repo.upsert("siteRequests", { ...props.sourceRequest, status: "converted", proposalId: saved.id });
       return saved;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível salvar.");
       return null;
     }
+  }
+
+  // Aceita (pelo Status ou pelo botão) → serviço agendado com o valor fechado e os custos da planilha a pagar
+  async function ensureJob(saved: Proposal): Promise<string> {
+    const total = proposalTotals(saved).total;
+    const existing = jobs.find((j) => j.id === saved.jobId);
+    const jobId = existing?.id ?? newId();
+    if (!existing) await repo.upsert("jobs", jobFromProposal(saved, jobId));
+    else if (existing.status === "quote") await repo.upsert("jobs", { ...existing, status: "scheduled", price: total });
+    if (saved.pricing && !jobCosts.some((c) => c.jobId === jobId)) await repo.replaceJobCosts(jobId, pricingJobCosts(saved.pricing, jobId));
+    return jobId;
   }
 
   const save = async () => {
@@ -333,23 +361,8 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
     }
   };
 
-  // Aceita → cria o serviço agendado com o valor fechado
   const accept = async () => {
-    const saved = await persist({ status: "accepted" });
-    if (!saved) return;
-    try {
-      if (!saved.jobId) {
-        const job = jobFromProposal(saved, newId());
-        await repo.upsert("jobs", job);
-        await repo.upsert("proposals", { ...saved, jobId: job.id });
-      } else {
-        const job = (await repo.list("jobs")).find((j) => j.id === saved.jobId);
-        if (job && job.status === "quote") await repo.upsert("jobs", { ...job, status: "scheduled", price: totals.total });
-      }
-      props.onClose();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível criar o serviço.");
-    }
+    if (await persist({ status: "accepted" })) props.onClose();
   };
 
   return (
@@ -411,12 +424,10 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
           <Segmented
             value={p.status}
             onChange={(v) => set("status", v)}
-            // "Aceita" só pelo botão "Marcar aceita e agendar", que também cria o serviço
-            options={(Object.keys(proposalStatusLabel) as ProposalStatus[])
-              .filter((s) => s !== "accepted" || p.status === "accepted")
-              .map((s) => ({ value: s, label: proposalStatusLabel[s] }))}
+            options={(Object.keys(proposalStatusLabel) as ProposalStatus[]).map((s) => ({ value: s, label: proposalStatusLabel[s] }))}
           />
         </Field>
+        {p.status === "accepted" && !p.jobId && <p className="-mt-3 text-xs text-muted">Ao salvar, o serviço é criado na agenda com o valor e os custos da planilha.</p>}
 
         <Field label="Título" hint="Aparece no topo do documento. Ex.: Proteção executiva · Visita da diretoria">
           <input className="input" value={p.title} onChange={(e) => set("title", e.target.value)} autoFocus={props.isNew && !p.title} />
@@ -543,7 +554,8 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
             </Select>
           }
         >
-          {scopeItems(p).length > 0 && (
+          {/* Com planilha de preço, os itens vêm dela; gerar pelo escopo criaria itens zerados repetidos */}
+          {scopeItems(p).length > 0 && !p.pricing && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
               <span className="text-[0.875rem] text-muted">Serviço: {scopeSummary(p)}</span>
               <Button variant="secondary" className="!min-h-9 !px-3" onClick={() => set("items", mergeScopeItems(p, newId))}>
@@ -654,6 +666,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
         (p.pricing ? (
           <>
             <PricingCalculator
+              taxNote={tax.note}
               value={p.pricing}
               onChange={(v) => {
                 set("pricing", v);
@@ -676,7 +689,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
             action={
               <Button
                 onClick={() => {
-                  const v = blankPricing();
+                  const v = blankPricing(tax.rate, { days: scopeDays(p), cars: p.vehicleIds.length, guards: p.guards });
                   set("pricing", v);
                   set("items", syncPricingItems(p.items, null, v));
                 }}
@@ -693,13 +706,14 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
             hint="Motoristas e seguranças apresentados no documento. Na proposta comercial vão foto e bio; no serviço fechado, currículo, contato e CNH."
             empty="Cadastre a equipe em Agentes."
             items={agents
-              .filter((a) => a.active || p.agentIds.includes(a.id))
+              .filter((a) => available(a) || p.agentIds.includes(a.id))
+              .sort(byRank)
               .map((a) => ({
                 id: a.id,
                 leading: <Avatar name={a.name} photo={a.photoUrl} />,
                 title: a.name,
-                subtitle: [a.freelance ? "Avulso" : "", a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ") || "Sem função",
-                warn: a.cnhUrl ? "" : "Sem CNH",
+                subtitle: [a.favorite ? "♥" : "", starsText(a.rating), a.freelance ? "Avulso" : "", a.rolePt, a.languages.join(", ")].filter(Boolean).join(" · ") || "Sem função",
+                warn: a.blacklisted ? "Lista negra" : a.cnhUrl ? "" : "Sem CNH",
               }))}
             selected={p.agentIds}
             onToggle={(id) => toggleIn("agentIds", id)}

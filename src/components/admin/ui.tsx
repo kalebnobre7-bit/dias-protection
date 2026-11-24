@@ -11,6 +11,7 @@ import {
   LoaderCircle as IconLoader,
   Plus as IconPlus,
   Search as IconSearch,
+  Star as IconStar,
   X as IconClose,
 } from "lucide-react";
 
@@ -86,8 +87,9 @@ export function Section(props: { title?: string; action?: React.ReactNode; child
 }
 
 // Lista sem moldura: só linhas finas separando os itens
-export function List({ children }: { children: React.ReactNode }) {
-  return <ul className="divide-y divide-line border-y border-line">{children}</ul>;
+// `striped`: linhas alternadas com fundo levemente mais claro (tabelas do Financeiro)
+export function List({ children, striped = false }: { children: React.ReactNode; striped?: boolean }) {
+  return <ul className={`divide-y divide-line border-y border-line ${striped ? "[&>li:nth-child(even)]:bg-white/[0.035]" : ""}`}>{children}</ul>;
 }
 
 export function Row(props: {
@@ -131,6 +133,27 @@ export function Row(props: {
 }
 
 // Marcador de seleção (modo "Exportar PDF" das listas)
+// Avaliação de 1 a 5; tocar de novo na estrela marcada limpa
+export function Stars({ value, onChange }: { value: number | null; onChange: (v: number | null) => void }) {
+  return (
+    <div className="flex" role="radiogroup" aria-label="Avaliação">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          role="radio"
+          aria-checked={value === n}
+          aria-label={`${n} estrela${n > 1 ? "s" : ""}`}
+          onClick={() => onChange(value === n ? null : n)}
+          className="grid size-11 place-items-center rounded-md hover:bg-white/6"
+        >
+          <IconStar className={`size-6 ${value && n <= value ? "fill-[#f5c84c] text-[#f5c84c]" : "text-muted"}`} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function PickMark({ on }: { on: boolean }) {
   return (
     <span
@@ -441,22 +464,65 @@ export function NumberInput(props: {
 }
 
 // Telefone formatado enquanto digita; guarda só os dígitos (com "+" na frente se for estrangeiro)
-export function PhoneInput(props: { value: string; onChange: (v: string) => void; label?: string; placeholder?: string }) {
+// DDI separado do número. Brasil (+55) segue salvo só com dígitos (DDD + número);
+// outro país vira "+DDI…". `storeDdi`: salva sempre com o DDI, só dígitos (ex.: WhatsApp da empresa)
+const DDI_CODES = ["1", "7", "27", "30", "31", "32", "33", "34", "39", "41", "43", "44", "45", "46", "47", "48", "49", "51", "52", "54", "56", "57", "58", "61", "81", "82", "86", "90", "91", "351", "352", "353", "377", "591", "593", "595", "598", "852", "966", "971", "972", "974"];
+
+function splitPhone(value: string, storeDdi: boolean): { ddi: string; num: string } {
+  const d = value.replace(/\D/g, "");
+  const intl = value.trim().startsWith("+") || (storeDdi ? d.length > 0 : d.length > 11);
+  if (!intl) return { ddi: "55", num: d };
+  if (d.startsWith("55")) return { ddi: "55", num: d.slice(2) };
+  const code = [3, 2, 1].map((n) => d.slice(0, n)).find((c) => DDI_CODES.includes(c)) ?? d.slice(0, 2);
+  return { ddi: code, num: d.slice(code.length) };
+}
+
+export function PhoneInput(props: { value: string; onChange: (v: string) => void; label?: string; placeholder?: string; storeDdi?: boolean }) {
+  const storeDdi = props.storeDdi ?? false;
+  const compose = (ddi: string, num: string) => (!num ? "" : storeDdi ? `${ddi}${num}` : ddi === "55" ? num : `+${ddi}${num}`);
+  const [ddi, setDdi] = useState(() => splitPhone(props.value, storeDdi).ddi);
+  // Valor trocado por fora (outro cadastro) realinha o DDI; o que o próprio campo emitiu, não
+  const [seen, setSeen] = useState(props.value);
+  if (props.value !== seen) {
+    setSeen(props.value);
+    setDdi(splitPhone(props.value, storeDdi).ddi);
+  }
+  const digits = props.value.replace(/\D/g, "");
+  const prefixed = storeDdi || props.value.trim().startsWith("+");
+  const num = prefixed && digits.startsWith(ddi) ? digits.slice(ddi.length) : digits;
+  const emit = (nextDdi: string, nextNum: string) => {
+    const v = compose(nextDdi || "55", nextNum);
+    setSeen(v);
+    props.onChange(v);
+  };
+  const br = ddi === "55";
   return (
-    <input
-      className="input num"
-      type="tel"
-      inputMode="tel"
-      autoComplete="tel"
-      aria-label={props.label}
-      placeholder={props.placeholder ?? "(11) 99999-9999"}
-      value={formatPhone(props.value)}
-      onChange={(e) => {
-        const text = e.target.value;
-        const digits = text.replace(/\D/g, "").slice(0, 15);
-        props.onChange(text.trim().startsWith("+") && digits ? `+${digits}` : digits);
-      }}
-    />
+    <div className="flex gap-1.5">
+      <span className="relative w-[4.75rem] shrink-0">
+        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted">+</span>
+        <input
+          className="input num !pl-6"
+          inputMode="numeric"
+          aria-label={`DDI${props.label ? ` do ${props.label.toLowerCase()}` : ""}`}
+          value={ddi}
+          onChange={(e) => {
+            const next = e.target.value.replace(/\D/g, "").slice(0, 3);
+            setDdi(next);
+            emit(next, num);
+          }}
+        />
+      </span>
+      <input
+        className="input num min-w-0 flex-1"
+        type="tel"
+        inputMode="tel"
+        autoComplete="tel-national"
+        aria-label={props.label}
+        placeholder={br ? (props.placeholder ?? "(11) 99999-9999") : "Número com código de área"}
+        value={br ? formatPhone(num) : num}
+        onChange={(e) => emit(ddi, e.target.value.replace(/\D/g, "").slice(0, 15 - ddi.length))}
+      />
+    </div>
   );
 }
 

@@ -21,6 +21,9 @@ export type AgentRecord = {
   documentId: string;
   cnhUrl: string | null; // imagem da CNH (vai só no documento de serviço fechado)
   notes: string;
+  favorite: boolean;
+  rating: number | null; // avaliação interna de 1 a 5 estrelas
+  blacklisted: boolean; // lista negra: some da escala e das propostas
   active: boolean;
   published: boolean;
   freelance: boolean; // avulso, criado direto no serviço ou na proposta
@@ -43,6 +46,7 @@ export type Vehicle = {
   // públicos (vão para a página Frota quando published)
   published: boolean;
   photoUrl: string | null;
+  photos: string[]; // álbum de até 6 fotos (vai no documento da proposta)
   descriptionPt: string;
   descriptionEn: string;
   capacity: number | null;
@@ -109,6 +113,7 @@ export type JobCost = {
   agentId: string | null;
   partnerId: string | null;
   paid: boolean;
+  advance: number; // adiantado ao fornecedor enquanto o total não é pago
   createdAt: string;
 };
 
@@ -134,9 +139,10 @@ export type FinanceCategory = {
 // Calculadora de preço (espelho da planilha de precificação do Gabriel)
 export type PricingCost = {
   id: string;
-  category: string; // Equipe, Transporte, Amenidades, Outros
+  category: string; // Proteção, Transporte, Amenidades, Outros (antigas: Equipe)
   description: string;
-  qty: number;
+  units: number; // fator multiplicador: quantos motoristas, veículos ou agentes
+  qty: number; // diárias (ou transfers) de cada um
   unitCost: number;
   extras: PricingExtra[]; // subcustos que somam no custo unitário (pedágio, combustível…)
   // Percentuais do item, em fração sobre o preço de venda
@@ -236,6 +242,7 @@ export type Settings = {
   finance: {
     cashOpening: number; // saldo em caixa na data abaixo
     cashDate: string; // "YYYY-MM-DD" ou ""
+    notes: Record<string, string>; // descritivo de cada mês ("YYYY-MM")
   };
   createdAt: string;
 };

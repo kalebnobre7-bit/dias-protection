@@ -77,6 +77,16 @@ export default function ProposalDocumentPage() {
   // Marca fixa do site; contato e assinatura vêm de Configurações
   const company = { ...settings.company, brandName: localContent.company.brandName, tagline: localContent.company.tagline };
   const totals = proposalTotals(p);
+  // Itens da planilha agrupados por categoria (Transporte, Proteção…) com total de cada uma
+  const categoryOf = (itemId: string) => p.pricing?.costs.find((c) => c.id === itemId)?.category ?? "Outros";
+  const groups = p.items.reduce<{ category: string; items: typeof p.items }[]>((acc, i) => {
+    const cat = categoryOf(i.id);
+    const group = acc.find((g) => g.category === cat);
+    if (group) group.items.push(i);
+    else acc.push({ category: cat, items: [i] });
+    return acc;
+  }, []);
+  const grouped = p.pricing !== null && groups.length > 1;
   const terms = p.terms
     .split("\n")
     .map((line) => line.trim())
@@ -200,7 +210,7 @@ export default function ProposalDocumentPage() {
               <dd className="mt-1.5 leading-relaxed">
                 {client ? (
                   <>
-                    <span className="block text-[1.25rem] font-semibold leading-snug">{client.name}</span>
+                    <span className="block text-[1.5rem] font-semibold leading-snug">{client.name}</span>
                     {client.company && <span className="block">{client.company}</span>}
                     {(client.email || client.phone) && <span className="block text-[#141922]/65">{[client.email, formatPhone(client.phone)].filter(Boolean).join(" · ")}</span>}
                     {client.representatives.map((r) => (
@@ -218,7 +228,7 @@ export default function ProposalDocumentPage() {
             <div>
               <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#141922]/55">{t.preparedBy}</dt>
               <dd className="mt-1.5 leading-relaxed">
-                <span className="block font-semibold">{company.founderName}</span>
+                <span className="block text-[1.125rem] font-semibold">{company.founderName}</span>
                 <span className="block">
                   {[company.founderRole, company.brandName].filter(Boolean).join(" · ")}
                 </span>
@@ -246,7 +256,7 @@ export default function ProposalDocumentPage() {
             <DocLabel>{t.vehicles}</DocLabel>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {fleet.map((v) => (
-                <VehicleCard key={v.id} vehicle={v} showPlate={closed} lang={lang} />
+                <VehicleCard key={v.id} vehicle={v} showPlate={closed} lang={lang} album />
               ))}
             </div>
           </section>
@@ -264,21 +274,38 @@ export default function ProposalDocumentPage() {
                 <th className="num w-28 py-2 text-right font-semibold">{t.total}</th>
               </tr>
             </thead>
-            <tbody>
-              {p.items.map((i) => (
-                <tr key={i.id} className="border-b border-[#141922]/10 align-top">
-                  <td className="py-3 pr-3">
-                    <span className="block font-medium">{docText(i.description, lang, p.en)}</span>
-                    {i.detail && <span className="block text-[0.8125rem] text-[#141922]/60">{docText(i.detail, lang, p.en)}</span>}
-                  </td>
-                  <td className="num whitespace-nowrap py-3 pr-3 text-right">
-                    {i.qty} <span className="text-[#141922]/55">{docText(i.unit, lang)}{lang === "en" && i.qty !== 1 ? "s" : ""}</span>
-                  </td>
-                  <td className="num py-3 pr-3 text-right">{brl.format(i.unitPrice)}</td>
-                  <td className="num py-3 text-right font-medium">{brl.format(itemTotal(i))}</td>
-                </tr>
-              ))}
-            </tbody>
+            {(grouped ? groups : [{ category: "", items: p.items }]).map((g) => (
+              <tbody key={g.category || "all"}>
+                {grouped && (
+                  <tr>
+                    <td colSpan={4} className="pb-1 pt-4 text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[#141922]/55">
+                      {docText(g.category, lang)}
+                    </td>
+                  </tr>
+                )}
+                {g.items.map((i) => (
+                  <tr key={i.id} className="border-b border-[#141922]/10 align-top">
+                    <td className="py-3 pr-3">
+                      <span className="block font-medium">{docText(i.description, lang, p.en)}</span>
+                      {i.detail && <span className="block text-[0.8125rem] text-[#141922]/60">{docText(i.detail, lang, p.en)}</span>}
+                    </td>
+                    <td className="num whitespace-nowrap py-3 pr-3 text-right">
+                      {i.qty} <span className="text-[#141922]/55">{docText(i.unit, lang)}{lang === "en" && i.qty !== 1 ? "s" : ""}</span>
+                    </td>
+                    <td className="num py-3 pr-3 text-right">{brl.format(i.unitPrice)}</td>
+                    <td className="num py-3 text-right font-medium">{brl.format(itemTotal(i))}</td>
+                  </tr>
+                ))}
+                {grouped && (
+                  <tr className="border-b border-[#141922]/25">
+                    <td colSpan={3} className="num py-2.5 pr-3 text-right text-[0.8125rem] text-[#141922]/65">
+                      {t.total} {docText(g.category, lang).toLowerCase()}
+                    </td>
+                    <td className="num py-2.5 text-right font-semibold">{brl.format(g.items.reduce((sum, i) => sum + itemTotal(i), 0))}</td>
+                  </tr>
+                )}
+              </tbody>
+            ))}
             <tfoot>
               {totals.discount > 0 && (
                 <>

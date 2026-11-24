@@ -1,4 +1,11 @@
-import type { Client, CostCategory, Job, JobStatus, ProposalStatus } from "./types";
+import type { AgentRecord, Client, CostCategory, Job, JobStatus, ProposalStatus } from "./types";
+
+// Ao montar equipe: favoritos, depois mais estrelas, depois nome
+export const byRank = (a: AgentRecord, b: AgentRecord) =>
+  Number(b.favorite) - Number(a.favorite) || (b.rating ?? 0) - (a.rating ?? 0) || a.name.localeCompare(b.name);
+// Disponível para escalar: ativo e fora da lista negra
+export const available = (a: AgentRecord) => a.active && !a.blacklisted;
+export const starsText = (rating: number | null) => (rating ? "★".repeat(rating) : "");
 
 export const jobStatusLabel: Record<JobStatus, string> = {
   quote: "Orçamento",

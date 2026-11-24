@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
     categories: ["Combustível", "Pedágio", "Alimentação", "Motorista", "Comissão", "Aluguel Veículo", "Transporte", "Amenidades", "Outros"],
     fixed: [],
   },
-  finance: { cashOpening: 0, cashDate: "" },
+  finance: { cashOpening: 0, cashDate: "", notes: {} },
   createdAt: "",
 };
 

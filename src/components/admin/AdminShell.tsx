@@ -57,9 +57,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const sidebar = (
     <nav aria-label="Painel" className="flex h-full flex-col gap-1 p-3">
       <Link href="/admin" className="mb-4 flex min-h-12 items-center gap-3 px-3">
-        <Emblem className="h-9 text-text" />
+        <Emblem className="h-12 text-text" />
         <span className="leading-tight">
-          <span className="block font-semibold tracking-[-0.02em]">Dias Protection</span>
+          <span className="block text-[1.0625rem] font-semibold tracking-[-0.02em]">Dias Protection</span>
           <span className="block text-xs text-muted">Painel</span>
         </span>
       </Link>

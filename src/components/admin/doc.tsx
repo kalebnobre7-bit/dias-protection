@@ -42,8 +42,8 @@ export function DocBrandHeader({ kind, children }: { kind: string; children?: Re
   return (
     <header className="flex items-start justify-between gap-6 border-b border-[#141922]/15 pb-6">
       <div className="flex items-center gap-3 text-[#141922]">
-        <Emblem className="h-20" />
-        <Wordmark className="h-[4.25rem]" />
+        <Emblem className="h-24" />
+        <Wordmark className="h-[5.25rem]" />
       </div>
       <div className="text-right">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[#141922]/55">{kind}</p>
@@ -85,7 +85,7 @@ export function AgentCard({ agent: a, lang = "pt" }: { agent: AgentRecord; lang?
     <div className="flex gap-4 break-inside-avoid">
       <Photo src={a.photoUrl} name={a.name} className="size-[22mm]" />
       <div className="min-w-0 text-[0.875rem] leading-relaxed">
-        <p className="text-[1rem] font-semibold">{a.name}</p>
+        <p className="text-[1.1875rem] font-semibold leading-tight">{a.name}</p>
         {agentRole(a, lang) && <p className="text-[#141922]/65">{agentRole(a, lang)}</p>}
         {agentMeta(a, lang) && <p className="text-[0.8125rem] text-[#141922]/55">{agentMeta(a, lang)}</p>}
         {/* Proposta: bio resumida; o currículo completo vai no serviço fechado */}
@@ -95,7 +95,7 @@ export function AgentCard({ agent: a, lang = "pt" }: { agent: AgentRecord; lang?
   );
 }
 
-export function VehicleCard({ vehicle: v, showPlate = false, lang = "pt" }: { vehicle: Vehicle; showPlate?: boolean; lang?: DocLang }) {
+export function VehicleCard({ vehicle: v, showPlate = false, lang = "pt", album = false }: { vehicle: Vehicle; showPlate?: boolean; lang?: DocLang; album?: boolean }) {
   const en = lang === "en";
   const description = (en && v.descriptionEn) || v.descriptionPt;
   const facts = [
@@ -109,8 +109,16 @@ export function VehicleCard({ vehicle: v, showPlate = false, lang = "pt" }: { ve
   return (
     <div className="break-inside-avoid overflow-hidden rounded-lg border border-[#141922]/12">
       {v.photoUrl && <img src={v.photoUrl} alt={v.model} className="aspect-[16/10] w-full object-cover" />}
+      {/* Álbum: miniaturas abaixo da capa */}
+      {album && v.photos.length > 0 && (
+        <div className="grid grid-cols-5 gap-1 p-1">
+          {v.photos.map((url) => (
+            <img key={url} src={url} alt="" className="aspect-[4/3] w-full rounded-sm object-cover" />
+          ))}
+        </div>
+      )}
       <div className="p-3 text-[0.875rem] leading-relaxed">
-        <p className="font-semibold">{v.model}</p>
+        <p className="text-[1.0625rem] font-semibold">{v.model}</p>
         <p className="text-[0.8125rem] text-[#141922]/60">{facts.join(" · ")}</p>
         {description && <p className="mt-1">{description}</p>}
       </div>
@@ -127,7 +135,7 @@ export function AgentCv({ agent: a, withPrivate, lang = "pt" }: { agent: AgentRe
       <div className="flex items-center gap-6">
         <Photo src={a.photoUrl} name={a.name} className="size-[32mm]" />
         <div className="min-w-0">
-          <p className="text-[1.75rem] font-semibold leading-tight tracking-[-0.03em]">{a.name}</p>
+          <p className="text-[2rem] font-semibold leading-tight tracking-[-0.03em]">{a.name}</p>
           {agentRole(a, lang) && <p className="mt-1 text-[1rem] text-[#141922]/70">{agentRole(a, lang)}</p>}
           {agentMeta(a, lang) && <p className="mt-1 text-[0.875rem] text-[#141922]/55">{agentMeta(a, lang)}</p>}
         </div>

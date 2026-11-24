@@ -17,6 +17,9 @@ export function shiftMonth(month: string, delta: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// Quanto do custo já saiu do caixa: tudo se pago, senão só o adiantamento
+export const costPaidPart = (c: JobCost) => (c.paid ? c.amount : Math.min(c.advance, c.amount));
+
 export function jobCostTotal(jobId: string, costs: JobCost[]): number {
   return costs.filter((c) => c.jobId === jobId).reduce((sum, c) => sum + c.amount, 0);
 }
@@ -44,6 +47,15 @@ export function rbt12(month: string, jobs: Job[]): number {
 }
 
 export const monthTaxRate = (month: string, jobs: Job[]) => effectiveTaxRate(rbt12(month, jobs));
+
+// Imposto sugerido na planilha de preço: alíquota do Simples pela receita dos últimos 12 meses
+export function taxSuggestion(month: string, jobs: Job[]): { rate: number; note: string } {
+  const revenue = rbt12(month, jobs);
+  const rate = effectiveTaxRate(revenue);
+  const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(revenue);
+  const pct = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 2 }).format(rate);
+  return { rate, note: `Imposto sugerido: ${pct}, alíquota do Simples (Anexo III) para ${money} faturados nos últimos 12 meses.` };
+}
 
 export type MonthSummary = {
   revenue: number;
@@ -89,34 +101,63 @@ export function categoryTotals(month: string, jobs: Job[], costs: JobCost[], tra
   };
 }
 
-export type ServiceTotal = { serviceTypeId: string | null; count: number; revenue: number; costs: number; margin: number };
+// Meses de um período: o mês, o semestre ou o ano do mês informado
+export function periodMonths(month: string, range: "month" | "semester" | "year"): string[] {
+  if (range === "month") return [month];
+  const [y, m] = month.split("-").map(Number);
+  const first = range === "year" ? 1 : m <= 6 ? 1 : 7;
+  const count = range === "year" ? 12 : 6;
+  return Array.from({ length: count }, (_, i) => `${y}-${String(first + i).padStart(2, "0")}`);
+}
 
-// Serviços do período ("YYYY-MM" ou "YYYY") agrupados por tipo, do mais rentável ao menos
-export function serviceTotals(period: string, jobs: Job[], costs: JobCost[]): ServiceTotal[] {
-  const map = new Map<string | null, ServiceTotal>();
-  for (const j of jobs.filter((j) => countsAsRevenue(j) && j.startsAt.startsWith(period))) {
-    const row = map.get(j.serviceTypeId) ?? { serviceTypeId: j.serviceTypeId, count: 0, revenue: 0, costs: 0, margin: 0 };
-    const c = jobCostTotal(j.id, costs);
-    row.count += 1;
-    row.revenue += j.price;
-    row.costs += c;
-    row.margin += j.price - c;
-    map.set(j.serviceTypeId, row);
+export type JobResult = { job: Job; costs: number; tax: number; overhead: number; net: number };
+
+// Resultado de cada serviço: preço − custos − imposto − rateio dos custos fixos do mês (proporcional ao preço)
+export function jobResults(months: string[], jobs: Job[], costs: JobCost[], fixedMonthly: number): JobResult[] {
+  const out: JobResult[] = [];
+  for (const month of months) {
+    const monthJobs = jobs.filter((j) => countsAsRevenue(j) && monthOf(j.startsAt) === month);
+    const revenue = monthJobs.reduce((s, j) => s + j.price, 0);
+    const rate = monthTaxRate(month, jobs);
+    for (const job of monthJobs) {
+      const c = jobCostTotal(job.id, costs);
+      const tax = job.price * rate;
+      const overhead = revenue > 0 ? (fixedMonthly * job.price) / revenue : 0;
+      out.push({ job, costs: c, tax, overhead, net: job.price - c - tax - overhead });
+    }
   }
-  return [...map.values()].sort((a, b) => b.margin - a.margin);
+  return out.sort((a, b) => a.job.startsAt.localeCompare(b.job.startsAt));
+}
+
+export type ServiceTotal = { serviceTypeId: string | null; count: number; revenue: number; costs: number; margin: number; net: number };
+
+// Resultados agrupados por tipo de serviço, do mais rentável ao menos
+export function serviceTotals(results: JobResult[]): ServiceTotal[] {
+  const map = new Map<string | null, ServiceTotal>();
+  for (const r of results) {
+    const id = r.job.serviceTypeId;
+    const row = map.get(id) ?? { serviceTypeId: id, count: 0, revenue: 0, costs: 0, margin: 0, net: 0 };
+    row.count += 1;
+    row.revenue += r.job.price;
+    row.costs += r.costs;
+    row.margin += r.job.price - r.costs;
+    row.net += r.net;
+    map.set(id, row);
+  }
+  return [...map.values()].sort((a, b) => b.net - a.net);
 }
 
 // Caixa: saldo informado + o que entrou menos o que saiu de fato desde a data do saldo
-export function cashBalance(opening: number, since: string, jobs: Job[], costs: JobCost[], transactions: Transaction[]): number {
-  const after = (date: string) => !since || date >= since;
+export function cashBalance(opening: number, since: string, jobs: Job[], costs: JobCost[], transactions: Transaction[], until = "9999-12-31"): number {
+  const after = (date: string) => (!since || date >= since) && date <= until;
   const jobsById = new Map(jobs.map((j) => [j.id, j]));
   const received = jobs.filter((j) => countsAsRevenue(j) && j.paymentStatus === "paid" && after(j.paidAt || j.startsAt.slice(0, 10))).reduce((s, j) => s + j.price, 0);
   const paidCosts = costs
     .filter((c) => {
       const job = jobsById.get(c.jobId);
-      return c.paid && job && countsAsRevenue(job) && after(job.startsAt.slice(0, 10));
+      return job && countsAsRevenue(job) && after(job.startsAt.slice(0, 10));
     })
-    .reduce((s, c) => s + c.amount, 0);
+    .reduce((s, c) => s + costPaidPart(c), 0);
   const tx = transactions.filter((t) => t.paid && after(t.date)).reduce((s, t) => s + (t.kind === "income" ? t.amount : -t.amount), 0);
   return opening + received - paidCosts + tx;
 }
@@ -145,4 +186,27 @@ export function categoryByClient(month: string, jobs: Job[], costs: JobCost[]): 
     return { category, byClient, total: sum, share: total ? sum / total : 0 };
   });
   return { clients: [...clients], rows: rows.sort((a, b) => b.total - a.total), total };
+}
+
+export type CashMonth = { inflow: number; outflow: number; receivable: number; payable: number };
+
+// Fluxo de caixa do mês: o que entrou e saiu de fato (mesmas regras do cashBalance) e o que ficou pendente
+export function cashMonth(month: string, jobs: Job[], costs: JobCost[], transactions: Transaction[]): CashMonth {
+  const r: CashMonth = { inflow: 0, outflow: 0, receivable: 0, payable: 0 };
+  const jobsById = new Map(jobs.filter(countsAsRevenue).map((j) => [j.id, j]));
+  for (const j of jobsById.values()) {
+    if (j.paymentStatus === "paid" && monthOf(j.paidAt || j.startsAt) === month) r.inflow += j.price;
+    if (j.paymentStatus === "pending" && monthOf(j.startsAt) === month) r.receivable += j.price;
+  }
+  for (const c of costs) {
+    const job = jobsById.get(c.jobId);
+    if (!job || monthOf(job.startsAt) !== month) continue;
+    r.outflow += costPaidPart(c);
+    r.payable += c.amount - costPaidPart(c);
+  }
+  for (const t of transactions.filter((t) => monthOf(t.date) === month)) {
+    if (t.kind === "income") r[t.paid ? "inflow" : "receivable"] += t.amount;
+    else r[t.paid ? "outflow" : "payable"] += t.amount;
+  }
+  return r;
 }

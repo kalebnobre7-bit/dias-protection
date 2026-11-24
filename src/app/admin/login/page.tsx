@@ -36,7 +36,7 @@ export default function LoginPage() {
       />
       <form onSubmit={submit} className="w-full max-w-sm">
         <div className="mb-10 flex flex-col items-center text-center">
-          <Emblem className="h-16 text-text" />
+          <Emblem className="h-20 text-text" />
           <h1 className="mt-6 text-[1.75rem] font-semibold tracking-[-0.03em]">Painel Dias Protection</h1>
           <p className="mt-1 text-[0.9375rem] text-muted">Entre para gerenciar serviços, equipe e financeiro.</p>
         </div>

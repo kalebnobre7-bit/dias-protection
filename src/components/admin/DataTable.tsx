@@ -2,7 +2,8 @@
 const STICKY = "sticky left-0 bg-[color-mix(in_srgb,var(--color-navy)_60%,var(--color-ink))]";
 const STRIPE = "bg-[color-mix(in_srgb,white_5%,color-mix(in_srgb,var(--color-navy)_60%,var(--color-ink)))]";
 
-export function DataTable({ head, rows, foot, striped = false }: { head: string[]; rows: string[][]; foot: string[]; striped?: boolean }) {
+// strong: índices das linhas em negrito (subtotais)
+export function DataTable({ head, rows, foot, striped = false, strong = [] }: { head: string[]; rows: string[][]; foot?: string[]; striped?: boolean; strong?: number[] }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-line bg-navy/60">
       <table className="w-full min-w-[34rem] border-collapse text-sm">
@@ -19,7 +20,7 @@ export function DataTable({ head, rows, foot, striped = false }: { head: string[
           {rows.map((r, ri) => {
             const stripe = striped && ri % 2 === 0;
             return (
-              <tr key={ri} className={stripe ? STRIPE : ""}>
+              <tr key={ri} className={`${stripe ? STRIPE : ""} ${strong.includes(ri) ? "font-semibold" : ""}`}>
                 {r.map((c, i) => (
                   <td key={i} className={`px-4 py-3 ${i ? "num text-right" : `font-medium sticky left-0 ${stripe ? STRIPE : STICKY}`}`}>
                     {c}
@@ -29,15 +30,17 @@ export function DataTable({ head, rows, foot, striped = false }: { head: string[
             );
           })}
         </tbody>
-        <tfoot>
-          <tr className="border-t border-line-strong font-semibold">
-            {foot.map((c, i) => (
-              <td key={i} className={`px-4 py-3 ${i ? "num text-right" : STICKY}`}>
-                {c}
-              </td>
-            ))}
-          </tr>
-        </tfoot>
+        {foot && (
+          <tfoot>
+            <tr className="border-t border-line-strong font-semibold">
+              {foot.map((c, i) => (
+                <td key={i} className={`px-4 py-3 ${i ? "num text-right" : STICKY}`}>
+                  {c}
+                </td>
+              ))}
+            </tr>
+          </tfoot>
+        )}
       </table>
     </div>
   );

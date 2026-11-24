@@ -7,16 +7,23 @@ import { Plus as IconPlus, Repeat as IconFixed, Tags as IconTags, X as IconClose
 import { DataTable } from "@/components/admin/DataTable";
 import { DateTile, MoneyInput } from "@/components/admin/job-bits";
 import { MonthStats, type MonthDetail } from "@/components/admin/MonthStats";
-import { cell, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PeriodStepper, Row, Section, Select, Segmented, Sheet, Skeleton, Stat, statStrip, Switch, useForm } from "@/components/admin/ui";
+import { cell, Badge, Button, DeleteButton, EmptyState, Field, List, PageHeader, PeriodStepper, Row, Section, Select, Segmented, Sheet, Skeleton, Stat, statStrip, Switch, TextArea, useForm } from "@/components/admin/ui";
 import { jobServiceNames, serviceTypeName } from "@/lib/admin/catalog";
-import { cashBalance, categoryByClient, categoryTotals, countsAsRevenue, currentMonth, jobCostTotal, monthlySummary, monthOf, serviceTotals, shiftMonth, type CategoryTotal, type MonthSummary } from "@/lib/admin/finance";
+import { cashBalance, cashMonth, categoryByClient, categoryTotals, countsAsRevenue, currentMonth, jobCostTotal, jobResults, monthlySummary, monthOf, periodMonths, serviceTotals, shiftMonth, type CategoryTotal, type JobResult, type MonthSummary } from "@/lib/admin/finance";
 import { brl, clientLine, costCategoryName, formatDate, formatDateTime, formatMonth, jobDatesText, jobDayCount, percent } from "@/lib/admin/labels";
 import { useSettings } from "@/lib/admin/settings";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { FinanceCategory, FixedCost, Job, JobCost, Settings, Transaction } from "@/lib/admin/types";
 
-type View = "month" | "service";
-type Range = "month" | "year";
+type View = "month" | "service" | "cash" | "dre";
+type Range = "month" | "semester" | "year";
+
+// Valores sem centavos nas tabelas largas (caixa e DRE)
+const brl0 = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const monthName = (m: string, style: "long" | "short") => {
+  const label = new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1, 1).toLocaleDateString("pt-BR", { month: style }).replace(".", "");
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
 
 const KIND_LABEL: Record<FinanceCategory["kind"], string> = { expense: "Saída", income: "Entrada", both: "Ambos" };
 
@@ -37,9 +44,15 @@ export default function FinancePage() {
   const [openJobId, setOpenJobId] = useState<string | null>(null);
   const [cashOpen, setCashOpen] = useState(false);
   const [fixedOpen, setFixedOpen] = useState(false);
+  const [noteMonth, setNoteMonth] = useState<string | null>(null);
 
-  // Na visão por serviço dá para ver o ano inteiro; as setas pulam de 12 em 12
-  const yearly = view === "service" && range === "year";
+  // Por serviço: mês, semestre ou ano. Caixa e DRE: sempre o ano. As setas pulam o período inteiro
+  const span: Range = view === "cash" || view === "dre" ? "year" : view === "service" ? range : "month";
+  const months = periodMonths(month, span);
+  const stepSize = span === "year" ? 12 : span === "semester" ? 6 : 1;
+  const year = month.slice(0, 4);
+  const periodLabel = span === "year" ? year : span === "semester" ? `${Number(month.slice(5, 7)) <= 6 ? 1 : 2}º semestre ${year}` : formatMonth(month);
+  const fixedMonthly = settings.costs.fixed.reduce((s, f) => s + f.amount, 0);
   const summary = monthlySummary(month, jobs, costs, transactions);
   const byCategory = categoryTotals(month, jobs, costs, transactions);
   const monthJobs = jobs.filter((j) => countsAsRevenue(j) && monthOf(j.startsAt) === month).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
@@ -49,14 +62,15 @@ export default function FinancePage() {
   const matrix = categoryByClient(month, jobs, costs);
   const cash = cashBalance(settings.finance.cashOpening, settings.finance.cashDate, jobs, costs, transactions);
   const openJob = jobs.find((j) => j.id === openJobId);
+  const openResult = openJob && jobResults([monthOf(openJob.startsAt)], jobs, costs, fixedMonthly).find((r) => r.job.id === openJob.id);
 
-  const blank = (): Transaction => ({
+  const blank = (m = month): Transaction => ({
     id: newId(),
     kind: "expense",
     description: "",
     category: "",
     amount: 0,
-    date: month === currentMonth() ? new Date().toISOString().slice(0, 10) : `${month}-01`,
+    date: m === currentMonth() ? new Date().toISOString().slice(0, 10) : `${m}-01`,
     paid: true,
     createdAt: new Date().toISOString(),
   });
@@ -68,11 +82,11 @@ export default function FinancePage() {
         subtitle="Receita dos serviços, custos e lançamentos avulsos do mês."
         action={
           <PeriodStepper
-            label={yearly ? month.slice(0, 4) : formatMonth(month)}
-            onStep={(d) => setMonth(shiftMonth(month, yearly ? d * 12 : d))}
-            onToday={(yearly ? month.slice(0, 4) !== currentMonth().slice(0, 4) : month !== currentMonth()) ? () => setMonth(currentMonth()) : undefined}
-            prevLabel={yearly ? "Ano anterior" : "Mês anterior"}
-            nextLabel={yearly ? "Próximo ano" : "Próximo mês"}
+            label={periodLabel}
+            onStep={(d) => setMonth(shiftMonth(month, d * stepSize))}
+            onToday={!periodMonths(currentMonth(), span).includes(month) ? () => setMonth(currentMonth()) : undefined}
+            prevLabel={span === "year" ? "Ano anterior" : span === "semester" ? "Semestre anterior" : "Mês anterior"}
+            nextLabel={span === "year" ? "Próximo ano" : span === "semester" ? "Próximo semestre" : "Próximo mês"}
           />
         }
       />
@@ -84,6 +98,8 @@ export default function FinancePage() {
           options={[
             { value: "month", label: "Mês" },
             { value: "service", label: "Por serviço" },
+            { value: "cash", label: "Caixa" },
+            { value: "dre", label: "DRE" },
           ]}
         />
         {view === "service" && (
@@ -92,6 +108,7 @@ export default function FinancePage() {
             onChange={setRange}
             options={[
               { value: "month", label: "No mês" },
+              { value: "semester", label: "No semestre" },
               { value: "year", label: "No ano" },
             ]}
           />
@@ -99,9 +116,19 @@ export default function FinancePage() {
       </div>
 
       {loading ? (
-        <Skeleton stats={view === "service" ? 2 : 4} rows={4} />
+        <Skeleton stats={4} rows={4} />
       ) : view === "service" ? (
-        <ServiceView period={yearly ? month.slice(0, 4) : month} jobs={jobs} costs={costs} />
+        <ServiceView months={months} single={span === "month"} jobs={jobs} costs={costs} fixedMonthly={fixedMonthly} clientOf={clientOf} onJob={setOpenJobId} />
+      ) : view === "cash" ? (
+        <>
+          <CashFlowView months={months} cash={cash} settings={settings} jobs={jobs} costs={costs} transactions={transactions} />
+          <MonthNotes months={months} settings={settings} transactions={transactions} onOpen={setNoteMonth} />
+        </>
+      ) : view === "dre" ? (
+        <>
+          <DreView months={months} jobs={jobs} costs={costs} transactions={transactions} />
+          <MonthNotes months={months} settings={settings} transactions={transactions} onOpen={setNoteMonth} />
+        </>
       ) : (
         <>
           <div className={`${statStrip[2]} mb-4`}>
@@ -124,7 +151,7 @@ export default function FinancePage() {
 
           <Section title="Serviços do mês" className="mt-10">
             {monthJobs.length ? (
-              <List>
+              <List striped>
                 {monthJobs.map((j) => {
                   const profit = j.price - jobCostTotal(j.id, costs) - j.price * summary.taxRate;
                   return (
@@ -161,6 +188,7 @@ export default function FinancePage() {
           {matrix.rows.length > 0 && (
             <Section title="Custos por categoria e cliente" className="mt-10">
               <DataTable
+                striped
                 head={["Categoria", ...matrix.clients.map(clientName), "Total", "%"]}
                 rows={matrix.rows.map((r) => [r.category, ...matrix.clients.map((id) => (r.byClient[id] ? brl.format(r.byClient[id]) : "—")), brl.format(r.total), percent.format(r.share)])}
                 foot={["Total", ...matrix.clients.map((id) => brl.format(matrix.rows.reduce((s, r) => s + (r.byClient[id] ?? 0), 0))), brl.format(matrix.total), percent.format(1)]}
@@ -186,7 +214,7 @@ export default function FinancePage() {
             }
           >
             {monthTx.length ? (
-              <List>
+              <List striped>
                 {monthTx.map((t) => (
                   <Row
                     key={t.id}
@@ -229,18 +257,30 @@ export default function FinancePage() {
           }}
         />
       )}
-      {openJob && <JobSummarySheet job={openJob} title={clientOf(openJob)} costs={costs} taxRate={summary.taxRate} onClose={() => setOpenJobId(null)} />}
+      {openJob && openResult && <JobSummarySheet job={openJob} title={clientOf(openJob)} costs={costs} result={openResult} onClose={() => setOpenJobId(null)} />}
+      {noteMonth && (
+        <MonthNoteSheet
+          month={noteMonth}
+          settings={settings}
+          transactions={transactions.filter((t) => monthOf(t.date) === noteMonth).sort((a, b) => a.date.localeCompare(b.date))}
+          onClose={() => setNoteMonth(null)}
+          onEdit={(t) => {
+            setNoteMonth(null);
+            setEditing(t ?? blank(noteMonth));
+          }}
+        />
+      )}
       {cashOpen && <CashSheet settings={settings} onClose={() => setCashOpen(false)} />}
       {fixedOpen && <FixedCostsSheet settings={settings} month={month} transactions={transactions} categories={categories} onClose={() => setFixedOpen(false)} />}
     </>
   );
 }
 
-const DETAIL_TITLE: Record<MonthDetail, string> = { revenue: "Receita", receivable: "A receber", costs: "Custos", profit: "Lucro líquido" };
+const DETAIL_TITLE: Record<MonthDetail, string> = { revenue: "Receita bruta", receivable: "A receber", costs: "Custos", profit: "Lucro líquido" };
 
 function MoneyLines({ rows }: { rows: { label: string; value: string; strong?: boolean }[] }) {
   return (
-    <dl className="divide-y divide-line border-y border-line text-sm">
+    <dl className="divide-y divide-line border-y border-line text-sm [&>div:nth-child(even)]:bg-white/[0.035]">
       {rows.map((r) => (
         <div key={r.label} className={`flex items-baseline justify-between gap-4 px-1 py-2.5 ${r.strong ? "text-base font-semibold" : ""}`}>
           <dt className={r.strong ? "" : "text-muted"}>{r.label}</dt>
@@ -311,16 +351,17 @@ function MonthDetailSheet(props: {
           { label: kind === "profit" ? "Lucro líquido" : "Total", value: brl.format(total), strong: true },
         ]}
       />
-      {rows.length ? <List>{rows}</List> : <p className="px-1 text-sm text-muted">Nada neste mês.</p>}
+      {rows.length ? <List striped>{rows}</List> : <p className="px-1 text-sm text-muted">Nada neste mês.</p>}
     </Sheet>
   );
 }
 
 // Tabelinha de um serviço: datas, receita, custos por categoria, imposto e lucro
-function JobSummarySheet({ job: j, title, costs, taxRate, onClose }: { job: Job; title: string; costs: JobCost[]; taxRate: number; onClose: () => void }) {
+function JobSummarySheet({ job: j, title, costs, result, onClose }: { job: Job; title: string; costs: JobCost[]; result: JobResult; onClose: () => void }) {
   const lines = costs.filter((c) => c.jobId === j.id && c.amount);
   const totalCosts = lines.reduce((s, c) => s + c.amount, 0);
-  const tax = j.price * taxRate;
+  const { tax, overhead } = result;
+  const taxRate = j.price ? tax / j.price : 0;
   const byCategory = new Map<string, number>();
   for (const c of lines) byCategory.set(costCategoryName(c.category), (byCategory.get(costCategoryName(c.category)) ?? 0) + c.amount);
 
@@ -344,11 +385,17 @@ function JobSummarySheet({ job: j, title, costs, taxRate, onClose }: { job: Job;
           ...[...byCategory].map(([label, value]) => ({ label: `Custo · ${label}`, value: brl.format(value) })),
           { label: "Total de custos", value: brl.format(totalCosts) },
           { label: `Imposto (${percent.format(taxRate)})`, value: brl.format(tax) },
-          { label: "Lucro", value: brl.format(j.price - totalCosts - tax), strong: true },
+          { label: "Lucro", value: brl.format(j.price - totalCosts - tax), strong: !overhead },
+          ...(overhead
+            ? [
+                { label: "Rateio dos custos fixos", value: `− ${brl.format(overhead)}` },
+                { label: "Lucro líquido", value: brl.format(result.net), strong: true },
+              ]
+            : []),
         ]}
       />
       <Section title="Entradas e saídas">
-        <List>
+        <List striped>
           <Row
             title="Receita do serviço"
             trailing={
@@ -366,7 +413,7 @@ function JobSummarySheet({ job: j, title, costs, taxRate, onClose }: { job: Job;
               trailing={
                 <span className="flex flex-col items-end gap-1">
                   <span className="num font-medium">− {brl.format(c.amount)}</span>
-                  <Badge tone={c.paid ? "good" : "warn"}>{c.paid ? "Pago" : "A pagar"}</Badge>
+                  <Badge tone={c.paid ? "good" : "warn"}>{c.paid ? "Pago" : c.advance ? `Adiantado ${brl.format(c.advance)}` : "A pagar"}</Badge>
                 </span>
               }
             />
@@ -538,44 +585,258 @@ function CategoryBars({ title, rows, tone }: { title: string; rows: CategoryTota
   );
 }
 
-// Receita, custos e margem agrupados por tipo de serviço, no mês ou no ano
-function ServiceView({ period, jobs, costs }: { period: string; jobs: Job[]; costs: JobCost[] }) {
-  const rows = serviceTotals(period, jobs, costs);
-  const sum = rows.reduce((s, r) => ({ count: s.count + r.count, revenue: s.revenue + r.revenue, margin: s.margin + r.margin }), { count: 0, revenue: 0, margin: 0 });
+// Receita, custos, margem e lucro líquido (com rateio dos custos fixos) por tipo e por serviço
+function ServiceView(props: { months: string[]; single: boolean; jobs: Job[]; costs: JobCost[]; fixedMonthly: number; clientOf: (j: Job) => string; onJob: (id: string) => void }) {
+  const results = jobResults(props.months, props.jobs, props.costs, props.fixedMonthly);
+  const rows = serviceTotals(results);
+  const sum = rows.reduce((s, r) => ({ count: s.count + r.count, revenue: s.revenue + r.revenue, margin: s.margin + r.margin, net: s.net + r.net }), { count: 0, revenue: 0, margin: 0, net: 0 });
   const pct = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : "—");
 
   return (
     <>
-      <div className={statStrip[2]}>
-        <Stat label="Receita" value={brl.format(sum.revenue)} />
-        <Stat label="Margem" value={brl.format(sum.margin)} tone={sum.margin < 0 ? "bad" : "good"} />
+      <div className={statStrip[4]}>
+        <Stat label="Receita" value={brl.format(sum.revenue)} tone="good" />
+        <Stat label="Margem" value={brl.format(sum.margin)} tone={sum.margin < 0 ? "bad" : "default"} />
+        <Stat label="Lucro líquido" value={brl.format(sum.net)} tone={sum.net < 0 ? "bad" : "default"} />
+        <Stat label="Margem líquida" value={pct(sum.net, sum.revenue)} tone="muted" />
       </div>
       <p className="mt-3 px-1 text-[0.8125rem] text-muted">
-        {sum.count} serviço(s) agendados e concluídos, menos os custos lançados em cada um. Lançamentos avulsos ficam de fora.
+        {sum.count} serviço(s) agendados e concluídos. Margem = receita − custos do serviço. Lucro líquido tira também o imposto e o rateio dos custos fixos
+        {props.fixedMonthly ? ` (${brl.format(props.fixedMonthly)}/mês, divididos entre os serviços de cada mês pelo valor)` : " (nenhum custo fixo cadastrado)"}.
       </p>
 
       <Section title="Por tipo de serviço" className="mt-10">
         {rows.length ? (
-          <List>
+          <List striped>
             {rows.map((r) => (
               <Row
                 key={r.serviceTypeId ?? "none"}
                 title={r.serviceTypeId ? serviceTypeName(r.serviceTypeId) : "Sem tipo definido"}
-                subtitle={`${r.count} serviço(s) · receita ${brl.format(r.revenue)} · custos ${brl.format(r.costs)}`}
+                subtitle={`${r.count} serviço(s) · receita ${brl.format(r.revenue)} · custos ${brl.format(r.costs)} · margem ${brl.format(r.margin)}`}
                 trailing={
                   <span className="flex flex-col items-end gap-1">
-                    <span className={`num font-medium ${r.margin < 0 ? "text-danger" : ""}`}>{brl.format(r.margin)}</span>
-                    <Badge tone={r.margin < 0 ? "bad" : "neutral"}>margem {pct(r.margin, r.revenue)}</Badge>
+                    <span className={`num font-medium ${r.net < 0 ? "text-danger" : ""}`}>{brl.format(r.net)}</span>
+                    <Badge tone={r.net < 0 ? "bad" : "neutral"}>líquida {pct(r.net, r.revenue)}</Badge>
                   </span>
                 }
               />
             ))}
           </List>
         ) : (
-          <EmptyState title={period.length === 4 ? "Nenhum serviço neste ano" : "Nenhum serviço neste mês"} />
+          <EmptyState title={props.single ? "Nenhum serviço neste mês" : "Nenhum serviço no período"} />
         )}
       </Section>
+
+      {results.length > 0 && (
+        <Section title="Serviço a serviço" className="mt-10">
+          <List striped>
+            {results.map((r) => (
+              <Row
+                key={r.job.id}
+                onClick={() => props.onJob(r.job.id)}
+                leading={<DateTile value={r.job.startsAt} />}
+                title={props.clientOf(r.job)}
+                subtitle={`${jobServiceNames(r.job)} · ${jobDatesText(r.job)}`}
+                trailing={
+                  <span className="flex gap-4 sm:gap-8">
+                    <span className="flex flex-col items-end">
+                      <span className="text-[0.75rem] text-muted">Receita</span>
+                      <span className="num font-medium">{brl.format(r.job.price)}</span>
+                    </span>
+                    <span className="flex flex-col items-end">
+                      <span className="text-[0.75rem] text-muted">Líquido</span>
+                      <span className={`num font-medium ${r.net < 0 ? "text-danger" : ""}`}>{brl.format(r.net)}</span>
+                    </span>
+                  </span>
+                }
+              />
+            ))}
+          </List>
+        </Section>
+      )}
     </>
+  );
+}
+
+// Regime de caixa, mês a mês: o que entrou e saiu de fato, o saldo acumulado e o que ficou pendente
+function CashFlowView(props: { months: string[]; cash: number; settings: Settings; jobs: Job[]; costs: JobCost[]; transactions: Transaction[] }) {
+  const { cashOpening, cashDate } = props.settings.finance;
+  const lines = props.months.map((m) => {
+    const c = cashMonth(m, props.jobs, props.costs, props.transactions);
+    // Antes da data do saldo informado não dá para saber o caixa
+    const end = cashDate && `${m}-31` < cashDate ? null : cashBalance(cashOpening, cashDate, props.jobs, props.costs, props.transactions, `${m}-31`);
+    return { m, ...c, end };
+  });
+  const total = (k: "inflow" | "outflow" | "receivable" | "payable") => lines.reduce((s, l) => s + l[k], 0);
+  const lastEnd = lines.at(-1)?.end ?? null;
+
+  return (
+    <>
+      <div className={statStrip[4]}>
+        <Stat label="Capital em caixa" value={brl.format(props.cash)} tone={props.cash < 0 ? "bad" : "default"} />
+        <Stat label="Entradas no ano" value={brl.format(total("inflow"))} tone="good" />
+        <Stat label="Saídas no ano" value={brl.format(total("outflow"))} />
+        <Stat label="Saldo do ano" value={brl.format(total("inflow") - total("outflow"))} tone={total("inflow") < total("outflow") ? "bad" : "default"} />
+      </div>
+      <p className="mt-3 mb-6 px-1 text-[0.8125rem] text-muted">
+        Só o que foi marcado como recebido ou pago, no mês em que aconteceu. Caixa no fim parte do saldo informado em Capital em caixa (aba Mês).
+      </p>
+      <DataTable
+        striped
+        head={["Mês", "Entradas", "Saídas", "Saldo do mês", "Caixa no fim", "A receber", "A pagar"]}
+        rows={lines.map((l) => [
+          monthName(l.m, "long"),
+          brl0.format(l.inflow),
+          brl0.format(l.outflow),
+          brl0.format(l.inflow - l.outflow),
+          l.end === null ? "—" : brl0.format(l.end),
+          l.receivable ? brl0.format(l.receivable) : "—",
+          l.payable ? brl0.format(l.payable) : "—",
+        ])}
+        foot={["Total", brl0.format(total("inflow")), brl0.format(total("outflow")), brl0.format(total("inflow") - total("outflow")), lastEnd === null ? "—" : brl0.format(lastEnd), brl0.format(total("receivable")), brl0.format(total("payable"))]}
+      />
+    </>
+  );
+}
+
+// DRE por competência: linhas do demonstrativo, uma coluna por mês e o total do ano
+function DreView(props: { months: string[]; jobs: Job[]; costs: JobCost[]; transactions: Transaction[] }) {
+  const all = props.months.map((m) => monthlySummary(m, props.jobs, props.costs, props.transactions));
+  const lines: [string, (s: MonthSummary) => number][] = [
+    ["Receita bruta", (s) => s.revenue],
+    ["(−) Impostos", (s) => s.tax],
+    ["Receita líquida", (s) => s.revenue - s.tax],
+    ["(−) Custos dos serviços", (s) => s.jobCosts],
+    ["Lucro bruto", (s) => s.revenue - s.tax - s.jobCosts],
+    ["(−) Despesas fixas e avulsas", (s) => s.otherExpense],
+    ["(+) Outras receitas", (s) => s.otherIncome],
+    ["Lucro líquido", (s) => s.profit],
+  ];
+  const sum = (f: (s: MonthSummary) => number) => all.reduce((acc, s) => acc + f(s), 0);
+  const margin = (profit: number, s: { revenue: number; otherIncome: number }) => {
+    const base = s.revenue + s.otherIncome;
+    return base > 0 ? percent.format(profit / base) : "—";
+  };
+  const yearRevenue = sum((s) => s.revenue);
+  const yearProfit = sum((s) => s.profit);
+
+  return (
+    <>
+      <div className={statStrip[4]}>
+        <Stat label="Receita bruta" value={brl.format(yearRevenue)} tone="good" />
+        <Stat label="Impostos" value={brl.format(sum((s) => s.tax))} tone="muted" />
+        <Stat label="Lucro líquido" value={brl.format(yearProfit)} tone={yearProfit < 0 ? "bad" : "default"} />
+        <Stat label="Margem líquida" value={margin(yearProfit, { revenue: yearRevenue, otherIncome: sum((s) => s.otherIncome) })} tone="muted" />
+      </div>
+      <p className="mt-3 mb-6 px-1 text-[0.8125rem] text-muted">Por competência: cada serviço conta no mês em que acontece, recebido ou não. Despesas incluem os custos fixos lançados.</p>
+      <DataTable
+        striped
+        strong={[2, 4, 7]}
+        head={["", ...props.months.map((m) => monthName(m, "short")), "Total"]}
+        rows={[
+          ...lines.map(([label, f]) => [label, ...all.map((s) => brl0.format(f(s))), brl0.format(sum(f))]),
+          ["Margem líquida", ...all.map((s) => margin(s.profit, s)), margin(yearProfit, { revenue: yearRevenue, otherIncome: sum((s) => s.otherIncome) })],
+        ]}
+      />
+    </>
+  );
+}
+
+// Descritivo de cada mês, editável, com a contagem de lançamentos
+function MonthNotes(props: { months: string[]; settings: Settings; transactions: Transaction[]; onOpen: (m: string) => void }) {
+  return (
+    <Section title="Descritivos e movimentações" className="mt-10">
+      <List striped>
+        {props.months.map((m) => {
+          const note = props.settings.finance.notes[m]?.trim();
+          const count = props.transactions.filter((t) => monthOf(t.date) === m).length;
+          return (
+            <Row
+              key={m}
+              onClick={() => props.onOpen(m)}
+              title={monthName(m, "long")}
+              subtitle={note ? note.split("\n")[0] : "Sem descritivo"}
+              trailing={<span className="num text-xs text-muted">{count} lançamento(s)</span>}
+            />
+          );
+        })}
+      </List>
+    </Section>
+  );
+}
+
+// Descritivo do mês + lançamentos dele; tocar num lançamento abre a edição
+function MonthNoteSheet(props: { month: string; settings: Settings; transactions: Transaction[]; onEdit: (t: Transaction | null) => void; onClose: () => void }) {
+  const [note, setNote] = useState(props.settings.finance.notes[props.month] ?? "");
+  const [error, setError] = useState("");
+  const dirty = note !== (props.settings.finance.notes[props.month] ?? "");
+  const persist = async () => {
+    if (!dirty) return true;
+    try {
+      const notes = { ...props.settings.finance.notes, [props.month]: note.trim() };
+      if (!notes[props.month]) delete notes[props.month];
+      await repo.upsert("settings", { ...props.settings, finance: { ...props.settings.finance, notes } });
+      return true;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+      return false;
+    }
+  };
+  const save = async () => {
+    if (await persist()) props.onClose();
+  };
+  // Abrir um lançamento salva o descritivo antes, para não perder o texto
+  const edit = async (t: Transaction | null) => {
+    if (await persist()) props.onEdit(t);
+  };
+  return (
+    <Sheet
+      open
+      error={error}
+      dirty={dirty}
+      onClose={props.onClose}
+      title={formatMonth(props.month)}
+      footer={
+        <Button className="ml-auto" onClick={save}>
+          Salvar
+        </Button>
+      }
+    >
+      <Field label="Descritivo do mês" hint="O que aconteceu no mês: eventos, decisões, observações do caixa.">
+        <TextArea rows={5} value={note} onChange={(e) => setNote(e.target.value)} />
+      </Field>
+      <Section
+        title="Lançamentos do mês"
+        action={
+          <Button variant="ghost" className="!min-h-9 !px-3" onClick={() => edit(null)}>
+            <IconPlus className="size-4" /> Novo lançamento
+          </Button>
+        }
+      >
+        {props.transactions.length ? (
+          <List striped>
+            {props.transactions.map((t) => (
+              <Row
+                key={t.id}
+                onClick={() => edit(t)}
+                title={t.description}
+                subtitle={[formatDate(t.date), t.category].filter(Boolean).join(" · ")}
+                trailing={
+                  <span className="flex flex-col items-end gap-1">
+                    <span className={`num font-medium ${t.kind === "income" ? "text-[#8fd6a5]" : ""}`}>
+                      {t.kind === "income" ? "+" : "−"} {brl.format(t.amount)}
+                    </span>
+                    {!t.paid && <Badge tone="warn">{t.kind === "income" ? "A receber" : "A pagar"}</Badge>}
+                  </span>
+                }
+              />
+            ))}
+          </List>
+        ) : (
+          <p className="px-1 text-sm text-muted">Nenhum lançamento neste mês.</p>
+        )}
+      </Section>
+    </Sheet>
   );
 }
 

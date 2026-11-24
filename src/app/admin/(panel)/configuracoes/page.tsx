@@ -97,7 +97,7 @@ function SettingsForm({ initial }: { initial: Settings }) {
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="WhatsApp" hint="Com +55 e DDD.">
-              <PhoneInput value={s.company.whatsapp} onChange={(v) => setCompany("whatsapp", v)} label="WhatsApp" placeholder="+55 (11) 99999-9999" />
+              <PhoneInput value={s.company.whatsapp} onChange={(v) => setCompany("whatsapp", v)} label="WhatsApp" storeDdi />
             </Field>
             <Field label="E-mail">
               <input className="input" type="email" value={s.company.email} onChange={(e) => setCompany("email", e.target.value)} />

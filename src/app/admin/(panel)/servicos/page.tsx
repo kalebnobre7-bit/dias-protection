@@ -32,7 +32,7 @@ import { FreelanceForm } from "@/components/admin/FreelanceForm";
 import { DateTile, MoneyInput, statusTone } from "@/components/admin/job-bits";
 import { jobServiceNames, serviceTypeOptions } from "@/lib/admin/catalog";
 import { monthOf, monthTaxRate } from "@/lib/admin/finance";
-import { brl, clientLine, costCategoryName, formatDateTime, jobDatesText, jobStatusLabel, percent } from "@/lib/admin/labels";
+import { available, brl, byRank, clientLine, costCategoryName, formatDateTime, jobDatesText, jobStatusLabel, percent } from "@/lib/admin/labels";
 import { useSettings } from "@/lib/admin/settings";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { AgentRecord, Job, JobCost, JobStatus } from "@/lib/admin/types";
@@ -310,7 +310,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   const addCost = () =>
     setCosts([
       ...list,
-      { id: newId(), jobId: j.id, description: "", category: "agent", amount: 0, agentId: null, partnerId: null, paid: false, createdAt: new Date().toISOString() },
+      { id: newId(), jobId: j.id, description: "", category: "agent", amount: 0, agentId: null, partnerId: null, paid: false, advance: 0, createdAt: new Date().toISOString() },
     ]);
 
   const save = async () => {
@@ -347,7 +347,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   };
 
   // Mostra os ativos + os já escalados (mesmo que tenham ficado inativos)
-  const teamOf = (kind: AgentRecord["kind"]) => agents.filter((a) => a.kind === kind && (a.active || j.agentIds.includes(a.id)));
+  const teamOf = (kind: AgentRecord["kind"]) => agents.filter((a) => a.kind === kind && (available(a) || j.agentIds.includes(a.id))).sort(byRank);
   const teamOptions = (kind: AgentRecord["kind"]) => teamOf(kind).map((a) => ({ value: a.id, label: a.freelance ? `${a.name} (avulso)` : a.name }));
   const pickedOf = (kind: AgentRecord["kind"]) => j.agentIds.filter((id) => teamOf(kind).some((a) => a.id === id));
   // Agentes e motoristas ficam em agentIds; cada grupo de chips só troca os seus
@@ -538,6 +538,14 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                   <MoneyInput value={c.amount} onChange={(v) => updateCost(c.id, { amount: v })} label="Valor do custo" className={`${cellChild} !w-32 [&>input]:!min-h-9`} />
                   <Checkbox checked={c.paid} onChange={(v) => updateCost(c.id, { paid: v })} label="Pago" />
                 </div>
+                {/* Adiantamento ao fornecedor (ex.: sinal do aluguel do carro); o resto fica a pagar */}
+                {!c.paid && c.amount > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 text-[0.8125rem] text-muted">
+                    <span>Adiantado</span>
+                    <MoneyInput value={c.advance} onChange={(v) => updateCost(c.id, { advance: Math.min(v, c.amount) })} label="Valor adiantado" className={`${cellChild} !w-32 [&>input]:!min-h-9`} />
+                    <span className="num">falta pagar {brl.format(c.amount - Math.min(c.advance, c.amount))}</span>
+                  </div>
+                )}
                 {c.category === "agent" && (
                   <Select className={`${cell} !min-h-9`} value={c.agentId ?? ""} onChange={(e) => pickCostAgent(c, e.target.value)} aria-label="Agente">
                     <option value="">Qual agente? (opcional)</option>
