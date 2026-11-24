@@ -29,6 +29,7 @@ import {
   cellChild,
 } from "@/components/admin/ui";
 import { FreelanceForm } from "@/components/admin/FreelanceForm";
+import { JobShareLinks } from "@/components/admin/JobShareLinks";
 import { JobShifts } from "@/components/admin/JobShifts";
 import { DateTile, MoneyInput, statusTone } from "@/components/admin/job-bits";
 import { jobServiceNames, serviceTypeOptions } from "@/lib/admin/catalog";
@@ -487,6 +488,8 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
           </div>
         </div>
       </Section>
+
+      {!props.isNew && <JobShareLinks job={j} />}
 
       <JobShifts
         job={j}

@@ -266,6 +266,17 @@ export type SiteRequest = {
   createdAt: string;
 };
 
+// Link de credenciamento do serviço (o id é o código que vai na URL)
+export type ShareLink = {
+  id: string;
+  jobId: string;
+  expiresAt: string; // "YYYY-MM-DD", vale até o fim do dia
+  revoked: boolean;
+  views: number;
+  lastViewAt: string; // "" se nunca abriu
+  createdAt: string;
+};
+
 export type Tables = {
   agents: AgentRecord;
   vehicles: Vehicle;
@@ -278,6 +289,7 @@ export type Tables = {
   proposals: Proposal;
   settings: Settings;
   siteRequests: SiteRequest;
+  shareLinks: ShareLink;
 };
 
 export type TableName = keyof Tables;

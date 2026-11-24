@@ -17,7 +17,8 @@ export function middleware(request: NextRequest) {
     return;
   }
 
-  if (isLocale(first)) return;
+  // Link de credenciamento: página única em português, fora das rotas de idioma
+  if (isLocale(first) || first === "credenciamento") return;
 
   const accept = request.headers.get("accept-language")?.toLowerCase() ?? "";
   const locale = accept.startsWith("pt") || !accept ? defaultLocale : "en";

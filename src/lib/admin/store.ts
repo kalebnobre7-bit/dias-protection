@@ -18,7 +18,7 @@ const notify = () => listeners.forEach((fn) => fn());
 
 export const newId = () => crypto.randomUUID();
 
-const dbTable = (table: TableName) => (table === "jobCosts" || table === "financeCategories" || table === "siteRequests" ? snake(table) : table);
+const dbTable = (table: TableName) => (table === "jobCosts" || table === "financeCategories" || table === "siteRequests" || table === "shareLinks" ? snake(table) : table);
 
 const snake = (k: string) => k.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 const camel = (k: string) => k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
@@ -29,7 +29,7 @@ const NULLABLE = new Set([
   "serviceTypeId", "language", "jobId", "agentId", "capacity", "year", "pricing", "proposalId", "rating", "vehicleId",
 ]);
 // Colunas de data/hora que não aceitam "" (vão como null)
-const OPTIONAL_DATES = new Set(["endsAt", "paidAt", "dueDate"]);
+const OPTIONAL_DATES = new Set(["endsAt", "paidAt", "dueDate", "lastViewAt"]);
 
 // "YYYY-MM-DDTHH:mm" local ↔ timestamptz
 const toLocalInput = (iso: string) => {
