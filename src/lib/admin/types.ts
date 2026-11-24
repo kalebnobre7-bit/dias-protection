@@ -262,7 +262,8 @@ export type Settings = {
 // Pedido feito em /solicitar; vira proposta pré-preenchida no painel
 export type SiteRequest = {
   id: string;
-  payload: { order: Order; locale: string; message: string };
+  // Pop-up do site: traz contato (telefone só dígitos, "+" na frente se veio com DDI) e source "popup"; o pedido completo vem sem
+  payload: { order: Order; locale: string; message: string; contact?: { phone: string; email: string }; source?: "popup" };
   status: "new" | "converted" | "archived";
   proposalId: string | null;
   createdAt: string;

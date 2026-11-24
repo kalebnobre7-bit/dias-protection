@@ -159,8 +159,12 @@ export default function ProposalsPage() {
             {newRequests.map((r) => (
               <Row
                 key={r.id}
-                title={r.payload.order.name}
-                subtitle={[r.payload.order.company, r.payload.order.date && formatDate(r.payload.order.date), r.payload.order.origin].filter(Boolean).join(" · ")}
+                title={
+                  <>
+                    {r.payload.order.name} {r.payload.source === "popup" && <Badge tone="neutral">pop-up</Badge>}
+                  </>
+                }
+                subtitle={[r.payload.order.company, r.payload.contact?.phone, r.payload.contact?.email, r.payload.order.date && formatDate(r.payload.order.date), r.payload.order.origin].filter(Boolean).join(" · ")}
                 trailing={
                   <span className="flex items-center gap-1">
                     <Button variant="ghost" className="!min-h-9 !px-3" onClick={() => archive(r)}>
@@ -253,9 +257,19 @@ export default function ProposalsPage() {
 
 function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceRequest: SiteRequest | null; onClose: () => void; onDuplicate: (p: Proposal) => void }) {
   const { value: p, set, dirty } = useForm(props.proposal);
-  const { rows: clients } = useTable("clients");
+  const { rows: clients, loading: clientsLoading } = useTable("clients");
   // Pedido do site já chega com o nome do cliente novo preenchido
   const [clientChoice, setClientChoice] = useState(props.sourceRequest ? NEW_CLIENT : (props.proposal.clientId ?? ""));
+  // Pop-up: se o telefone ou e-mail bate com um cliente cadastrado, usa esse (uma vez, quando a lista carrega)
+  const contact = props.sourceRequest?.payload.contact;
+  const matched = useRef(false);
+  useEffect(() => {
+    if (!contact || clientsLoading || matched.current) return;
+    matched.current = true;
+    const tail = (s: string) => onlyDigits(s).slice(-10);
+    const known = clients.find((c) => (contact.phone && tail(c.phone) === tail(contact.phone)) || (contact.email && c.email.toLowerCase() === contact.email.toLowerCase()));
+    if (known) setClientChoice(known.id);
+  }, [contact, clients, clientsLoading]);
   const [newClient, setNewClient] = useState(props.sourceRequest?.payload.order.name ?? "");
   const [newCompany, setNewCompany] = useState(props.sourceRequest?.payload.order.company ?? "");
   const [error, setError] = useState("");
@@ -315,7 +329,7 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
       let clientId = clientChoice || null;
       if (clientChoice === NEW_CLIENT) {
         clientId = newId();
-        await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: newCompany.trim(), phone: "", email: "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
+        await repo.upsert("clients", { id: clientId, name: newClient.trim(), company: newCompany.trim(), phone: contact?.phone ?? "", email: contact?.email ?? "", language: null, representatives: [], notes: "", createdAt: new Date().toISOString() });
         setClientChoice(clientId);
       }
       const saved: Proposal = {

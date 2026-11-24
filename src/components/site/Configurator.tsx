@@ -632,7 +632,7 @@ function withServices(order: Order, ids: string[]): Order {
   return { ...order, services, event };
 }
 
-function inputClass(invalid = false) {
+export function inputClass(invalid = false) {
   return `min-h-12 w-full rounded-xl border bg-ink-2 px-4 py-3 text-base placeholder:text-muted/60 transition-colors duration-300 focus:outline-none focus:border-accent ${
     invalid ? "border-danger" : "border-line hover:border-line-strong"
   }`;
@@ -650,7 +650,7 @@ function StepHeader(props: { title: string; hint?: string; tag?: string }) {
   );
 }
 
-function Field(props: { label: string; id?: string; error?: string; className?: string; children: React.ReactNode }) {
+export function Field(props: { label: string; id?: string; error?: string; className?: string; children: React.ReactNode }) {
   return (
     <label id={props.id} className={`block scroll-mt-24 ${props.className ?? ""}`}>
       <span className="label mb-2 block">{props.label}</span>
@@ -660,7 +660,7 @@ function Field(props: { label: string; id?: string; error?: string; className?: 
   );
 }
 
-function Chip(props: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+export function Chip(props: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
