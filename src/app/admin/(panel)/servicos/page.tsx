@@ -29,10 +29,12 @@ import {
   cellChild,
 } from "@/components/admin/ui";
 import { FreelanceForm } from "@/components/admin/FreelanceForm";
+import { JobShifts } from "@/components/admin/JobShifts";
 import { DateTile, MoneyInput, statusTone } from "@/components/admin/job-bits";
 import { jobServiceNames, serviceTypeOptions } from "@/lib/admin/catalog";
 import { monthOf, monthTaxRate } from "@/lib/admin/finance";
 import { available, brl, byRank, clientLine, costCategoryName, formatDateTime, jobDatesText, jobStatusLabel, percent } from "@/lib/admin/labels";
+import { defaultDueDate, jobDates } from "@/lib/admin/overtime";
 import { useSettings } from "@/lib/admin/settings";
 import { newId, repo, useTable } from "@/lib/admin/store";
 import type { AgentRecord, Job, JobCost, JobStatus } from "@/lib/admin/types";
@@ -67,6 +69,7 @@ const blank = (): Job => ({
   paymentStatus: "pending",
   paidAt: "",
   notes: "",
+  shifts: [],
   agentIds: [],
   vehicleIds: [],
   createdAt: new Date().toISOString(),
@@ -281,7 +284,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   const { rows: vehicles } = useTable("vehicles");
   const { rows: partners } = useTable("partners");
   const { rows: jobs } = useTable("jobs");
-  const costCategories = useSettings().settings.costs.categories;
+  const { categories: costCategories, paymentDays } = useSettings().settings.costs;
   const { rows: allCosts, loading: costsLoading } = useTable("jobCosts");
   const [costs, setCosts] = useState<JobCost[] | null>(null);
   const [newClient, setNewClient] = useState("");
@@ -301,6 +304,8 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   const tax = j.price * taxRate;
   const profit = j.price - totalCosts - tax;
 
+  // Vencimento padrão: último dia do serviço + prazo de Configurações
+  const dueDefault = j.startsAt ? defaultDueDate(j, paymentDays ?? 15) : "";
   const updateCost = (id: string, patch: Partial<JobCost>) => setCosts(list.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   // Escolher o agente preenche a descrição vazia ("Diária · Nome")
   const pickCostAgent = (c: JobCost, agentId: string) => {
@@ -310,7 +315,7 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
   const addCost = () =>
     setCosts([
       ...list,
-      { id: newId(), jobId: j.id, description: "", category: "agent", amount: 0, agentId: null, partnerId: null, paid: false, advance: 0, createdAt: new Date().toISOString() },
+      { id: newId(), jobId: j.id, description: "", category: "agent", amount: 0, agentId: null, partnerId: null, paid: false, advance: 0, dueDate: "", overtimeHours: 0, vehicleId: null, createdAt: new Date().toISOString() },
     ]);
 
   const save = async () => {
@@ -327,10 +332,11 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
       const first = j.days[0];
       const last = j.days[j.days.length - 1];
       const dates = first ? { startsAt: first + j.startsAt.slice(10), endsAt: j.endsAt ? last + j.endsAt.slice(10) : "" } : {};
-      await repo.upsert("jobs", { ...j, ...dates, clientId, paidAt: j.paymentStatus === "paid" ? j.paidAt || j.startsAt.slice(0, 10) : "" });
+      const shiftDates = jobDates(j);
+      await repo.upsert("jobs", { ...j, ...dates, clientId, shifts: j.shifts.filter((s) => shiftDates.includes(s.date)), paidAt: j.paymentStatus === "paid" ? j.paidAt || j.startsAt.slice(0, 10) : "" });
       await repo.replaceJobCosts(
         j.id,
-        list.filter((c) => c.description.trim() || c.amount > 0).map((c) => ({ ...c, description: c.description.trim() || costCategoryName(c.category) })),
+        list.filter((c) => c.description.trim() || c.amount > 0).map((c) => ({ ...c, description: c.description.trim() || costCategoryName(c.category), dueDate: c.dueDate || (c.paid ? "" : dueDefault) })),
       );
       props.onClose();
     } catch (e) {
@@ -482,6 +488,16 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
         </div>
       </Section>
 
+      <JobShifts
+        job={j}
+        costs={list}
+        agents={agents}
+        vehicles={vehicles}
+        onShifts={(shifts) => set("shifts", shifts)}
+        onCosts={setCosts}
+        onAddPrice={(v) => set("price", j.price + v)}
+      />
+
       <Section
         title="Custos do serviço"
         action={
@@ -544,6 +560,10 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
                     <span>Adiantado</span>
                     <MoneyInput value={c.advance} onChange={(v) => updateCost(c.id, { advance: Math.min(v, c.amount) })} label="Valor adiantado" className={`${cellChild} !w-32 [&>input]:!min-h-9`} />
                     <span className="num">falta pagar {brl.format(c.amount - Math.min(c.advance, c.amount))}</span>
+                    <label className="ml-auto flex items-center gap-2">
+                      Vence
+                      <input className={`input ${cell} !min-h-9 !w-auto`} type="date" value={c.dueDate || dueDefault} onChange={(e) => updateCost(c.id, { dueDate: e.target.value })} />
+                    </label>
                   </div>
                 )}
                 {c.category === "agent" && (

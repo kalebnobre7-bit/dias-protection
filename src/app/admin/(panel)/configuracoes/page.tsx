@@ -193,6 +193,41 @@ function SettingsForm({ initial }: { initial: Settings }) {
         </button>
       </Section>
 
+      <Section title="Horas extras e pagamentos">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Horas por diária" hint="O que passar disso, pelos horários do serviço, é hora extra">
+            <NumberInput
+              value={s.costs.dailyHours}
+              onChange={(v) => {
+                setS((prev) => ({ ...prev, costs: { ...prev.costs, dailyHours: v ?? 10 } }));
+                setSaved(false);
+              }}
+              fallback={10}
+              min={1}
+              max={24}
+              digits={2}
+              suffix="h"
+              label="Horas por diária"
+            />
+          </Field>
+          <Field label="Prazo para pagar a equipe" hint="Vencimento dos custos, contado do fim do serviço">
+            <NumberInput
+              value={s.costs.paymentDays}
+              onChange={(v) => {
+                setS((prev) => ({ ...prev, costs: { ...prev.costs, paymentDays: v ?? 15 } }));
+                setSaved(false);
+              }}
+              fallback={15}
+              min={0}
+              max={120}
+              digits={3}
+              suffix="dias"
+              label="Prazo para pagar a equipe"
+            />
+          </Field>
+        </div>
+      </Section>
+
       <Section
         title="Categorias de custo dos serviços"
         action={

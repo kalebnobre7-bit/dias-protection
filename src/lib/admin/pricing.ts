@@ -125,6 +125,9 @@ export function pricingJobCosts(p: Pricing, jobId: string): JobCost[] {
       partnerId: null,
       paid: false,
       advance: 0,
+      dueDate: "",
+      overtimeHours: 0,
+      vehicleId: null,
       createdAt,
     }));
 }

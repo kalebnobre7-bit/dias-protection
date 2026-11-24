@@ -29,6 +29,8 @@ export const DEFAULT_SETTINGS: Settings = {
   costs: {
     categories: ["Combustível", "Pedágio", "Alimentação", "Motorista", "Comissão", "Aluguel Veículo", "Transporte", "Amenidades", "Outros"],
     fixed: [],
+    dailyHours: 10,
+    paymentDays: 15,
   },
   finance: { cashOpening: 0, cashDate: "", notes: {} },
   createdAt: "",

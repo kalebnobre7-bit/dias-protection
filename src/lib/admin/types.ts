@@ -81,6 +81,10 @@ export type Partner = {
 
 export type JobStatus = "quote" | "scheduled" | "done" | "canceled";
 
+// Horário real de um dia; "all" vale para a equipe toda, os outros separam seguranças, motoristas e veículos
+export type ShiftGroup = "all" | "agent" | "driver" | "vehicle";
+export type JobShift = { date: string; group: ShiftGroup; start: string; end: string }; // "YYYY-MM-DD", "HH:mm"
+
 export type Job = {
   id: string;
   clientId: string | null;
@@ -96,6 +100,7 @@ export type Job = {
   paymentStatus: "pending" | "paid";
   paidAt: string; // "YYYY-MM-DD" ou ""
   notes: string;
+  shifts: JobShift[]; // horários operacionais registrados (base das horas extras)
   agentIds: string[];
   vehicleIds: string[];
   createdAt: string;
@@ -114,6 +119,9 @@ export type JobCost = {
   partnerId: string | null;
   paid: boolean;
   advance: number; // adiantado ao fornecedor enquanto o total não é pago
+  dueDate: string; // data-limite de pagamento "YYYY-MM-DD" ou ""
+  overtimeHours: number; // > 0: linha de hora extra gerada pelo cálculo
+  vehicleId: string | null; // hora extra de veículo
   createdAt: string;
 };
 
@@ -238,6 +246,8 @@ export type Settings = {
   costs: {
     categories: string[]; // além de Agente e Parceiro, que são fixos
     fixed: FixedCost[];
+    dailyHours: number; // horas da diária; o que passar é hora extra
+    paymentDays: number; // prazo para pagar a equipe e fornecedores depois do serviço
   };
   finance: {
     cashOpening: number; // saldo em caixa na data abaixo

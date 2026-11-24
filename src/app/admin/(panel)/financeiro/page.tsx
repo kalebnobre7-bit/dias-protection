@@ -58,6 +58,13 @@ export default function FinancePage() {
   const monthJobs = jobs.filter((j) => countsAsRevenue(j) && monthOf(j.startsAt) === month).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const monthTx = transactions.filter((t) => monthOf(t.date) === month).sort((a, b) => a.date.localeCompare(b.date));
   const clientName = (id: string | null) => clients.find((c) => c.id === id)?.name ?? "Sem cliente";
+  // Custos de serviço ainda não pagos (de qualquer mês), pelo vencimento; sem data vão pro fim
+  const today = new Date().toLocaleDateString("sv-SE");
+  const payables = costs
+    .filter((c) => !c.paid && c.amount - c.advance > 0)
+    .map((c) => ({ cost: c, job: jobs.find((j) => j.id === c.jobId) }))
+    .filter((p): p is { cost: JobCost; job: Job } => !!p.job && countsAsRevenue(p.job))
+    .sort((a, b) => (a.cost.dueDate || "9999").localeCompare(b.cost.dueDate || "9999"));
   const clientOf = (j: Job) => clientLine(clients.find((c) => c.id === j.clientId));
   const matrix = categoryByClient(month, jobs, costs);
   const cash = cashBalance(settings.finance.cashOpening, settings.finance.cashDate, jobs, costs, transactions);
@@ -139,6 +146,30 @@ export default function FinancePage() {
           <p className="mt-3 px-1 text-[0.8125rem] text-muted">
             Receita e custos consideram serviços agendados e concluídos do mês. Orçamentos e cancelados ficam de fora.
           </p>
+
+          {payables.length > 0 && (
+            <Section title={`A pagar · ${brl.format(payables.reduce((s, p) => s + p.cost.amount - p.cost.advance, 0))}`} className="mt-10">
+              <List striped>
+                {payables.map(({ cost: c, job: j }) => {
+                  const late = !!c.dueDate && c.dueDate < today;
+                  return (
+                    <Row
+                      key={c.id}
+                      onClick={() => setOpenJobId(j.id)}
+                      title={c.description || costCategoryName(c.category)}
+                      subtitle={`${clientOf(j)} · ${jobDatesText(j)}`}
+                      trailing={
+                        <span className="flex flex-col items-end gap-1">
+                          <span className="num font-medium">{brl.format(c.amount - c.advance)}</span>
+                          <Badge tone={late ? "bad" : "warn"}>{c.dueDate ? `${late ? "Atrasado · " : "Vence "}${formatDate(c.dueDate)}` : "Sem vencimento"}</Badge>
+                        </span>
+                      }
+                    />
+                  );
+                })}
+              </List>
+            </Section>
+          )}
 
           {(byCategory.expense.length > 0 || summary.otherIncome > 0) && (
             <Section title="Por categoria" className="mt-10">

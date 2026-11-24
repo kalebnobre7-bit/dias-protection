@@ -229,6 +229,7 @@ export function jobFromProposal(p: Proposal, id: string): Job {
     paymentStatus: "pending",
     paidAt: "",
     notes: `Proposta ${p.number} · ${p.title}`,
+    shifts: [],
     agentIds: p.agentIds,
     vehicleIds: p.vehicleIds,
     createdAt: new Date().toISOString(),

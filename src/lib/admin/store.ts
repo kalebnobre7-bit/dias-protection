@@ -26,10 +26,10 @@ const camel = (k: string) => k.replace(/_([a-z])/g, (_, c: string) => c.toUpperC
 // Campos que o tipo declara como `| null`; os demais textos usam "" no lugar de null
 const NULLABLE = new Set([
   "photoUrl", "cnhUrl", "yearsExperience", "categoryId", "partnerId", "clientId",
-  "serviceTypeId", "language", "jobId", "agentId", "capacity", "year", "pricing", "proposalId", "rating",
+  "serviceTypeId", "language", "jobId", "agentId", "capacity", "year", "pricing", "proposalId", "rating", "vehicleId",
 ]);
 // Colunas de data/hora que não aceitam "" (vão como null)
-const OPTIONAL_DATES = new Set(["endsAt", "paidAt"]);
+const OPTIONAL_DATES = new Set(["endsAt", "paidAt", "dueDate"]);
 
 // "YYYY-MM-DDTHH:mm" local ↔ timestamptz
 const toLocalInput = (iso: string) => {
@@ -83,6 +83,7 @@ function parse<T extends TableName>(table: T, raw: Row): Tables[T] {
       // Linha antiga: só tinha um tipo e nenhum dia avulso
       serviceTypeIds: (job.serviceTypeIds as string[] | "") || (job.serviceTypeId ? [job.serviceTypeId] : []),
       days: job.days || [],
+      shifts: job.shifts || [],
       agentIds: (jobAgents as { agent_id: string }[]).map((r) => r.agent_id),
       vehicleIds: (jobVehicles as { vehicle_id: string }[]).map((r) => r.vehicle_id),
     } as Tables[T];
@@ -107,7 +108,7 @@ function parse<T extends TableName>(table: T, raw: Row): Tables[T] {
   }
   if (table === "jobCosts") {
     const cost = fromRow(raw);
-    return { ...cost, advance: Number(cost.advance || 0) } as Tables[T];
+    return { ...cost, advance: Number(cost.advance || 0), overtimeHours: Number(cost.overtimeHours || 0), vehicleId: cost.vehicleId ?? null } as Tables[T];
   }
   if (table === "vehicles") {
     const vehicle = fromRow(raw);
