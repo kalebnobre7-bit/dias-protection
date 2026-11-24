@@ -29,7 +29,7 @@ const NULLABLE = new Set([
   "serviceTypeId", "language", "jobId", "agentId", "capacity", "year", "pricing", "proposalId", "rating", "vehicleId",
 ]);
 // Colunas de data/hora que não aceitam "" (vão como null)
-const OPTIONAL_DATES = new Set(["endsAt", "paidAt", "dueDate", "lastViewAt"]);
+const OPTIONAL_DATES = new Set(["endsAt", "paidAt", "dueDate", "lastViewAt", "acceptedAt"]);
 
 // "YYYY-MM-DDTHH:mm" local ↔ timestamptz
 const toLocalInput = (iso: string) => {

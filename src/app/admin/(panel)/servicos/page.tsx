@@ -29,7 +29,7 @@ import {
   cellChild,
 } from "@/components/admin/ui";
 import { FreelanceForm } from "@/components/admin/FreelanceForm";
-import { JobShareLinks } from "@/components/admin/JobShareLinks";
+import { ShareLinks } from "@/components/admin/ShareLinks";
 import { JobShifts } from "@/components/admin/JobShifts";
 import { DateTile, MoneyInput, statusTone } from "@/components/admin/job-bits";
 import { jobServiceNames, serviceTypeOptions } from "@/lib/admin/catalog";
@@ -489,7 +489,16 @@ function JobSheet(props: { job: Job; isNew: boolean; onClose: () => void }) {
         </div>
       </Section>
 
-      {!props.isNew && <JobShareLinks job={j} />}
+      {!props.isNew && (
+        <ShareLinks
+          title="Link de credenciamento"
+          hint="Para a portaria do evento ou condomínio: foto, nome, função e documento da equipe salva neste serviço (CNH só dos motoristas) e modelo, cor e placa dos veículos. Sem telefone."
+          path="credenciamento"
+          target={{ jobId: j.id }}
+          // Padrão: dia seguinte ao fim do serviço
+          defaultExpiry={defaultDueDate(j, 1)}
+        />
+      )}
 
       <JobShifts
         job={j}

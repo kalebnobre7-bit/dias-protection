@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check as IconCheck, Copy as IconCopy, CopyPlus as IconDuplicate, FileCheck as IconDocClosed, FileText as IconDoc, Minus as IconMinus, Plus as IconPlus, Send as IconSend, Sparkles as IconMagic, X as IconClose } from "lucide-react";
 
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { FreelanceForm } from "@/components/admin/FreelanceForm";
 import { MoneyInput, NumberTile } from "@/components/admin/job-bits";
 import { PricingCalculator } from "@/components/admin/PricingCalculator";
+import { ShareLinks } from "@/components/admin/ShareLinks";
 import {
   Avatar,
   Badge,
@@ -57,16 +58,29 @@ import {
 } from "@/lib/admin/proposals";
 import { useSettings } from "@/lib/admin/settings";
 import { newId, repo, useTable } from "@/lib/admin/store";
-import type { Pricing, Proposal, ProposalItem, ProposalStatus, SiteRequest } from "@/lib/admin/types";
+import type { Job, JobCost, Pricing, Proposal, ProposalItem, ProposalStatus, SiteRequest } from "@/lib/admin/types";
 import { whatsappUrl } from "@/lib/order";
+import { getBrowserClient } from "@/lib/supabase";
 
 type Filter = "all" | "open" | ProposalStatus;
 const NEW_CLIENT = "__novo";
 
+// Aceita (pelo Status, pelo botão ou pelo link) → serviço agendado com o valor fechado e os custos da planilha a pagar
+async function ensureJob(saved: Proposal, jobs: Job[], jobCosts: JobCost[]): Promise<string> {
+  const total = proposalTotals(saved).total;
+  const existing = jobs.find((j) => j.id === saved.jobId);
+  const jobId = existing?.id ?? newId();
+  if (!existing) await repo.upsert("jobs", jobFromProposal(saved, jobId));
+  else if (existing.status === "quote") await repo.upsert("jobs", { ...existing, status: "scheduled", price: total });
+  if (saved.pricing && !jobCosts.some((c) => c.jobId === jobId)) await repo.replaceJobCosts(jobId, pricingJobCosts(saved.pricing, jobId));
+  return jobId;
+}
+
 export default function ProposalsPage() {
   const { rows, loading } = useTable("proposals");
   const { rows: clients } = useTable("clients");
-  const { rows: jobs } = useTable("jobs");
+  const { rows: jobs, loading: jobsLoading } = useTable("jobs");
+  const { rows: jobCosts, loading: costsLoading } = useTable("jobCosts");
   const { settings, loading: settingsLoading } = useSettings();
   const blank = () => blankProposal(newId(), rows, settings.proposal);
   const [editing, setEditing] = useState<Proposal | null>(null);
@@ -104,6 +118,18 @@ export default function ProposalsPage() {
     // só na carga inicial
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, settingsLoading]);
+
+  // Aceita pelo link (sem o painel aberto): o serviço é criado aqui, uma vez por proposta
+  const converting = useRef(new Set<string>());
+  useEffect(() => {
+    if (loading || jobsLoading || costsLoading) return;
+    for (const p of rows.filter((x) => x.status === "accepted" && x.acceptedAt && !x.jobId && !converting.current.has(x.id))) {
+      converting.current.add(p.id);
+      ensureJob(p, jobs, jobCosts)
+        .then((jobId) => repo.upsert("proposals", { ...p, jobId }))
+        .catch(() => converting.current.delete(p.id));
+    }
+  }, [loading, jobsLoading, costsLoading, rows, jobs, jobCosts]);
 
   const clientName = (id: string | null) => clients.find((c) => c.id === id)?.name ?? "Sem cliente";
   const q = query.trim().toLowerCase();
@@ -193,7 +219,7 @@ export default function ProposalsPage() {
                   trailing={
                     <span className="flex flex-col items-end gap-1">
                       <span className="num font-medium">{brl.format(proposalTotals(p).total)}</span>
-                      <Badge tone={proposalStatusTone(p.status)}>{proposalStatusLabel[p.status]}</Badge>
+                      <Badge tone={proposalStatusTone(p.status)}>{p.status === "accepted" && p.acceptedAt ? "Aceita pelo cliente" : proposalStatusLabel[p.status]}</Badge>
                     </span>
                   }
                 />
@@ -299,26 +325,23 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
         title: p.title.trim(),
         items: p.items.filter((i) => i.description.trim()).map((i) => ({ ...i, description: i.description.trim() })),
       };
-      if (saved.status === "accepted") saved.jobId = await ensureJob(saved);
+      // Cliente aceitou pelo link com o editor aberto: mantém o aceite em vez de sobrescrever
+      if (!props.isNew && !saved.acceptedAt) {
+        const { data } = await getBrowserClient().from("proposals").select("accepted_name, accepted_at").eq("id", saved.id).maybeSingle();
+        if (data?.accepted_at) Object.assign(saved, { status: "accepted", acceptedName: data.accepted_name ?? "", acceptedAt: data.accepted_at });
+      }
+      if (saved.status === "accepted") saved.jobId = await ensureJob(saved, jobs, jobCosts);
       await repo.upsert("proposals", saved);
       set("jobId", saved.jobId);
+      set("status", saved.status);
+      set("acceptedName", saved.acceptedName);
+      set("acceptedAt", saved.acceptedAt);
       if (props.sourceRequest) await repo.upsert("siteRequests", { ...props.sourceRequest, status: "converted", proposalId: saved.id });
       return saved;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível salvar.");
       return null;
     }
-  }
-
-  // Aceita (pelo Status ou pelo botão) → serviço agendado com o valor fechado e os custos da planilha a pagar
-  async function ensureJob(saved: Proposal): Promise<string> {
-    const total = proposalTotals(saved).total;
-    const existing = jobs.find((j) => j.id === saved.jobId);
-    const jobId = existing?.id ?? newId();
-    if (!existing) await repo.upsert("jobs", jobFromProposal(saved, jobId));
-    else if (existing.status === "quote") await repo.upsert("jobs", { ...existing, status: "scheduled", price: total });
-    if (saved.pricing && !jobCosts.some((c) => c.jobId === jobId)) await repo.replaceJobCosts(jobId, pricingJobCosts(saved.pricing, jobId));
-    return jobId;
   }
 
   const save = async () => {
@@ -428,6 +451,12 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
           />
         </Field>
         {p.status === "accepted" && !p.jobId && <p className="-mt-3 text-xs text-muted">Ao salvar, o serviço é criado na agenda com o valor e os custos da planilha.</p>}
+        {p.acceptedAt && (
+          <p className="-mt-3 text-xs text-muted">
+            <Badge tone="good">Aceita pelo cliente</Badge> {p.acceptedName} em{" "}
+            {new Date(p.acceptedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}, pelo link
+          </p>
+        )}
 
         <Field label="Título" hint="Aparece no topo do documento. Ex.: Proteção executiva · Visita da diretoria">
           <input className="input" value={p.title} onChange={(e) => set("title", e.target.value)} autoFocus={props.isNew && !p.title} />
@@ -648,6 +677,19 @@ function ProposalSheet(props: { proposal: Proposal; isNew: boolean; sourceReques
         <Field label="Observações internas" hint="Não aparecem no documento nem no WhatsApp.">
           <TextArea rows={2} value={p.notes} onChange={(e) => set("notes", e.target.value)} />
         </Field>
+
+        {!props.isNew && (
+          <ShareLinks
+            title="Link da proposta"
+            hint="O cliente abre a proposta comercial no celular, salva em PDF e aceita digitando o nome. Sem valores internos, notas nem contato da equipe."
+            path="proposta"
+            target={{ proposalId: p.id }}
+            // Padrão: a validade da proposta
+            defaultExpiry={p.validUntil}
+            // Salva antes (o link mostra o que está gravado); rascunho vira Enviada
+            beforeCreate={async () => (await persist(p.status === "draft" ? { status: "sent" } : {})) !== null}
+          />
+        )}
         </>
       )}
 

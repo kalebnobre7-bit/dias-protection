@@ -210,6 +210,8 @@ export type Proposal = {
   terms: string; // condições gerais (uma por linha)
   notes: string; // internas, não vão para o documento
   pricing: Pricing | null; // calculadora de preço, interna
+  acceptedName: string; // nome digitado pelo cliente ao aceitar pelo link ("" se não aceitou por lá)
+  acceptedAt: string; // "" se não aceitou pelo link
   createdAt: string;
 };
 
@@ -266,10 +268,11 @@ export type SiteRequest = {
   createdAt: string;
 };
 
-// Link de credenciamento do serviço (o id é o código que vai na URL)
+// Link com validade (o id é o código que vai na URL): credenciamento do serviço ou proposta para o cliente
 export type ShareLink = {
   id: string;
-  jobId: string;
+  jobId: string | null;
+  proposalId: string | null;
   expiresAt: string; // "YYYY-MM-DD", vale até o fim do dia
   revoked: boolean;
   views: number;

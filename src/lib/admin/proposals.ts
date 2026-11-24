@@ -166,6 +166,8 @@ export function blankProposal(id: string, existing: Proposal[], defaults: Settin
     terms: defaults.terms,
     notes: "",
     pricing: null,
+    acceptedName: "",
+    acceptedAt: "",
     createdAt: today.toISOString(),
   };
 }
@@ -184,6 +186,8 @@ export function duplicateProposal(source: Proposal, id: string, existing: Propos
     issuedAt: base.issuedAt,
     validUntil: base.validUntil,
     jobId: null,
+    acceptedName: "",
+    acceptedAt: "",
     createdAt: base.createdAt,
     items: source.items.map(fresh),
     pricing: source.pricing ? { ...source.pricing, costs: source.pricing.costs.map(fresh) } : null,

@@ -5,25 +5,40 @@ import { useState } from "react";
 
 import { Badge, Button, Section } from "@/components/admin/ui";
 import { formatDate, formatDateTime } from "@/lib/admin/labels";
-import { defaultDueDate } from "@/lib/admin/overtime";
 import { newId, repo, useTable } from "@/lib/admin/store";
-import type { Job, ShareLink } from "@/lib/admin/types";
+import type { ShareLink } from "@/lib/admin/types";
 
-const linkUrl = (id: string) => `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/credenciamento/?t=${id}`;
-const today = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
+export const today = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 
-// Link com validade para a portaria credenciar a equipe e os veículos do serviço (sem PDF solto)
-export function JobShareLinks({ job }: { job: Job }) {
+// Link com validade, sem PDF solto: credenciamento do serviço (portaria) ou proposta (cliente).
+// beforeCreate grava o que precisa estar salvo antes do link existir; false cancela.
+export function ShareLinks({
+  title,
+  hint,
+  path,
+  target,
+  defaultExpiry,
+  beforeCreate,
+}: {
+  title: string;
+  hint: string;
+  path: "credenciamento" | "proposta";
+  target: { jobId: string } | { proposalId: string };
+  defaultExpiry: string;
+  beforeCreate?: () => Promise<boolean>;
+}) {
   const { rows } = useTable("shareLinks");
-  const links = rows.filter((l) => l.jobId === job.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  // Padrão: dia seguinte ao fim do serviço (serviço já passado: hoje)
-  const [expiresAt, setExpiresAt] = useState(() => [defaultDueDate(job, 1), today()].sort()[1]);
+  const jobId = "jobId" in target ? target.jobId : null;
+  const proposalId = "proposalId" in target ? target.proposalId : null;
+  const links = rows.filter((l) => (jobId ? l.jobId === jobId : l.proposalId === proposalId)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  // Data já passada vira hoje
+  const [expiresAt, setExpiresAt] = useState(() => [defaultExpiry, today()].sort()[1]);
   const [copied, setCopied] = useState("");
   const [error, setError] = useState("");
 
   const copy = async (id: string) => {
     try {
-      await navigator.clipboard.writeText(linkUrl(id));
+      await navigator.clipboard.writeText(`${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/${path}/?t=${id}`);
       setCopied(id);
     } catch {
       setError("Não deu para copiar. Abra o link e copie da barra de endereço.");
@@ -39,18 +54,17 @@ export function JobShareLinks({ job }: { job: Job }) {
   };
   const create = () =>
     run(async () => {
+      if (beforeCreate && !(await beforeCreate())) return;
       const id = newId();
-      await repo.upsert("shareLinks", { id, jobId: job.id, expiresAt, revoked: false, views: 0, lastViewAt: "", createdAt: new Date().toISOString() });
+      await repo.upsert("shareLinks", { id, jobId, proposalId, expiresAt, revoked: false, views: 0, lastViewAt: "", createdAt: new Date().toISOString() });
       await copy(id);
     });
   const revoke = (l: ShareLink) => run(() => repo.upsert("shareLinks", { ...l, revoked: true }));
 
   return (
-    <Section title="Link de credenciamento">
+    <Section title={title}>
       <div className="space-y-3">
-        <p className="text-[0.8125rem] text-muted">
-          Para a portaria do evento ou condomínio: foto, nome, função e documento da equipe salva neste serviço (CNH só dos motoristas) e modelo, cor e placa dos veículos. Sem telefone.
-        </p>
+        <p className="text-[0.8125rem] text-muted">{hint}</p>
         <div className="flex flex-wrap items-center gap-2 text-[0.8125rem]">
           <label className="flex items-center gap-2">
             <span className="text-muted">Válido até</span>

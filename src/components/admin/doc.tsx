@@ -74,13 +74,18 @@ function Photo({ src, name, className }: { src: string | null; name: string; cla
   );
 }
 
-const agentMeta = (a: AgentRecord, lang: DocLang) =>
+// Campos que a proposta comercial mostra (o link do cliente recebe só estes)
+export type DocAgent = Pick<AgentRecord, "id" | "name" | "rolePt" | "roleEn" | "bioPt" | "bioEn" | "languages" | "yearsExperience" | "photoUrl">;
+export type DocVehicle = Pick<Vehicle, "id" | "model" | "categoryId" | "year" | "color" | "capacity" | "armored" | "descriptionPt" | "descriptionEn" | "photoUrl" | "photos"> &
+  Partial<Pick<Vehicle, "plate">>;
+
+const agentMeta = (a: DocAgent, lang: DocLang) =>
   [a.languages.join(", "), a.yearsExperience ? `${a.yearsExperience} ${lang === "en" ? "years of experience" : "anos de experiência"}` : ""].filter(Boolean).join(" · ");
-const agentRole = (a: AgentRecord, lang: DocLang) => (lang === "en" && a.roleEn) || a.rolePt;
-const agentBio = (a: AgentRecord, lang: DocLang) => (lang === "en" && a.bioEn) || a.bioPt;
+const agentRole = (a: DocAgent, lang: DocLang) => (lang === "en" && a.roleEn) || a.rolePt;
+const agentBio = (a: DocAgent, lang: DocLang) => (lang === "en" && a.bioEn) || a.bioPt;
 
 // Proposta comercial: só apresentação (sem contato nem documentos)
-export function AgentCard({ agent: a, lang = "pt" }: { agent: AgentRecord; lang?: DocLang }) {
+export function AgentCard({ agent: a, lang = "pt" }: { agent: DocAgent; lang?: DocLang }) {
   return (
     <div className="flex gap-4 break-inside-avoid">
       <Photo src={a.photoUrl} name={a.name} className="size-[22mm]" />
@@ -95,7 +100,7 @@ export function AgentCard({ agent: a, lang = "pt" }: { agent: AgentRecord; lang?
   );
 }
 
-export function VehicleCard({ vehicle: v, showPlate = false, lang = "pt", album = false }: { vehicle: Vehicle; showPlate?: boolean; lang?: DocLang; album?: boolean }) {
+export function VehicleCard({ vehicle: v, showPlate = false, lang = "pt", album = false }: { vehicle: DocVehicle; showPlate?: boolean; lang?: DocLang; album?: boolean }) {
   const en = lang === "en";
   const description = (en && v.descriptionEn) || v.descriptionPt;
   const facts = [
